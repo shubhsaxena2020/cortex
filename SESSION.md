@@ -180,7 +180,62 @@ Required before publishing:
 ### Council #2 verdict — roadmap
 **Rewrote `ROADMAP.md` per council.** v0.2 cut from 11 items to 5 P0s; summarization / auto-tagging / multi-platform distribution / Chrome Web Store / auto-update moved to v0.3 or v0.4. Bidirectional links promoted from v0.4 → v0.3 (cheap legibility win). Kill criteria added to every phase. Cert costs ($99 Apple + $200-400 Win + $5 Chrome Store) called out as explicit prerequisites. `Out of scope: telemetry` reframed — cloud telemetry forever no, opt-in local-only usage log added to v0.2 P0 as the only realistic research instrument.
 
-### Blocked on user
+### Blocked on user *(now resolved — see "Phase 3 — GitHub Launch" below)*
 1. `gh` CLI is not installed in this shell. The actual `gh repo create cortex --public --source=. --remote=origin --push` and `gh release create v0.1.0-beta --prerelease ...` commands must be run by the user on their own machine.
 2. Clean-VM installer smoke test must happen before publishing.
 3. Optional: one screenshot or short GIF in the repo before the pre-release goes public.
+
+## Phase 3 — GitHub Launch ✅ Complete
+
+### Milestone: Cortex v0.1.0-beta is live on GitHub
+
+- **Repo:** <https://github.com/shubhsaxena2020/cortex> (public)
+- **Pre-Release:** <https://github.com/shubhsaxena2020/cortex/releases/tag/v0.1.0-beta>
+- **Installer:** `Cortex Setup 0.1.0.exe` (82.97 MiB, SHA256 `d1ec83e6bd2018be0fe66ea9878ec75d3f57198fa472cf5b631f65902df2a2b5`)
+
+### Timeline
+- UI fixes — Settings scroll, `cortex_brain` path ✅
+- Git init — 2 commits on `main` ✅
+- `gh` CLI — installed (v2.93.0), authenticated ✅
+- Repo creation — public repo on GitHub ✅
+- Pre-Release — `v0.1.0-beta` published with installer attached ✅
+
+### What's live
+- Full source: `src/`, `extension/`, `scripts/`, config — all 101 commits on `main`.
+- Docs: `README.md`, `ROADMAP.md` (Council-vetted), `RELEASE_NOTES.md`, `EXTENSION_SETUP.md`, `SESSION.md`.
+- Tag marked as Pre-Release (not "Latest").
+- Installer downloadable from the release page.
+- Branch tracking: `main` → `origin/main`.
+
+### Release positioning (per Claude Council #1 verdict)
+- Infrastructure release — Electron 31, sqlite-vec, extension capture pipeline, Ollama integration.
+- User-visible intelligence (dedup, search latency, summarization) deferred to v0.2 per the Council P0 list.
+- Asks for **install reports**, not stars or press.
+- Honest about limitations: unsigned installer (SmartScreen warning expected), graph perf at 8000+ nodes, no dedup yet.
+- Code-signing certs deferred to v0.4 (cost + lead-time blocker).
+
+### Next — Phase 4: v0.2 P0 work (per Claude Council #2 verdict)
+Cut to 5 items, all in service of "the capture pipeline is correct, fast, and observable." Everything else deferred to v0.3 / v0.4.
+
+**P0:**
+1. **Conversation deduplication** — same chat scraped twice merges instead of duplicating.
+2. **Smart capture filtering** — skip system prompts, tool calls, empty / single-message / system-error responses at the content-script layer.
+3. **Graph LOD + viewport culling** — usable past 8000 nodes; visible-only rendering. Web-worker force simulation deferred to v0.3 unless culling alone isn't enough.
+4. **Search latency <200 ms p95 on a 10k-memory vault** — measured, not guessed. Keyword path first; vector path opportunistic.
+5. **In-app feedback link + opt-in, local-only usage log** — the only realistic research instrument for a solo dev with zero users. Never leaves the machine.
+
+**Deferred to v0.3 / v0.4:**
+- Conversation summarization
+- Auto-tagging
+- Multi-platform distribution (macOS DMG, Linux AppImage)
+- Chrome Web Store publishing
+- Auto-update infrastructure (`electron-updater`)
+- `db.test.disabled.ts` → `vitest-electron`
+- Code-signing certs (Windows ~$200-400/yr, Apple $99/yr)
+
+### Verification
+- Repo public ✅ <https://github.com/shubhsaxena2020/cortex>
+- Pre-Release live ✅ <https://github.com/shubhsaxena2020/cortex/releases/tag/v0.1.0-beta>
+- Installer uploaded ✅ 82.97 MiB asset
+- All tests passing ✅ 128/128
+- All bundles green ✅ main + preload + renderer
