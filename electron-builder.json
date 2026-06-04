@@ -1,0 +1,38 @@
+{
+  "appId": "com.cortex.app",
+  "productName": "Cortex",
+  "directories": {
+    "buildResources": "build",
+    "output": "release"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "publish": {
+    "provider": "github",
+    "owner": "shubhsaxena2020",
+    "repo": "cortex"
+  },
+  "asar": true,
+  "asarUnpack": [
+    "**/*.node",
+    "**/*.dll",
+    "**/better-sqlite3/**",
+    "**/sqlite-vec*/**"
+  ],
+  "extraMetadata": {
+    "main": "dist/main/index.js"
+  },
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "icon": "build/icon.ico"
+  },
+  "mac": {
+    "target": "dmg",
+    "icon": "build/icon.icns"
+  },
+  "linux": {
+    "target": "AppImage",
+    "icon": "build/icon.png"
+  }
+}

@@ -1,0 +1,14 @@
+:root {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3f3f3f;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --accent-claude: #6366f1;
+  --accent-chatgpt: #10a37f;
+  --accent-gemini: #8b5cf6;
+  --accent-brand: #3b82f6;
+  --border-color: #404040;
+  --font-mono: 'Courier New', Courier, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

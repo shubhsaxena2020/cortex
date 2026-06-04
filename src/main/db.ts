@@ -1,0 +1,476 @@
+import Database from 'better-sqlite3'
+import * as sqliteVec from 'sqlite-vec'
+import { join, sep } from 'path'
+import { app } from 'electron'
+import { randomUUID } from 'crypto'
+import log from 'electron-log'
+
+let db: Database.Database | null = null
+let vectorSearchEnabled = false
+
+const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
+const SCHEMA_VERSION = 1   // bump + add migration when schema changes
+
+function defaultDbPath(): string {
+  return join(app.getPath('userData'), 'memories.db')
+}
+
+type MemoryRow = {
+  id: string
+  title: string
+  content: string
+  timestamp: number
+  updatedAt: number
+  source: string
+  tags: string
+}
+
+type RelationshipRow = {
+  id: string
+  sourceId: string
+  targetId: string
+  relationship: string
+}
+
+function mapMemory(r: MemoryRow) {
+  return {
+    id: r.id,
+    title: r.title,
+    content: r.content,
+    timestamp: r.timestamp,
+    updatedAt: r.updatedAt,
+    source: r.source,
+    tags: JSON.parse(r.tags || '[]') as string[],
+  }
+}
+
+function mapRelationship(r: RelationshipRow) {
+  return {
+    id: r.id,
+    sourceId: r.sourceId,
+    targetId: r.targetId,
+    relationship: r.relationship,
+  }
+}
+
+function getDb(): Database.Database {
+  if (!db) throw new Error('Database not initialized')
+  return db
+}
+
+// User input flows into LIKE patterns; without escaping, a query containing
+// %  _ or \ would match wildcards. ESCAPE clause must be paired on the SQL side.
+function escapeLike(s: string): string {
+  return s.replace(/[\\%_]/g, m => '\\' + m)
+}
+
+export async function initDb(customPath?: string): Promise<void> {
+  if (db) return
+
+  db = new Database(customPath ?? defaultDbPath())
+  db.pragma('journal_mode = WAL')
+  db.pragma('foreign_keys = ON')
+
+  // Best-effort load of sqlite-vec. If it fails (extension missing, ABI
+  // mismatch, etc.) the app keeps working — /api/related just falls back to
+  // keyword search.
+  try {
+    // In a packaged Electron build, sqlite-vec's sidecar binary lives in
+    // app.asar.unpacked but require.resolve returns the app.asar path. Native
+    // SQLite's LoadLibrary/dlopen bypasses Node's asar redirect, so we rewrite
+    // the path here. No-op in dev where neither path segment is present.
+    let loadablePath = sqliteVec.getLoadablePath()
+    if (loadablePath.includes(`app.asar${sep}`)) {
+      loadablePath = loadablePath.replace(`app.asar${sep}`, `app.asar.unpacked${sep}`)
+    }
+    db.loadExtension(loadablePath)
+    db.exec(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS memory_vectors USING vec0(
+        memory_id TEXT PRIMARY KEY,
+        embedding FLOAT[${EMBEDDING_DIM}]
+      );
+      CREATE VIRTUAL TABLE IF NOT EXISTS vault_vectors USING vec0(
+        file_id TEXT PRIMARY KEY,
+        embedding FLOAT[${EMBEDDING_DIM}]
+      );
+    `)
+    vectorSearchEnabled = true
+    log.info('[db] sqlite-vec loaded; vector search enabled')
+  } catch (err) {
+    vectorSearchEnabled = false
+    log.warn('[db] sqlite-vec unavailable — falling back to keyword search:', err)
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS memories (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT,
+      timestamp INTEGER,
+      updatedAt INTEGER,
+      source TEXT,
+      tags TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS memory_relationships (
+      id TEXT PRIMARY KEY,
+      sourceId TEXT NOT NULL,
+      targetId TEXT NOT NULL,
+      relationship TEXT,
+      FOREIGN KEY(sourceId) REFERENCES memories(id),
+      FOREIGN KEY(targetId) REFERENCES memories(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS fts_memories (
+      rowid INTEGER PRIMARY KEY,
+      title TEXT,
+      content TEXT,
+      memory_id TEXT UNIQUE,
+      FOREIGN KEY(memory_id) REFERENCES memories(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS vault_files (
+      id TEXT PRIMARY KEY,
+      filepath TEXT UNIQUE NOT NULL,
+      filename TEXT NOT NULL,
+      extension TEXT NOT NULL,
+      content TEXT,
+      size INTEGER DEFAULT 0,
+      last_modified INTEGER DEFAULT 0,
+      indexed_at INTEGER DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
+  `)
+
+  // Record the schema version if absent. Future versions add migrations here
+  // that compare the stored version against SCHEMA_VERSION and run upward.
+  const row = db.prepare('SELECT version FROM schema_version').get() as { version: number } | undefined
+  if (!row) {
+    db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(SCHEMA_VERSION)
+  }
+
+  // Reap orphaned vectors. Hot-reload, manual DB edits, and prior bugs can
+  // leave embedding rows whose parent memory or vault file no longer exists.
+  // Without this, /api/admin/embed-status and the Settings status panel show
+  // counts higher than the actual memory count.
+  if (vectorSearchEnabled) {
+    try {
+      db.exec(`
+        DELETE FROM memory_vectors WHERE memory_id NOT IN (SELECT id FROM memories);
+        DELETE FROM vault_vectors  WHERE file_id   NOT IN (SELECT id FROM vault_files);
+      `)
+    } catch (err) {
+      log.warn('[db] orphan vector cleanup failed:', err)
+    }
+  }
+}
+
+export function hasVectorSearch(): boolean {
+  return vectorSearchEnabled
+}
+
+// Test-only: close the singleton and reset state so the next initDb() spawns
+// a fresh DB. Production code never needs this.
+export function __resetDbForTest(): void {
+  if (db) { try { db.close() } catch {} }
+  db = null
+  vectorSearchEnabled = false
+}
+
+export function createMemory(id: string, title: string, content: string, source: string, tags: string[] = []) {
+  const d = getDb()
+  const now = Date.now()
+  const tagsStr = JSON.stringify(tags)
+
+  d.prepare(
+    'INSERT OR REPLACE INTO memories (id, title, content, timestamp, updatedAt, source, tags) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, title, content, now, now, source, tagsStr)
+
+  d.prepare(
+    'INSERT OR REPLACE INTO fts_memories (memory_id, title, content) VALUES (?, ?, ?)'
+  ).run(id, title, content)
+
+  return { id, title, content, timestamp: now, updatedAt: now, source, tags }
+}
+
+export function getMemory(id: string) {
+  const row = getDb().prepare('SELECT * FROM memories WHERE id = ?').get(id) as MemoryRow | undefined
+  return row ? mapMemory(row) : null
+}
+
+export function getAllMemories() {
+  const rows = getDb().prepare('SELECT * FROM memories ORDER BY updatedAt DESC').all() as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+export function updateMemory(id: string, title: string, content: string, tags: string[] = []) {
+  const d = getDb()
+  const now = Date.now()
+  const tagsStr = JSON.stringify(tags)
+
+  d.prepare(
+    'UPDATE memories SET title = ?, content = ?, updatedAt = ?, tags = ? WHERE id = ?'
+  ).run(title, content, now, tagsStr, id)
+
+  d.prepare(
+    'UPDATE fts_memories SET title = ?, content = ? WHERE memory_id = ?'
+  ).run(title, content, id)
+
+  return { id, title, content, updatedAt: now, tags }
+}
+
+export function deleteMemory(id: string) {
+  const d = getDb()
+  // FK is enforced now; delete dependent rows before the memory itself.
+  d.prepare('DELETE FROM memory_relationships WHERE sourceId = ? OR targetId = ?').run(id, id)
+  d.prepare('DELETE FROM fts_memories WHERE memory_id = ?').run(id)
+  if (vectorSearchEnabled) {
+    try { d.prepare('DELETE FROM memory_vectors WHERE memory_id = ?').run(id) } catch (_) {}
+  }
+  d.prepare('DELETE FROM memories WHERE id = ?').run(id)
+  return { success: true }
+}
+
+export function searchMemories(query: string, source?: string, tags?: string[]) {
+  const escaped = escapeLike(query)
+  let sql = `
+    SELECT * FROM memories
+    WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')
+  `
+  const params: unknown[] = [`%${escaped}%`, `%${escaped}%`]
+
+  if (source) {
+    sql += ' AND source = ?'
+    params.push(source)
+  }
+
+  if (tags && tags.length) {
+    for (const t of tags) {
+      // Tags are stored as JSON string; the surrounding quotes are literal so
+      // they don't need LIKE-escaping, but the tag itself does.
+      sql += ' AND tags LIKE ? ESCAPE \'\\\''
+      params.push(`%"${escapeLike(t)}"%`)
+    }
+  }
+
+  sql += ' ORDER BY updatedAt DESC LIMIT 50'
+
+  const rows = getDb().prepare(sql).all(...params) as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+export function createRelationship(sourceId: string, targetId: string, relationship: string) {
+  const id = `${sourceId}-${targetId}`
+  getDb().prepare(
+    'INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship) VALUES (?, ?, ?, ?)'
+  ).run(id, sourceId, targetId, relationship)
+  return { id, sourceId, targetId, relationship }
+}
+
+export function getRelatedMemories(id: string) {
+  const rows = getDb().prepare(`
+    SELECT DISTINCT m.* FROM memories m
+    JOIN memory_relationships mr ON (mr.targetId = m.id AND mr.sourceId = ?)
+                                 OR (mr.sourceId = m.id AND mr.targetId = ?)
+    LIMIT 10
+  `).all(id, id) as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+export function getMemoriesByTag(tag: string) {
+  const rows = getDb().prepare(
+    'SELECT * FROM memories WHERE tags LIKE ? ORDER BY updatedAt DESC'
+  ).all(`%"${tag}"%`) as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+export function getStats() {
+  const d = getDb()
+  const total = (d.prepare('SELECT COUNT(*) as total FROM memories').get() as { total: number }).total
+  const rows = d.prepare('SELECT source, COUNT(*) as count FROM memories GROUP BY source').all() as Array<{ source: string; count: number }>
+  const bySource: Record<string, number> = {}
+  rows.forEach(r => { bySource[r.source] = r.count })
+  return { total, bySource }
+}
+
+export function getAllRelationships() {
+  const rows = getDb().prepare('SELECT * FROM memory_relationships').all() as RelationshipRow[]
+  return rows.map(mapRelationship)
+}
+
+export function getRelationshipsForMemory(memoryId: string) {
+  const rows = getDb().prepare(
+    'SELECT * FROM memory_relationships WHERE sourceId = ? OR targetId = ?'
+  ).all(memoryId, memoryId) as RelationshipRow[]
+  return rows.map(mapRelationship)
+}
+
+export function deleteRelationship(id: string) {
+  getDb().prepare('DELETE FROM memory_relationships WHERE id = ?').run(id)
+  return { success: true }
+}
+
+// ── Vector search (sqlite-vec, optional) ─────────────────────────────────────
+
+export function storeEmbedding(memoryId: string, vector: number[]): void {
+  if (!vectorSearchEnabled) return
+  if (vector.length !== EMBEDDING_DIM) {
+    log.warn(`[db] embedding dim mismatch: got ${vector.length}, want ${EMBEDDING_DIM}`)
+    return
+  }
+  const d = getDb()
+  // sqlite-vec's vec0 virtual table doesn't honor INSERT OR REPLACE — the
+  // conflict resolution path throws "UNIQUE constraint failed". Emulate
+  // upsert manually with DELETE then INSERT. Wrapped in a transaction so the
+  // row is never observably missing.
+  const buf = Buffer.from(new Float32Array(vector).buffer)
+  const upsert = d.transaction((id: string, b: Buffer) => {
+    d.prepare('DELETE FROM memory_vectors WHERE memory_id = ?').run(id)
+    d.prepare('INSERT INTO memory_vectors (memory_id, embedding) VALUES (?, ?)').run(id, b)
+  })
+  upsert(memoryId, buf)
+}
+
+export function vectorSearch(queryVector: number[], limit = 10): Array<{ memory_id: string; distance: number }> {
+  if (!vectorSearchEnabled) return []
+  if (queryVector.length !== EMBEDDING_DIM) return []
+  const d = getDb()
+  const buf = Buffer.from(new Float32Array(queryVector).buffer)
+  // vec0 KNN: `MATCH` triggers similarity search; ORDER BY distance + LIMIT k.
+  const rows = d.prepare(`
+    SELECT memory_id, distance
+    FROM memory_vectors
+    WHERE embedding MATCH ?
+    ORDER BY distance
+    LIMIT ?
+  `).all(buf, limit) as Array<{ memory_id: string; distance: number }>
+  return rows
+}
+
+export function getEmbeddedMemoryIds(): Set<string> {
+  if (!vectorSearchEnabled) return new Set()
+  const rows = getDb().prepare('SELECT memory_id FROM memory_vectors').all() as Array<{ memory_id: string }>
+  return new Set(rows.map(r => r.memory_id))
+}
+
+export function countEmbeddings(): number {
+  if (!vectorSearchEnabled) return 0
+  const row = getDb().prepare('SELECT COUNT(*) AS n FROM memory_vectors').get() as { n: number }
+  return row.n
+}
+
+// ── Vault files ───────────────────────────────────────────────────────────────
+
+type VaultFileRow = {
+  id: string
+  filepath: string
+  filename: string
+  extension: string
+  content: string | null
+  size: number
+  last_modified: number
+  indexed_at: number
+}
+
+function mapVaultFile(r: VaultFileRow) {
+  return {
+    id: r.id,
+    filepath: r.filepath,
+    filename: r.filename,
+    extension: r.extension,
+    content: r.content ?? '',
+    size: r.size,
+    lastModified: r.last_modified,
+    indexedAt: r.indexed_at,
+  }
+}
+
+export function upsertVaultFile(data: {
+  filepath: string
+  filename: string
+  extension: string
+  content: string | null
+  size: number
+  lastModified: number
+}): void {
+  const d = getDb()
+  const existing = d.prepare('SELECT id FROM vault_files WHERE filepath = ?').get(data.filepath) as { id: string } | undefined
+  const id = existing?.id ?? randomUUID()
+  const now = Date.now()
+  d.prepare(
+    'INSERT OR REPLACE INTO vault_files (id, filepath, filename, extension, content, size, last_modified, indexed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, data.filepath, data.filename, data.extension, data.content ?? null, data.size, data.lastModified, now)
+}
+
+export function getVaultFileByPath(filepath: string): ReturnType<typeof mapVaultFile> | null {
+  const row = getDb().prepare('SELECT * FROM vault_files WHERE filepath = ?').get(filepath) as VaultFileRow | undefined
+  return row ? mapVaultFile(row) : null
+}
+
+export function getVaultFileById(id: string): ReturnType<typeof mapVaultFile> | null {
+  const row = getDb().prepare('SELECT * FROM vault_files WHERE id = ?').get(id) as VaultFileRow | undefined
+  return row ? mapVaultFile(row) : null
+}
+
+export function getAllVaultFiles(): ReturnType<typeof mapVaultFile>[] {
+  const rows = getDb().prepare('SELECT * FROM vault_files ORDER BY last_modified DESC').all() as VaultFileRow[]
+  return rows.map(mapVaultFile)
+}
+
+export function deleteVaultFileByPath(filepath: string): void {
+  const d = getDb()
+  const row = d.prepare('SELECT id FROM vault_files WHERE filepath = ?').get(filepath) as { id: string } | undefined
+  if (!row) return
+  if (vectorSearchEnabled) {
+    try { d.prepare('DELETE FROM vault_vectors WHERE file_id = ?').run(row.id) } catch (_) {}
+  }
+  d.prepare('DELETE FROM vault_files WHERE filepath = ?').run(filepath)
+}
+
+export function deleteVaultFileById(id: string): void {
+  const d = getDb()
+  if (vectorSearchEnabled) {
+    try { d.prepare('DELETE FROM vault_vectors WHERE file_id = ?').run(id) } catch (_) {}
+  }
+  d.prepare('DELETE FROM vault_files WHERE id = ?').run(id)
+}
+
+export function searchVaultFiles(query: string): ReturnType<typeof mapVaultFile>[] {
+  const escaped = escapeLike(query)
+  const rows = getDb().prepare(
+    "SELECT * FROM vault_files WHERE filename LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\' ORDER BY last_modified DESC LIMIT 50"
+  ).all(`%${escaped}%`, `%${escaped}%`) as VaultFileRow[]
+  return rows.map(mapVaultFile)
+}
+
+export function storeVaultEmbedding(fileId: string, vector: number[]): void {
+  if (!vectorSearchEnabled) return
+  if (vector.length !== EMBEDDING_DIM) return
+  const d = getDb()
+  // Same vec0 limitation as storeEmbedding above — DELETE+INSERT instead of
+  // INSERT OR REPLACE.
+  const buf = Buffer.from(new Float32Array(vector).buffer)
+  const upsert = d.transaction((id: string, b: Buffer) => {
+    d.prepare('DELETE FROM vault_vectors WHERE file_id = ?').run(id)
+    d.prepare('INSERT INTO vault_vectors (file_id, embedding) VALUES (?, ?)').run(id, b)
+  })
+  upsert(fileId, buf)
+}
+
+export function vectorSearchVaultFiles(queryVector: number[], limit = 10): Array<{ file_id: string; distance: number }> {
+  if (!vectorSearchEnabled) return []
+  if (queryVector.length !== EMBEDDING_DIM) return []
+  const d = getDb()
+  const buf = Buffer.from(new Float32Array(queryVector).buffer)
+  const rows = d.prepare(
+    'SELECT file_id, distance FROM vault_vectors WHERE embedding MATCH ? ORDER BY distance LIMIT ?'
+  ).all(buf, limit) as Array<{ file_id: string; distance: number }>
+  return rows
+}
+
+export function getEmbeddedVaultFileIds(): Set<string> {
+  if (!vectorSearchEnabled) return new Set()
+  const rows = getDb().prepare('SELECT file_id FROM vault_vectors').all() as Array<{ file_id: string }>
+  return new Set(rows.map(r => r.file_id))
+}

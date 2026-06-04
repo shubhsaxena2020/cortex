@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cortex</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Header: app mark + settings gear -->
+  <header class="header">
+    <div class="brand">
+      <span class="mark">◆</span>
+      <span class="name">Cortex</span>
+    </div>
+    <button id="settings-toggle" class="icon-btn" title="Pair extension">⚙</button>
+  </header>
+
+  <!-- Save This Chat button -->
+  <div id="save-chat-wrap" class="save-chat-wrap" hidden>
+    <button id="save-chat-btn" class="save-chat-btn">
+      <span id="save-chat-icon">💾</span>
+      <span id="save-chat-label">Save This Chat</span>
+    </button>
+  </div>
+
+  <!-- Status strip: connection state from background.js -->
+  <div id="status" class="status" hidden></div>
+
+  <!-- Disconnect button (shown when already paired) -->
+  <div id="disconnect-btn" class="disconnect-wrap" hidden>
+    <button class="disconnect-link">Disconnect</button>
+  </div>
+
+  <!-- Settings panel (hidden until gear clicked) -->
+  <section id="settings-panel" class="panel" hidden>
+    <button id="connect-btn" class="primary-btn">Connect to App</button>
+    <p id="connect-hint" class="hint">In the app: <strong>Settings → Pair Extension</strong></p>
+
+    <details class="advanced">
+      <summary>Paste token manually</summary>
+      <label class="field">
+        <span class="field-label">Token</span>
+        <input id="token-input" type="password" placeholder="paste 64-char token from app Settings" autocomplete="off" />
+      </label>
+      <button id="pair-btn" class="primary-btn secondary">Pair</button>
+    </details>
+  </section>
+
+  <!-- Search input -->
+  <section class="search-wrap">
+    <input id="search-input" type="search" placeholder="Search memories..." autocomplete="off" autofocus />
+  </section>
+
+  <!-- Results list (populated by popup.js) -->
+  <main id="results" class="results"></main>
+
+  <!-- Toast (copied! / errors) -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

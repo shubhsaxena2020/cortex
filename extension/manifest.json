@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Cortex",
+  "version": "0.2.0",
+  "description": "Cortex — a local AI memory layer. Search your memories from Claude, ChatGPT, Gemini, and any other AI tool.",
+  "permissions": [
+    "activeTab",
+    "alarms",
+    "contextMenus",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:*/*",
+    "https://claude.ai/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Cortex",
+    "default_icon": {
+      "128": "icon.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "128": "icon.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}
