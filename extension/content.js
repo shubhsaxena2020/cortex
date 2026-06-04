@@ -256,10 +256,25 @@ function extractChatGPT() {
   const messages = []
   let index = 0
 
+  // P0 #2 filter — drops system + tool messages BEFORE text extraction.
+  // Guarded: if filters.js failed to inject for any reason (manifest typo,
+  // chrome bug, race), fall back to a no-op skipper so capture still
+  // succeeds with whatever existing length-based filtering provided.
+  var filters = (typeof globalThis !== 'undefined' && globalThis.cortexFilters)
+    ? globalThis.cortexFilters
+    : null
+  var shouldSkip = filters && filters.shouldSkipChatGPTElement
+    ? filters.shouldSkipChatGPTElement
+    : function () { return false }
+  var isPlaceholder = filters && filters.isPlaceholderText
+    ? filters.isPlaceholderText
+    : function () { return false }
+
   // Strategy 1: stable data-message-author-role attribute
   const roleEls = document.querySelectorAll('[data-message-author-role]')
   if (roleEls.length > 0) {
     for (const el of roleEls) {
+      if (shouldSkip(el)) continue
       const authorRole = el.getAttribute('data-message-author-role')
       const role = authorRole === 'user' ? 'human' : 'ai'
       // Try to get content from a nested content div
@@ -267,7 +282,9 @@ function extractChatGPT() {
       const content = contentEl
         ? extractTextFromElement(contentEl)
         : extractTextFromElement(el)
-      if (content && content.length >= 10) messages.push({ role, content, index: index++ })
+      if (content && content.length >= 10 && !isPlaceholder(content)) {
+        messages.push({ role, content, index: index++ })
+      }
     }
     if (messages.length > 0) return { messages, source: 'chatgpt', title: document.title }
   }
@@ -277,13 +294,16 @@ function extractChatGPT() {
   for (const article of articles) {
     const roleEl = article.querySelector('[data-message-author-role]')
     if (!roleEl) continue
+    if (shouldSkip(roleEl)) continue
     const authorRole = roleEl.getAttribute('data-message-author-role')
     const role = authorRole === 'user' ? 'human' : 'ai'
     const contentEl = article.querySelector('.markdown, .prose, [class*="markdown"]')
     const content = contentEl
       ? extractTextFromElement(contentEl)
       : extractTextFromElement(article)
-    if (content && content.length >= 10) messages.push({ role, content, index: index++ })
+    if (content && content.length >= 10 && !isPlaceholder(content)) {
+      messages.push({ role, content, index: index++ })
+    }
   }
 
   if (messages.length === 0) {

@@ -354,4 +354,8 @@ Plus three push events (main → renderer): `memories:changed`, `vault:changed`,
 - **`node_modules/`, `dist/`, `release/`, `build/`** — generated. Inspect `electron.vite.config.ts` for build behaviour; inspect `electron-builder.json` for packaging.
 - **`.cortex-shots/`** — frozen Phase-2 UI snapshots; historical, gitignored.
 - **Settings UI internals** — Settings.tsx is 496 lines; functions are documented at the top of the file. Re-grep when working on it.
-- **Test fixtures directory** — none exists yet. v0.2 P0 #2 (smart capture filtering) will add `tests/fixtures/capture-{claude,chatgpt,gemini}.html` per the roadmap.
+- **Test fixtures directory** — none yet at `tests/fixtures/`. v0.2 P0 #2 part 1 added a synthetic minimal fixture inline in `extension/filters.test.js`. When you capture a real ChatGPT/Claude/Gemini conversation that exhibits noise, extract its outerHTML into `tests/fixtures/capture-{provider}.html` and import from the existing test file — the harness is identical.
+
+### Updates since generation
+
+- `extension/filters.js` + `extension/filters.test.js` added by P0 #2 (Smart capture filtering). Tests count: 179 → 198. jsdom added as dev dep. vitest now includes `extension/**/*.test.{js,ts}`.

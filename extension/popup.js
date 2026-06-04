@@ -461,9 +461,13 @@ async function handleSaveChat() {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
     if (!tab || !tab.id) throw new Error('No active tab')
 
+    // P0 #2 — filters.js MUST inject before content.js so the per-provider
+    // capture predicates are available on globalThis when extraction runs.
+    // Same target tab + isolated world; chrome.scripting runs files in
+    // sequence within a single executeScript call.
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ['content.js']
+      files: ['filters.js', 'content.js']
     })
 
     const extracted = results && results[0] && results[0].result
