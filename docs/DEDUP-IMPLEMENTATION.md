@@ -65,6 +65,14 @@ Single-shot script that:
 | Migration adds nullable column | Some legacy rows never get a URL (backfill misses unmatched files) | Backfill is best-effort; unmatched rows simply never dedup with future captures, which is harmless |
 | Pure logic in separate files | Two new tiny modules + two test files | Worth it: url-canon and frontmatter are reusable + the only fully-testable parts of P0 #1 |
 
+## Regression fixed in `1d7d0e1 → <follow-up>`
+
+The first cut shipped a sequencing bug — `CREATE INDEX ... ON memories(url)` lived in the initial `db.exec()` block, which ran before `runMigrations()` could `ALTER TABLE` to add the column. On any existing v1 database the index creation threw `SqliteError: no such column: url` and crashed `initDb()` before the migration could heal it.
+
+**Fix:** moved the index creation **into the migration step** (where the ALTER lives), and changed `initDb` to treat an absent `schema_version` row as version 0 so fresh installs also run the migration chain (since the index now only exists inside `runMigrations`).
+
+**Regression guard:** `src/main/db.migration-ordering.test.ts` reads `db.ts` as text and asserts the architectural rules — initial `db.exec` block must not reference `idx_memories_url`, migration must create it, ALTER must be PRAGMA-guarded, version handling must default to 0 for absent rows. Any future edit that reintroduces the bug fails CI at PR time, not on user startup.
+
 ## Rollback path
 
 If P0 #1 part 1 misbehaves in production:

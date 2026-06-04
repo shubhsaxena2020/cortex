@@ -114,7 +114,12 @@ export async function initDb(customPath?: string): Promise<void> {
       tags TEXT,
       url TEXT
     );
-    CREATE INDEX IF NOT EXISTS idx_memories_url ON memories(url) WHERE url IS NOT NULL;
+    -- NOTE: idx_memories_url is created by runMigrations(), NOT here.
+    -- On an existing v1 database the CREATE TABLE statement above is a no-op
+    -- and the url column is not actually present yet — the migration adds it
+    -- via ALTER TABLE before the index can reference it. The CREATE TABLE
+    -- above only takes effect on fresh installs; runMigrations is the single
+    -- source of truth for everything that depends on the v2+ schema shape.
 
     CREATE TABLE IF NOT EXISTS memory_relationships (
       id TEXT PRIMARY KEY,
@@ -147,13 +152,25 @@ export async function initDb(customPath?: string): Promise<void> {
     CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
   `)
 
-  // Record the schema version if absent. Future versions add migrations here
-  // that compare the stored version against SCHEMA_VERSION and run upward.
+  // Schema-version handling. Two cases:
+  //
+  //   (a) Fresh install — no row in schema_version. Treat as "from version 0"
+  //       and run every migration step. The CREATE TABLE statements above
+  //       gave us the right columns for fresh installs, but objects that
+  //       depend on the new columns (indexes, etc.) still need to be created
+  //       by the migration steps — so the migration runs even when there's
+  //       nothing to ALTER.
+  //
+  //   (b) Existing install — row present with the previous version. Run any
+  //       migration steps from that version up to SCHEMA_VERSION.
+  //
+  // The migration runner is idempotent per step (PRAGMA checks before ALTER,
+  // CREATE INDEX IF NOT EXISTS), so running steps that have already
+  // effectively happened on a fresh install is a no-op.
   const row = db.prepare('SELECT version FROM schema_version').get() as { version: number } | undefined
-  if (!row) {
-    db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(SCHEMA_VERSION)
-  } else {
-    runMigrations(db, row.version, SCHEMA_VERSION)
+  const fromVersion = row?.version ?? 0
+  if (fromVersion < SCHEMA_VERSION) {
+    runMigrations(db, fromVersion, SCHEMA_VERSION)
   }
 
   // Reap orphaned vectors. Hot-reload, manual DB edits, and prior bugs can
@@ -175,27 +192,56 @@ export async function initDb(customPath?: string): Promise<void> {
 // ── Migrations ────────────────────────────────────────────────────────────────
 //
 // Each step is idempotent and forward-only. New steps append, never edit
-// existing ones — the contract is "every existing user runs every step from
-// their current version forward exactly once."
+// existing ones — the contract is "every install runs every step from its
+// current version forward exactly once." Fresh installs enter with from=0
+// and run the whole chain; existing installs enter with from=<their stored
+// version> and run only the deltas.
+//
+// Every step MUST be safe to re-run if a previous attempt half-finished:
+// guard column adds with PRAGMA table_info checks, use CREATE INDEX IF NOT
+// EXISTS / CREATE TABLE IF NOT EXISTS, etc. The whole batch runs inside one
+// transaction so any error rolls everything back atomically.
 function runMigrations(d: Database.Database, from: number, to: number): void {
   if (from >= to) return
-  const m = d.transaction(() => {
-    if (from < 2) {
-      // v2: add memories.url for dedup (P0 #1, see docs/DEDUP-IMPLEMENTATION.md).
-      // Columns are added NULLable so existing rows keep working; backfill is a
-      // separate offline pass via scripts/backfill-source-urls.mjs.
-      const cols = d.prepare(`PRAGMA table_info(memories)`).all() as Array<{ name: string }>
-      if (!cols.some(c => c.name === 'url')) {
-        d.exec(`ALTER TABLE memories ADD COLUMN url TEXT`)
+  try {
+    const m = d.transaction(() => {
+      if (from < 2) {
+        // v2: add memories.url + index for dedup-by-URL.
+        // See docs/DEDUP-IMPLEMENTATION.md. Column is NULLable so existing rows
+        // keep working; backfill is a separate offline pass via
+        // scripts/backfill-source-urls.mjs.
+        const cols = d.prepare(`PRAGMA table_info(memories)`).all() as Array<{ name: string }>
+        if (!cols.some(c => c.name === 'url')) {
+          d.exec(`ALTER TABLE memories ADD COLUMN url TEXT`)
+        }
+        // Partial index — URLs are rare on legacy rows; full index would waste
+        // space. Created here (NOT in the initial CREATE TABLE block) because
+        // on existing v1 databases the column doesn't exist yet when the
+        // initial CREATE TABLE statement runs as a no-op.
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_url ON memories(url) WHERE url IS NOT NULL`)
       }
-      // Partial index — URLs are rare on legacy rows; full index would waste space.
-      d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_url ON memories(url) WHERE url IS NOT NULL`)
-    }
-    // Future: if (from < 3) { ... }
-    d.prepare(`UPDATE schema_version SET version = ?`).run(to)
-  })
-  m()
-  log.info(`[db] migrated schema ${from} → ${to}`)
+      // Future: if (from < 3) { ... }
+
+      // Bump (or write) the stored version. UPDATE if the row exists; INSERT
+      // otherwise. We can't rely on the caller to handle the fresh-install
+      // INSERT because that would split state ownership across two functions
+      // and risk a half-migrated row.
+      const existing = d.prepare(`SELECT 1 FROM schema_version`).get() as unknown
+      if (existing) {
+        d.prepare(`UPDATE schema_version SET version = ?`).run(to)
+      } else {
+        d.prepare(`INSERT INTO schema_version (version) VALUES (?)`).run(to)
+      }
+    })
+    m()
+    log.info(`[db] migrated schema ${from} → ${to}`)
+  } catch (err) {
+    // Loud failure beats silent corruption. The app will keep crashing on the
+    // next memories operation if the migration didn't land, so make sure the
+    // root cause shows up in the log instead of just the downstream symptom.
+    log.error(`[db] SCHEMA MIGRATION FAILED (from ${from} → ${to}):`, err)
+    throw err
+  }
 }
 
 export function hasVectorSearch(): boolean {
