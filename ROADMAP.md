@@ -1,72 +1,99 @@
 # Cortex Roadmap
 
-> Living document. Phase tags are intent, not contract.
+> Living document. Phase tags are intent, not contract. Reviewed via Claude Council; see commit history for prior versions.
 
-## v0.1.0 — Infrastructure (current ✅)
+## What Cortex is (and what the roadmap is for)
+
+The moat is the **capture pipeline**: a Chrome extension + Electron app that pulls AI conversations out of the walled gardens of Claude / ChatGPT / Gemini and stores them as plain Markdown in a local SQLite-backed knowledge graph. Search, graph view, and embeddings are *how you use* what was captured — they are not the differentiator.
+
+Every phase below earns the right to exist by sharpening or extending that capture-to-retrieval loop. If a feature doesn't, it gets cut.
+
+## v0.1.0 — Infrastructure (current, GitHub Pre-Release `v0.1.0-beta`)
+
+The plumbing. Honestly framed: not the smart product yet.
 
 - [x] Electron 31 + React 18 + TypeScript scaffold (3-process boundary: main / preload / renderer)
 - [x] better-sqlite3 + sqlite-vec storage with FTS5 fallback
-- [x] Ollama `all-minilm` embeddings (384-dim) with silent degradation
+- [x] Ollama `all-minilm` embeddings (384-dim), **optional** — silent degradation to keyword search if absent
 - [x] Chrome MV3 extension + Fastify pairing handshake (`body.app === 'cortex'`)
 - [x] Vault folder + chokidar watch folder
 - [x] D3 knowledge graph
-- [x] Settings UI with AI status, vault, watch folder, pairing
-- [x] 128/128 unit + integration tests
+- [x] Settings UI (AI status, vault, watch folder, pairing) with scroll fix
+- [x] 128/128 unit + integration tests (DB integration suite parked behind ABI mismatch — covered by live-process script)
 - [x] NSIS Windows installer
-- [x] First GitHub Release
+- [x] GitHub Pre-Release
 
-## v0.2.0 — "It feels smart" (next)
+## v0.2.0 — "The capture pipeline is correct, fast, and observable"
 
-Goal: the app stops being a glorified file index and starts earning the word *cortex*.
+Five P0 items. That is the entire scope. Everything previously in v0.2 that isn't on this list moved to v0.3 or later. The council reviewed this list and called it out as the smallest credible MVP that still defends the moat.
 
-### Capture quality
-- [ ] **Conversation deduplication** — same Claude chat scraped twice shouldn't create two memories
-- [ ] **Smart capture filtering** — skip empty / single-message / system-error chats
-- [ ] **Conversation summarization** — one-line + paragraph summary via local Ollama (`llama3.2:3b` or similar)
-- [ ] **Auto-tagging** — extract topical tags from content; user can edit/lock tags
+- [ ] **Conversation deduplication** — same chat captured twice never creates two memories. Without this, the graph becomes a landfill within a week of real LLM usage. (P0 because correctness, not polish.)
+- [ ] **Smart capture filtering** — skip empty / single-message / system-error chats at the content-script layer.
+- [ ] **Graph LOD + viewport culling** — graph stays usable past 8k nodes. Web-worker force simulation is deferred to v0.3 unless culling alone isn't enough.
+- [ ] **<200 ms p95 search latency on a 10k-memory vault** — measured, not guessed. Keyword path first; vector path opportunistic.
+- [ ] **In-app feedback link + opt-in, local-only usage log** — the only realistic research instrument for a solo dev with zero users. User can read, export, and wipe the log from Settings. **Never leaves the machine.** This is how v0.3 priorities get set from real signal, not guesswork.
 
-### Performance
-- [ ] **Graph rendering for 8000+ nodes** — viewport culling, level-of-detail, web worker for force simulation
-- [ ] **Embedding backfill UI** — show progress, allow pause/resume
-- [ ] **First-search latency** — < 200ms p95 on a 10k-memory vault
+### v0.2 kill criteria
 
-### Test infrastructure
-- [ ] **`db.test.disabled.ts` → vitest-electron** — proper Electron-Node test runner so the disabled DB integration tests run in CI
+- Ships by **end of Q3 2026** *or* the phase is reframed.
+- If <10 stars / 0 unsolicited installs by 30 days post-Pre-Release, v0.3 work stops and we do a positioning rewrite (README + landing) before more features.
+- If dedup + filtering land but the rest doesn't, ship as v0.2.0 anyway and call v0.3 the perf+search release. **Don't slip the release to ship the bullet.**
 
-### Distribution
-- [ ] **macOS DMG** signed + notarized
-- [ ] **Linux AppImage**
-- [ ] **Chrome Web Store** listing for the extension
-- [ ] **Auto-update** via electron-updater + GitHub releases
+## v0.3.0 — "It feels smart"
 
-## v0.3.0 — Polish
+The features the name "Cortex" implies. Earns the right to exist after v0.2 proves the pipeline is correct.
 
-- [ ] Multi-model Ollama picker (let user swap embedding + summarization models)
-- [ ] Export graph as PNG / SVG / PDF
+- [ ] **Bidirectional `[[wiki]]` links + backlinks panel** — promoted from v0.4. Every prior-art comparator (Obsidian, Roam, Logseq) has these; their absence reads as incomplete, not minimalist.
+- [ ] Conversation summarization via local Ollama (`llama3.2:3b` or equivalent) — one-line + paragraph summaries
+- [ ] Auto-tagging from content; user can edit / lock tags
+- [ ] Multi-model Ollama picker (swap embedding + summarization models from Settings)
+- [ ] Graph force simulation in a web worker (only if v0.2 culling proved insufficient)
+- [ ] Embedding backfill UI — visible progress, pause/resume
 - [ ] Saved searches / smart folders
+- [ ] `db.test.disabled.ts` → vitest-electron — proper Electron-Node test runner; CI-green DB integration tests
+
+### v0.3 kill criteria
+
+- Ship at most 5 of these 8. The other 3 slip publicly to v0.4 with a one-line "why."
+
+## v0.4.0 — Polish + Distribution (the boring, expensive layer)
+
+Boring because nobody downloads an app for "consistent dark mode." Expensive because code signing + notarization + Web Store enrollment is real money and real lead time.
+
+- [ ] **Distribution prerequisites — actual money, actual time:**
+  - macOS DMG signed + notarized — requires **Apple Developer Program enrollment ($99/yr + ~24-48h provisioning)**
+  - Windows code-signing certificate — **$200-400/yr from a CA**, kills SmartScreen warning
+  - Chrome Web Store listing — **$5 one-time + 3-7 day review**
+- [ ] Linux AppImage
+- [ ] Auto-update via electron-updater (requires the signed builds above)
+- [ ] Export graph as PNG / SVG / PDF
 - [ ] Dark / light theme toggle (currently dark-only)
 - [ ] Keyboard navigation through graph
-- [ ] Settings UI polish pass (a11y audit, focus traps, reduced-motion)
+- [ ] Accessibility pass — focus traps, reduced-motion, ARIA on graph canvas
 
-## v0.4.0 — Connect
+### v0.4 kill criteria
 
-- [ ] Bidirectional links between memories (Markdown `[[wiki]]` style)
-- [ ] Backlinks panel
+- If certs aren't bought by start of phase, distribution items defer indefinitely. Ship unsigned to GitHub Releases as a workable fallback.
+
+## v0.5.0 — Connect (your own machines, not other people's)
+
 - [ ] Daily / weekly digest view
-- [ ] Local web companion (read-only) on the LAN
-- [ ] Optional encrypted sync between two of your own machines (no cloud middleman — Syncthing-style)
+- [ ] Local read-only web companion (open `http://cortex.local` on your LAN-only laptop)
+- [ ] Optional **encrypted P2P sync between your own machines** — Syncthing-style, no cloud middleman, never a server
 
 ## v1.0.0 — Stable
 
-- [ ] Documented public API for plugins (custom capturers, custom extractors)
+- [ ] Documented public **plugin API** — only if v0.3-0.5 produced unsolicited "I'd build X if I could" requests. If nobody asked, this stays out.
 - [ ] Performance benchmark suite checked into CI
-- [ ] Migration story for schema changes
-- [ ] First-class support for non-AI sources (Markdown editors, RSS, email-to-vault)
-- [ ] Comprehensive user docs + screencast
+- [ ] Schema migration story (forward + back-compat)
+- [ ] Non-AI source adapters — Markdown editors (Obsidian vault), RSS, email-to-vault
+- [ ] Comprehensive user docs + a 3-minute screencast
 
 ## Out of scope (explicitly)
 
-- Cloud-hosted vault — Cortex is local-first by design. Optional encrypted P2P sync only.
-- Telemetry / analytics — not now, not ever.
-- Mobile clients — out of scope for at least the first year.
-- LLM hosting — we integrate with Ollama; we do not ship inference.
+- **Cloud-hosted vault.** Local-first by design. Optional encrypted P2P sync between *your own* devices only.
+- **Cloud telemetry.** Hard no.
+  - *In scope:* opt-in, local-only, transparent usage logs the user can read and delete. v0.2 P0.
+- **Mobile clients.** Not in the first year.
+- **LLM hosting.** Cortex integrates with Ollama; it does not ship inference.
+- **Closed-source.** Open-source for the lifetime of the project.

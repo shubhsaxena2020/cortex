@@ -159,3 +159,28 @@ npx vitest run src/main/transformers.test.ts   # single file
 ## Tooling
 
 - **Claude Council skill** installed at `~/.claude/skills/council-review/SKILL.md` (cloned from `ngmeyer/council-review`). Run `/council-review "<question>"` (or `--quick` for 3-advisor mode) to bounce Phase-3 decisions / docs off the 5-advisor LLM panel before committing.
+
+## Phase 3 — Release prep (in progress)
+
+### What's done locally
+- Settings page scroll bug fixed (`<main>` now `flex flex-col`; child views with `flex-1 overflow-y-auto` get bounded height).
+- `.gitignore` written; `git init -b main`; identity set to `shubh.saxena2020@gmail.com`; **single initial commit** `1b46ec7 chore: initial Cortex commit`.
+- `RELEASE_NOTES.md`, `ROADMAP.md`, `EXTENSION_SETUP.md` written.
+- Build + tests still green post-Settings-fix: **128/128 passing**, 3 bundles compile.
+- Vault path UI is dynamic — already reflects `cortex_brain` from `%APPDATA%\cortex\vault-config.json`; no UI code change needed.
+
+### Council #1 verdict — release strategy
+**Ship as GitHub Pre-Release (`v0.1.0-beta`), not as standard `v0.1.0`.** Devil's Advocate's "shipping creates the forcing function" rebuttal won — but the framing of `v0.1.0` as a normal release lost on first-impression grounds. Pre-Release gives momentum without the half-baked-product risk.
+
+Required before publishing:
+- **Clean-Windows-VM installer smoke test** (~30 min) — the only universally-flagged hard blocker.
+- README + 1 screenshot/GIF — README already exists and is decent; screenshot is missing.
+- `gh` CLI install on the user's local machine (not present in this shell session).
+
+### Council #2 verdict — roadmap
+**Rewrote `ROADMAP.md` per council.** v0.2 cut from 11 items to 5 P0s; summarization / auto-tagging / multi-platform distribution / Chrome Web Store / auto-update moved to v0.3 or v0.4. Bidirectional links promoted from v0.4 → v0.3 (cheap legibility win). Kill criteria added to every phase. Cert costs ($99 Apple + $200-400 Win + $5 Chrome Store) called out as explicit prerequisites. `Out of scope: telemetry` reframed — cloud telemetry forever no, opt-in local-only usage log added to v0.2 P0 as the only realistic research instrument.
+
+### Blocked on user
+1. `gh` CLI is not installed in this shell. The actual `gh repo create cortex --public --source=. --remote=origin --push` and `gh release create v0.1.0-beta --prerelease ...` commands must be run by the user on their own machine.
+2. Clean-VM installer smoke test must happen before publishing.
+3. Optional: one screenshot or short GIF in the repo before the pre-release goes public.
