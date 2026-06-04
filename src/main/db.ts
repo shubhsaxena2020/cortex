@@ -9,7 +9,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 1   // bump + add migration when schema changes
+const SCHEMA_VERSION = 2   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -23,6 +23,7 @@ type MemoryRow = {
   updatedAt: number
   source: string
   tags: string
+  url: string | null
 }
 
 type RelationshipRow = {
@@ -41,6 +42,7 @@ function mapMemory(r: MemoryRow) {
     updatedAt: r.updatedAt,
     source: r.source,
     tags: JSON.parse(r.tags || '[]') as string[],
+    url: r.url ?? null,
   }
 }
 
@@ -109,8 +111,10 @@ export async function initDb(customPath?: string): Promise<void> {
       timestamp INTEGER,
       updatedAt INTEGER,
       source TEXT,
-      tags TEXT
+      tags TEXT,
+      url TEXT
     );
+    CREATE INDEX IF NOT EXISTS idx_memories_url ON memories(url) WHERE url IS NOT NULL;
 
     CREATE TABLE IF NOT EXISTS memory_relationships (
       id TEXT PRIMARY KEY,
@@ -148,6 +152,8 @@ export async function initDb(customPath?: string): Promise<void> {
   const row = db.prepare('SELECT version FROM schema_version').get() as { version: number } | undefined
   if (!row) {
     db.prepare('INSERT INTO schema_version (version) VALUES (?)').run(SCHEMA_VERSION)
+  } else {
+    runMigrations(db, row.version, SCHEMA_VERSION)
   }
 
   // Reap orphaned vectors. Hot-reload, manual DB edits, and prior bugs can
@@ -166,6 +172,32 @@ export async function initDb(customPath?: string): Promise<void> {
   }
 }
 
+// ── Migrations ────────────────────────────────────────────────────────────────
+//
+// Each step is idempotent and forward-only. New steps append, never edit
+// existing ones — the contract is "every existing user runs every step from
+// their current version forward exactly once."
+function runMigrations(d: Database.Database, from: number, to: number): void {
+  if (from >= to) return
+  const m = d.transaction(() => {
+    if (from < 2) {
+      // v2: add memories.url for dedup (P0 #1, see docs/DEDUP-IMPLEMENTATION.md).
+      // Columns are added NULLable so existing rows keep working; backfill is a
+      // separate offline pass via scripts/backfill-source-urls.mjs.
+      const cols = d.prepare(`PRAGMA table_info(memories)`).all() as Array<{ name: string }>
+      if (!cols.some(c => c.name === 'url')) {
+        d.exec(`ALTER TABLE memories ADD COLUMN url TEXT`)
+      }
+      // Partial index — URLs are rare on legacy rows; full index would waste space.
+      d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_url ON memories(url) WHERE url IS NOT NULL`)
+    }
+    // Future: if (from < 3) { ... }
+    d.prepare(`UPDATE schema_version SET version = ?`).run(to)
+  })
+  m()
+  log.info(`[db] migrated schema ${from} → ${to}`)
+}
+
 export function hasVectorSearch(): boolean {
   return vectorSearchEnabled
 }
@@ -178,20 +210,97 @@ export function __resetDbForTest(): void {
   vectorSearchEnabled = false
 }
 
-export function createMemory(id: string, title: string, content: string, source: string, tags: string[] = []) {
+export function createMemory(id: string, title: string, content: string, source: string, tags: string[] = [], url: string | null = null) {
   const d = getDb()
   const now = Date.now()
   const tagsStr = JSON.stringify(tags)
 
   d.prepare(
-    'INSERT OR REPLACE INTO memories (id, title, content, timestamp, updatedAt, source, tags) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(id, title, content, now, now, source, tagsStr)
+    'INSERT OR REPLACE INTO memories (id, title, content, timestamp, updatedAt, source, tags, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, title, content, now, now, source, tagsStr, url)
 
   d.prepare(
     'INSERT OR REPLACE INTO fts_memories (memory_id, title, content) VALUES (?, ?, ?)'
   ).run(id, title, content)
 
-  return { id, title, content, timestamp: now, updatedAt: now, source, tags }
+  return { id, title, content, timestamp: now, updatedAt: now, source, tags, url }
+}
+
+/**
+ * Find an existing memory by its canonical URL. Returns null if none exists
+ * or if `canonicalUrl` is null. Used by the capture-pipeline dedup path —
+ * callers compute the canonical URL via `src/main/url-canon.ts`.
+ */
+export function findMemoryByCanonicalUrl(canonicalUrl: string | null): ReturnType<typeof mapMemory> | null {
+  if (!canonicalUrl) return null
+  const row = getDb().prepare('SELECT * FROM memories WHERE url = ?').get(canonicalUrl) as MemoryRow | undefined
+  return row ? mapMemory(row) : null
+}
+
+/**
+ * UPDATE the URL of an existing memory. Used by the backfill script for
+ * legacy rows captured before v0.2 (when URLs weren't persisted to the DB).
+ * No-op if the row doesn't exist; idempotent if called twice with the same URL.
+ */
+export function setMemoryUrl(id: string, url: string | null): void {
+  getDb().prepare('UPDATE memories SET url = ? WHERE id = ?').run(url, id)
+}
+
+/**
+ * Capture-pipeline dedup: if a memory with the same canonical URL exists,
+ * UPDATE it in place (newer content wins, updatedAt bumps, original id is
+ * preserved so graph nodes stay stable). Otherwise INSERT a new row.
+ *
+ * Returns the resulting memory plus an action flag for telemetry / the API
+ * response so callers can distinguish create from update.
+ */
+export function upsertMemoryByUrl(
+  newId: string,
+  title: string,
+  content: string,
+  source: string,
+  tags: string[],
+  canonicalUrl: string | null,
+): { memory: ReturnType<typeof mapMemory>; action: 'created' | 'updated' } {
+  const d = getDb()
+
+  // No URL → no dedup possible. Fall through to plain create.
+  if (!canonicalUrl) {
+    const row = createMemory(newId, title, content, source, tags, null)
+    return { memory: row, action: 'created' }
+  }
+
+  const existing = findMemoryByCanonicalUrl(canonicalUrl)
+  if (!existing) {
+    const row = createMemory(newId, title, content, source, tags, canonicalUrl)
+    return { memory: row, action: 'created' }
+  }
+
+  // Update in place. Preserve original id + timestamp; bump updatedAt; keep
+  // url unchanged (it's the key we matched on). Title and tags can change
+  // between captures — the newer values win.
+  const now = Date.now()
+  const tagsStr = JSON.stringify(tags)
+  d.prepare(
+    'UPDATE memories SET title = ?, content = ?, updatedAt = ?, source = ?, tags = ? WHERE id = ?'
+  ).run(title, content, now, source, tagsStr, existing.id)
+  d.prepare(
+    'UPDATE fts_memories SET title = ?, content = ? WHERE memory_id = ?'
+  ).run(title, content, existing.id)
+
+  return {
+    memory: {
+      id: existing.id,
+      title,
+      content,
+      timestamp: existing.timestamp,
+      updatedAt: now,
+      source,
+      tags,
+      url: canonicalUrl,
+    },
+    action: 'updated',
+  }
 }
 
 export function getMemory(id: string) {

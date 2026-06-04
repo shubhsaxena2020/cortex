@@ -5,6 +5,7 @@ import { getToken } from './extension-config'
 import * as db from './db'
 import { toMemory, makeHighlight } from './transformers'
 import { getEmbedding } from './embeddings'
+import { canonicalUrl } from './url-canon'
 
 const APP_NAME = 'cortex'
 const API_VERSION = 1
@@ -213,12 +214,18 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
         ? body.tags.filter((t): t is string => typeof t === 'string')
         : []
       const url = typeof body.url === 'string' ? body.url : undefined
-      const id = randomUUID()
-      const row = db.createMemory(id, title, content, source, tags)
+
+      // P0 #1 dedup: canonicalise the URL (if any) and route through the
+      // upsert path. Two captures of the same Claude/ChatGPT/Gemini
+      // conversation produce identical canonical URLs and merge into one row.
+      const canonical = canonicalUrl(url)
+      const newId = randomUUID()
+      const { memory: row, action } = db.upsertMemoryByUrl(newId, title, content, source, tags, canonical)
       const memory = toMemory(row)
+
       try { onMemoryCreated?.(memory, url) } catch (e) { req.log.error(e, 'onMemoryCreated callback failed') }
-      reply.code(201)
-      return { memory }
+      reply.code(action === 'created' ? 201 : 200)
+      return { memory, action }
     }
   )
 

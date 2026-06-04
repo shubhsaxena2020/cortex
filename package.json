@@ -12,7 +12,8 @@
     "release": "npm run build && electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "backfill-source-urls": "node scripts/backfill-source-urls.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.0",

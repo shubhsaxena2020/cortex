@@ -8,6 +8,7 @@ export type DbMemory = {
   updatedAt: number
   source: string
   tags: string[]
+  url?: string | null
 }
 
 export type DbRelationship = {
@@ -25,7 +26,8 @@ export function toMemory(row: DbMemory) {
     source: (row.source || 'manual') as MemorySource,
     created_at: new Date(row.timestamp || Date.now()).toISOString(),
     updated_at: new Date(row.updatedAt || Date.now()).toISOString(),
-    tags: row.tags || []
+    tags: row.tags || [],
+    url: row.url ?? null
   }
 }
 

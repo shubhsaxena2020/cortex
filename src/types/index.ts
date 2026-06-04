@@ -50,6 +50,8 @@ export interface Memory {
   created_at: string
   updated_at: string
   tags: string[]
+  /** Canonical source URL — present for chats captured via the extension; null otherwise. Used for dedup (P0 #1). */
+  url: string | null
 }
 
 export interface Relationship {

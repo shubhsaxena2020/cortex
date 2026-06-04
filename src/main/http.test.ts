@@ -31,11 +31,36 @@ vi.mock('./db', () => ({
   hasVectorSearch: () => vectorSearchEnabled,
   getMemory: (id: string) => store.get(id) ?? null,
   getAllMemories: () => [...store.values()].sort((a, b) => b.updatedAt - a.updatedAt),
-  createMemory: (id: string, title: string, content: string, source: string, tags: string[] = []) => {
+  createMemory: (id: string, title: string, content: string, source: string, tags: string[] = [], url: string | null = null) => {
     const now = Date.now()
-    const row = { id, title, content, source, tags, timestamp: now, updatedAt: now }
+    const row = { id, title, content, source, tags, timestamp: now, updatedAt: now, url }
     store.set(id, row)
     return row
+  },
+  findMemoryByCanonicalUrl: (canon: string | null) => {
+    if (!canon) return null
+    for (const r of store.values()) if (r.url === canon) return r
+    return null
+  },
+  setMemoryUrl: (id: string, url: string | null) => {
+    const r = store.get(id); if (r) { r.url = url; store.set(id, r) }
+  },
+  upsertMemoryByUrl: (
+    newId: string, title: string, content: string, source: string, tags: string[], canon: string | null,
+  ) => {
+    const now = Date.now()
+    if (canon) {
+      for (const r of store.values()) {
+        if (r.url === canon) {
+          const updated = { ...r, title, content, source, tags, updatedAt: now }
+          store.set(r.id, updated)
+          return { memory: updated, action: 'updated' as const }
+        }
+      }
+    }
+    const row = { id: newId, title, content, source, tags, timestamp: now, updatedAt: now, url: canon }
+    store.set(newId, row)
+    return { memory: row, action: 'created' as const }
   },
   deleteMemory: (id: string) => {
     store.delete(id)
