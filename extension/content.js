@@ -18,14 +18,90 @@ function extractChat() {
   return { messages: [], source: 'manual', title: document.title }
 }
 
+// Walk upward from an action-bar button (Copy / Edit / Retry) to the
+// enclosing AI message container. Strategy: keep climbing while the parent
+// is still scoped to a SINGLE turn (i.e., contains exactly one action-bar)
+// and stop one level below the first ancestor that shares the action-bar
+// with another turn. This is robust to Claude.ai's frequent DOM shuffles
+// because we never depend on a class name or data-testid for the AI
+// container itself — only on the action button, which is functionally
+// stable (users need it to copy answers).
+function findAiContainerFromActionBar(buttonEl) {
+  if (!buttonEl) return null
+  // Hard cap so a missing scope-boundary never walks to <body>.
+  var MAX_WALK = 10
+  var node = buttonEl.parentElement
+  var lastSingleTurnNode = null
+  for (var i = 0; i < MAX_WALK && node && node !== document.body; i++) {
+    var copyButtonsInside = node.querySelectorAll('[data-testid="action-bar-copy"]').length
+    if (copyButtonsInside > 1) {
+      // We've walked into a wrapper that contains other turns. The last
+      // single-turn ancestor is our message container.
+      return lastSingleTurnNode || node
+    }
+    lastSingleTurnNode = node
+    node = node.parentElement
+  }
+  return lastSingleTurnNode
+}
+
 function extractClaude() {
   const messages = []
   let index = 0
 
   console.log('[cortex] Starting extraction, user-message count:',
-    document.querySelectorAll('[data-testid="user-message"]').length)
+    document.querySelectorAll('[data-testid="user-message"]').length,
+    'action-bar-copy count:',
+    document.querySelectorAll('[data-testid="action-bar-copy"]').length)
 
-  // Strategy 1: user-message / assistant-message data-testid (current Claude.ai DOM)
+  // Strategy 0 (preferred, 2026-06+ DOM): action-bar buttons as anchors.
+  // [data-testid="assistant-message"] no longer exists in Claude.ai's
+  // current DOM, but Copy/Edit/Retry buttons on every AI response do.
+  // Walk up from each Copy button to find the response container.
+  var userMsgsForS0 = document.querySelectorAll('[data-testid="user-message"]')
+  var copyButtons = document.querySelectorAll('[data-testid="action-bar-copy"]')
+  if (userMsgsForS0.length > 0 && copyButtons.length > 0) {
+    var combined = []
+    for (var u0 = 0; u0 < userMsgsForS0.length; u0++) {
+      combined.push({ el: userMsgsForS0[u0], role: 'human' })
+    }
+    var aiContainers = []
+    var seen = new Set()
+    for (var b = 0; b < copyButtons.length; b++) {
+      var container = findAiContainerFromActionBar(copyButtons[b])
+      if (container && !seen.has(container)) {
+        seen.add(container)
+        aiContainers.push(container)
+      }
+    }
+    for (var ai = 0; ai < aiContainers.length; ai++) {
+      combined.push({ el: aiContainers[ai], role: 'ai' })
+    }
+    combined.sort(function(x, y) {
+      var pos = x.el.compareDocumentPosition(y.el)
+      return pos & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1
+    })
+    for (var c0 = 0; c0 < combined.length; c0++) {
+      var content0 = extractTextFromElement(combined[c0].el)
+      if (content0 && content0.length >= 10) {
+        messages.push({ role: combined[c0].role, content: content0, index: index++ })
+      }
+    }
+    // Only return if we got at least one ai message — otherwise fall through
+    // to legacy strategies which may match a future DOM regression.
+    var hasAi = messages.some(function(m) { return m.role === 'ai' })
+    if (messages.length > 0 && hasAi) {
+      console.log('[cortex] Strategy 0 succeeded:', messages.length, 'messages',
+        '(', messages.filter(function(m){return m.role==='human'}).length, 'human,',
+        messages.filter(function(m){return m.role==='ai'}).length, 'ai )')
+      return { messages: messages, source: 'claude', title: document.title }
+    }
+    // Reset and fall through if Strategy 0 produced no AI messages.
+    messages.length = 0
+    index = 0
+  }
+
+  // Strategy 1: user-message / assistant-message data-testid (legacy Claude.ai DOM)
   const userMsgs = document.querySelectorAll('[data-testid="user-message"]')
   if (userMsgs.length > 0) {
     // Log what follows the first user-message for debugging
