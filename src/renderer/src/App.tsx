@@ -194,6 +194,38 @@ export default function App(): React.ReactElement {
 }
 
 function StatusBar({ status, onOpenSettings }: { status: SystemStatus | null; onOpenSettings: () => void }): React.ReactElement {
+  // Indexing takes priority over the semantic-search status text — it's the
+  // only live activity worth surfacing in a single status row.
+  const indexProgress = useStore(s => s.indexProgress)
+  const isIndexing = indexProgress !== null && indexProgress.total > 0
+
+  if (isIndexing) {
+    const { current, total } = indexProgress
+    const pct = Math.min(100, Math.round((current / total) * 100))
+    return (
+      <button
+        onClick={onOpenSettings}
+        title="Indexing watch folder — click for Settings"
+        className="flex items-center gap-3 h-6 px-4 text-[11px] bg-[#0a0a0a] border-t border-[#242424] flex-shrink-0 hover:bg-[#111] transition-colors text-left"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[#6B9FD4] animate-pulse" />
+        <span className="text-[#888]">Indexing… {current}/{total}</span>
+        <div className="flex-1 max-w-[240px] h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#6B9FD4] transition-[width] duration-200 ease-out"
+            style={{ width: `${pct}%` }}
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Indexing ${current} of ${total} files`}
+          />
+        </div>
+        <span className="text-[#444] tabular-nums">{pct}%</span>
+      </button>
+    )
+  }
+
   const semanticOn = !!status && status.vectorSearch.enabled && status.ollama.reachable && status.ollama.modelPulled
   const label = !status ? 'Checking…'
     : semanticOn ? `Semantic search: on (${status.vectorSearch.embeddedCount}/${status.vectorSearch.totalMemories} embedded)`

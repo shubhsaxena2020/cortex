@@ -174,6 +174,7 @@ export default function Settings(): React.ReactElement {
                     <EyeOff size={11} /> Remove
                   </button>
                 </div>
+                <IndexProgressInline />
               </div>
             ) : (
               <div className="rounded-lg border border-dashed border-[#333] bg-[#111] p-6 text-center">
@@ -434,6 +435,37 @@ function StatusRow({
           {actionLabel}
         </a>
       )}
+    </div>
+  )
+}
+
+function IndexProgressInline(): React.ReactElement | null {
+  const indexProgress = useStore(s => s.indexProgress)
+  if (!indexProgress || indexProgress.total <= 0) return null
+
+  const { current, total } = indexProgress
+  const pct = Math.min(100, Math.round((current / total) * 100))
+
+  return (
+    <div className="flex items-center gap-3 p-3 bg-[#0e1620] border border-[#1f3553] rounded-lg">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#6B9FD4] animate-pulse flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-[#a5b4fc]">Indexing files</span>
+          <span className="text-[11px] text-[#666] tabular-nums">{current} / {total} · {pct}%</span>
+        </div>
+        <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#6B9FD4] transition-[width] duration-200 ease-out"
+            style={{ width: `${pct}%` }}
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Indexing ${current} of ${total} files`}
+          />
+        </div>
+      </div>
     </div>
   )
 }
