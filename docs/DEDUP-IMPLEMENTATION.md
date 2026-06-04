@@ -86,16 +86,77 @@ UPDATE schema_version SET version = 1;
 
 Then revert the commit. The dead `url` column on existing rows is harmless — it's nullable, unindexed (the partial index has zero entries if the app stops writing URLs), and ignored by all read paths in pre-v0.2 code.
 
-## Part 2 (separate commit, after Shubh verifies part 1)
+## Part 2 — Cross-pipeline absorption (shipped)
 
-Cross-pipeline absorption — when the vault watcher indexes a `.md` file whose frontmatter URL matches an existing memory's URL, link the file to the memory and suppress its appearance in the Files tab / graph as a separate node. Specifically:
+Resolves the absorbed `v0.2-FULL-ROADMAP.md` issue: same conversation appearing twice (as a Memory node *and* a File node) because Extension POST and vault-watcher are two separate ingestion paths into two separate tables.
 
-- Add `vault_files.frontmatter_url TEXT` + `vault_files.linked_memory_id TEXT REFERENCES memories(id)`
-- `vault.ts indexFile`: parse frontmatter, set both columns
-- `graph-builder.ts`: omit file nodes where `linked_memory_id IS NOT NULL`
-- `Sidebar` Files tab: filter the same way, OR show a "from chat" pill
+### Schema (v2 → v3)
 
-This resolves the perceived "Memories tab missing chats" bug from the v0.2-FULL-ROADMAP.md absorbed-issue list.
+```sql
+ALTER TABLE vault_files ADD COLUMN frontmatter_url  TEXT;
+ALTER TABLE vault_files ADD COLUMN linked_memory_id TEXT;  -- REFERENCES on fresh installs only (SQLite ALTER limitation)
+CREATE INDEX IF NOT EXISTS idx_vault_frontmatter_url
+  ON vault_files(frontmatter_url) WHERE frontmatter_url IS NOT NULL;
+```
+
+`ON DELETE SET NULL` is declared on the column for fresh installs (via the initial `CREATE TABLE`). Existing installs get the column via `ALTER TABLE`, which SQLite forbids from carrying FK constraints — so the integrity guarantee is enforced at the app layer in `deleteMemory()` via `UPDATE vault_files SET linked_memory_id = NULL WHERE linked_memory_id = ?`. Both paths converge on the same observable behaviour.
+
+### Linking, on file ingest (`vault.ts indexFile`)
+
+When the vault watcher sees a `.md` file:
+1. Parse YAML frontmatter via the same `parseFrontmatter` module Part 1 introduced.
+2. Canonicalise the `url:` field via the same `canonicalUrl` module.
+3. Look up `findMemoryByCanonicalUrl(canonical)` — if a memory exists, set `linked_memory_id` on the new vault row.
+4. Either way, `frontmatter_url` (the canonicalised URL) gets stored so future memory creates can backlink.
+
+**Self-heal on upgrade.** The existing skip-if-unchanged guard (`if (lastModified === lastModified && size === size) return`) prevents v2 vault rows from ever being re-processed. The migration would land but the existing rows would never get their `frontmatter_url` populated. Workaround: on the next launch after upgrade, `indexFile` re-processes any `.md` file whose existing row has `frontmatterUrl == null`. One-shot extra work; subsequent launches skip normally.
+
+### Race-condition handling (memory created after file)
+
+Reverse order — file gets indexed *before* the matching memory exists — is handled by `upsertMemoryByUrl` retroactively linking:
+
+```sql
+UPDATE vault_files SET linked_memory_id = ?
+  WHERE frontmatter_url = ? AND linked_memory_id IS NULL
+```
+
+Runs only on the `'created'` branch (UPDATE branch already linked; new content for an existing memory doesn't change the file's link). Idempotent.
+
+### Hiding linked files (read paths)
+
+Filter happens at `db.ts` so every consumer inherits it — graph, Sidebar Files tab, search, IPC `vault:getFiles`. Single source of truth:
+
+```sql
+SELECT * FROM vault_files WHERE linked_memory_id IS NULL ORDER BY ...
+```
+
+If a future admin tool or "show linked" toggle needs the suppressed rows, that's a *new* db function (`getAllVaultFilesIncludingLinked`) — not a flag on this one. Keeps the default safe.
+
+### Regression guard (Part 2 additions)
+
+`src/main/db.migration-ordering.test.ts` adds 6 new structural assertions:
+- v3 index NOT in initial CREATE TABLE block (same regression class as v2 — index would reference a column the ALTER hasn't added yet)
+- v3 migration MUST create the index
+- v3 ALTERs MUST be PRAGMA-guarded
+- v3 `linked_memory_id` ALTER MUST NOT include REFERENCES (SQLite silently drops it; documented invariant)
+- `deleteMemory` MUST null linked references at app layer
+- Both `getAllVaultFiles` and `searchVaultFiles` MUST filter on `linked_memory_id IS NULL`
+
+Total tests: 179.
+
+### Rollback path
+
+```sql
+UPDATE schema_version SET version = 2;
+-- v3 columns + index are harmless dead weight at v2.
+```
+
+Then revert the commit; `linked_memory_id` filters become no-ops because the column is always NULL in v2 code, all vault files re-appear.
+
+### Out of scope for Part 2
+
+- **No UI "from chat" pill** on memory nodes indicating they have an underlying file. Pure absorption — the user shouldn't need to know the storage shape; they have a memory, end of story. If discoverability becomes a real complaint, that's a v0.3 affordance, not a v0.2 dedup concern.
+- **No bulk backfill script** for existing vault files that have URLs but were ingested before v3. The self-heal-on-next-index path covers them — they get linked the next time the watcher touches them, which is the next launch.
 
 ## Verification checklist (for Shubh)
 

@@ -97,7 +97,65 @@ describe('db.ts schema migration ordering (regression: no such column: url)', ()
     expect(mig).toMatch(/throw err/)
   })
 
-  it('bumps SCHEMA_VERSION constant to 2 (or higher) — required for v0.2 dedup', () => {
-    expect(DB_SOURCE).toMatch(/SCHEMA_VERSION\s*=\s*(?:[2-9]|\d{2,})\b/)
+  it('bumps SCHEMA_VERSION constant to 3 (or higher) — required for v0.2 dedup part 2', () => {
+    expect(DB_SOURCE).toMatch(/SCHEMA_VERSION\s*=\s*(?:[3-9]|\d{2,})\b/)
+  })
+
+  // ─── v3 (cross-pipeline absorption) ─────────────────────────────────────
+
+  it('v3: does NOT create idx_vault_frontmatter_url in the initial CREATE TABLE block', () => {
+    // Same regression class as v2: the index references a column that exists
+    // only after ALTER TABLE in the migration. If this lands in the initial
+    // exec block, the app dies on existing v1/v2 databases with "no such
+    // column: frontmatter_url" before the migration can heal it.
+    const block = extractInitialExecBlock(DB_SOURCE)
+    expect(block).not.toMatch(/idx_vault_frontmatter_url/)
+  })
+
+  it('v3: creates idx_vault_frontmatter_url inside runMigrations()', () => {
+    const mig = extractMigrationFunction(DB_SOURCE)
+    expect(mig).toMatch(/CREATE INDEX IF NOT EXISTS\s+idx_vault_frontmatter_url/)
+  })
+
+  it('v3: guards the vault_files ALTER TABLE adds with a PRAGMA table_info check', () => {
+    const mig = extractMigrationFunction(DB_SOURCE)
+    expect(mig).toMatch(/PRAGMA table_info\(vault_files\)/)
+    expect(mig).toMatch(/ALTER TABLE vault_files ADD COLUMN frontmatter_url TEXT/)
+    expect(mig).toMatch(/ALTER TABLE vault_files ADD COLUMN linked_memory_id TEXT/)
+
+    const pragmaIdx = mig.indexOf('PRAGMA table_info(vault_files)')
+    const fmAlterIdx = mig.indexOf('ALTER TABLE vault_files ADD COLUMN frontmatter_url TEXT')
+    const lmAlterIdx = mig.indexOf('ALTER TABLE vault_files ADD COLUMN linked_memory_id TEXT')
+    expect(pragmaIdx).toBeGreaterThan(-1)
+    expect(fmAlterIdx).toBeGreaterThan(pragmaIdx)
+    expect(lmAlterIdx).toBeGreaterThan(pragmaIdx)
+  })
+
+  it('v3: ALTER TABLE for linked_memory_id does NOT include REFERENCES (SQLite limitation)', () => {
+    // SQLite silently drops FK declarations on ALTER TABLE ADD COLUMN — the
+    // column appears, but no constraint is created. Including REFERENCES in
+    // the ALTER would suggest enforcement we don't actually have. Fresh
+    // installs get the FK via the initial CREATE TABLE; existing installs
+    // get app-layer cleanup in deleteMemory(). Documented invariant.
+    const mig = extractMigrationFunction(DB_SOURCE)
+    const lmAlterLine = /ALTER TABLE vault_files ADD COLUMN linked_memory_id[^\n;]*/g.exec(mig)
+    expect(lmAlterLine).not.toBeNull()
+    expect(lmAlterLine![0]).not.toMatch(/REFERENCES/)
+  })
+
+  it('deleteMemory unlinks any vault_files that referenced the deleted memory', () => {
+    // Required for existing installs where ALTER couldn't attach a real FK.
+    // Fresh installs get ON DELETE SET NULL via the initial CREATE TABLE,
+    // but this app-layer step covers everyone uniformly.
+    expect(DB_SOURCE).toMatch(/UPDATE vault_files SET linked_memory_id = NULL WHERE linked_memory_id = \?/)
+  })
+
+  it('getAllVaultFiles + searchVaultFiles filter out linked files', () => {
+    // The whole point of cross-pipeline absorption: the canonical
+    // representation is the memory, not the file. If either read path
+    // forgets the filter, the user sees duplicates in graph / Files tab /
+    // search.
+    expect(DB_SOURCE).toMatch(/SELECT \* FROM vault_files WHERE linked_memory_id IS NULL ORDER BY last_modified DESC/)
+    expect(DB_SOURCE).toMatch(/SELECT \* FROM vault_files WHERE linked_memory_id IS NULL AND/)
   })
 })

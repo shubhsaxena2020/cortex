@@ -6,6 +6,8 @@ import { app, BrowserWindow } from 'electron'
 import log from 'electron-log'
 import * as db from './db'
 import { getEmbedding } from './embeddings'
+import { canonicalUrl } from './url-canon'
+import { parseFrontmatter } from './frontmatter'
 
 const VAULT_CONFIG_FILE = 'vault-config.json'
 const MAX_FILE_SIZE = 10 * 1024 * 1024  // 10 MB
@@ -149,8 +151,16 @@ export async function indexFile(filepath: string): Promise<void> {
     // every restart re-runs extractText and hits Ollama for every file in the
     // vault — turning a sub-second boot into minutes of useless work for users
     // with non-trivial vaults.
+    //
+    // Exception: re-process if existing.frontmatterUrl is null AND the file
+    // is a Markdown file. This is the self-heal path for installs that were
+    // on schema v2 (no frontmatter columns) and have since upgraded to v3 —
+    // their existing vault rows have NULL frontmatter_url and would never
+    // get linked to memories without this re-pass. After one launch on v3
+    // the values are populated and normal skip behaviour resumes.
     const existing = db.getVaultFileByPath(filepath)
-    if (existing && existing.lastModified === lastModified && existing.size === size) {
+    const needsFrontmatterBackfill = !!existing && existing.frontmatterUrl == null && ext.toLowerCase() === '.md'
+    if (existing && existing.lastModified === lastModified && existing.size === size && !needsFrontmatterBackfill) {
       return
     }
 
@@ -159,7 +169,25 @@ export async function indexFile(filepath: string): Promise<void> {
     return
   }
 
-  db.upsertVaultFile({ filepath, filename, extension: ext, content, size, lastModified })
+  // Cross-pipeline absorption (P0 #1 part 2): parse YAML frontmatter from
+  // Markdown files, canonicalise any url field, and link this file to the
+  // matching memory if one exists. getAllVaultFiles + searchVaultFiles
+  // filter out linked files, so the conversation appears once (as the memory)
+  // instead of twice (memory + file).
+  let frontmatterUrl: string | null = null
+  let linkedMemoryId: string | null = null
+  if (content && ext.toLowerCase() === '.md') {
+    const fm = parseFrontmatter(content)
+    if (fm.url) {
+      frontmatterUrl = canonicalUrl(fm.url)
+      if (frontmatterUrl) {
+        const memory = db.findMemoryByCanonicalUrl(frontmatterUrl)
+        if (memory) linkedMemoryId = memory.id
+      }
+    }
+  }
+
+  db.upsertVaultFile({ filepath, filename, extension: ext, content, size, lastModified, frontmatterUrl, linkedMemoryId })
 
   if (content && db.hasVectorSearch()) {
     const file = db.getVaultFileByPath(filepath)

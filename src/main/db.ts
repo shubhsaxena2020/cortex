@@ -9,7 +9,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 2   // bump + add migration when schema changes
+const SCHEMA_VERSION = 3   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -146,8 +146,17 @@ export async function initDb(customPath?: string): Promise<void> {
       content TEXT,
       size INTEGER DEFAULT 0,
       last_modified INTEGER DEFAULT 0,
-      indexed_at INTEGER DEFAULT 0
+      indexed_at INTEGER DEFAULT 0,
+      frontmatter_url TEXT,
+      linked_memory_id TEXT REFERENCES memories(id) ON DELETE SET NULL
     );
+    -- NOTE: idx_vault_frontmatter_url is created by runMigrations(), NOT here.
+    -- Same reason as idx_memories_url: on an existing v1 / v2 database the
+    -- CREATE TABLE statement is a no-op and the columns aren't actually
+    -- present yet. The migration adds the columns via ALTER TABLE before the
+    -- index can reference them. The CREATE TABLE above only takes effect on
+    -- fresh installs; runMigrations is the single source of truth for
+    -- everything that depends on the v3+ schema shape.
 
     CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY);
   `)
@@ -220,7 +229,28 @@ function runMigrations(d: Database.Database, from: number, to: number): void {
         // initial CREATE TABLE statement runs as a no-op.
         d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_url ON memories(url) WHERE url IS NOT NULL`)
       }
-      // Future: if (from < 3) { ... }
+      if (from < 3) {
+        // v3: cross-pipeline absorption (P0 #1 part 2).
+        // vault_files gains frontmatter_url (parsed from .md YAML at ingest)
+        // and linked_memory_id (set when frontmatter_url matches an existing
+        // memory's url). getAllVaultFiles + searchVaultFiles filter by
+        // linked_memory_id IS NULL so linked files disappear from the graph
+        // and Files tab — the memory becomes the canonical representation.
+        const vcols = d.prepare(`PRAGMA table_info(vault_files)`).all() as Array<{ name: string }>
+        if (!vcols.some(c => c.name === 'frontmatter_url')) {
+          d.exec(`ALTER TABLE vault_files ADD COLUMN frontmatter_url TEXT`)
+        }
+        if (!vcols.some(c => c.name === 'linked_memory_id')) {
+          // SQLite ALTER TABLE ADD COLUMN cannot include REFERENCES — FKs on
+          // ALTER are silently dropped (PRAGMA foreign_keys check_table fails
+          // afterwards). For existing installs the column exists without a
+          // declared FK; the JOIN integrity is maintained at the app layer
+          // (we never write a linked_memory_id that doesn't exist, and we
+          // null it on memory delete via vault.ts cleanup).
+          d.exec(`ALTER TABLE vault_files ADD COLUMN linked_memory_id TEXT`)
+        }
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_vault_frontmatter_url ON vault_files(frontmatter_url) WHERE frontmatter_url IS NOT NULL`)
+      }
 
       // Bump (or write) the stored version. UPDATE if the row exists; INSERT
       // otherwise. We can't rely on the caller to handle the fresh-install
@@ -319,6 +349,10 @@ export function upsertMemoryByUrl(
   const existing = findMemoryByCanonicalUrl(canonicalUrl)
   if (!existing) {
     const row = createMemory(newId, title, content, source, tags, canonicalUrl)
+    // P0 #1 part 2: if a vault file with this URL was indexed BEFORE this
+    // memory existed, retroactively link it. Without this, the file stays
+    // visible in the graph + Files tab as a duplicate of the new memory.
+    try { d.prepare('UPDATE vault_files SET linked_memory_id = ? WHERE frontmatter_url = ? AND linked_memory_id IS NULL').run(newId, canonicalUrl) } catch (_) {}
     return { memory: row, action: 'created' }
   }
 
@@ -383,6 +417,12 @@ export function deleteMemory(id: string) {
   if (vectorSearchEnabled) {
     try { d.prepare('DELETE FROM memory_vectors WHERE memory_id = ?').run(id) } catch (_) {}
   }
+  // Unlink any vault_files that pointed at this memory so they reappear in
+  // the graph + Files tab instead of being silently orphaned. Fresh installs
+  // also have ON DELETE SET NULL declared at table level; this app-layer
+  // step covers upgraded installs where ALTER TABLE ADD COLUMN couldn't
+  // attach the FK constraint.
+  try { d.prepare('UPDATE vault_files SET linked_memory_id = NULL WHERE linked_memory_id = ?').run(id) } catch (_) {}
   d.prepare('DELETE FROM memories WHERE id = ?').run(id)
   return { success: true }
 }
@@ -526,6 +566,8 @@ type VaultFileRow = {
   size: number
   last_modified: number
   indexed_at: number
+  frontmatter_url: string | null
+  linked_memory_id: string | null
 }
 
 function mapVaultFile(r: VaultFileRow) {
@@ -538,6 +580,8 @@ function mapVaultFile(r: VaultFileRow) {
     size: r.size,
     lastModified: r.last_modified,
     indexedAt: r.indexed_at,
+    frontmatterUrl: r.frontmatter_url ?? null,
+    linkedMemoryId: r.linked_memory_id ?? null,
   }
 }
 
@@ -548,14 +592,20 @@ export function upsertVaultFile(data: {
   content: string | null
   size: number
   lastModified: number
+  frontmatterUrl?: string | null
+  linkedMemoryId?: string | null
 }): void {
   const d = getDb()
   const existing = d.prepare('SELECT id FROM vault_files WHERE filepath = ?').get(data.filepath) as { id: string } | undefined
   const id = existing?.id ?? randomUUID()
   const now = Date.now()
   d.prepare(
-    'INSERT OR REPLACE INTO vault_files (id, filepath, filename, extension, content, size, last_modified, indexed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  ).run(id, data.filepath, data.filename, data.extension, data.content ?? null, data.size, data.lastModified, now)
+    'INSERT OR REPLACE INTO vault_files (id, filepath, filename, extension, content, size, last_modified, indexed_at, frontmatter_url, linked_memory_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(
+    id, data.filepath, data.filename, data.extension, data.content ?? null,
+    data.size, data.lastModified, now,
+    data.frontmatterUrl ?? null, data.linkedMemoryId ?? null,
+  )
 }
 
 export function getVaultFileByPath(filepath: string): ReturnType<typeof mapVaultFile> | null {
@@ -568,8 +618,23 @@ export function getVaultFileById(id: string): ReturnType<typeof mapVaultFile> | 
   return row ? mapVaultFile(row) : null
 }
 
+/**
+ * List vault files for the graph / Files sidebar / search.
+ *
+ * Hides files whose `linked_memory_id` is set — those are the same
+ * conversation as an existing memory (P0 #1 part 2 cross-pipeline absorption).
+ * Showing both the memory node and the file node for one conversation is the
+ * "duplicate in the graph" symptom we're solving. The memory is canonical;
+ * the file is suppressed.
+ *
+ * Callers that genuinely need every file (admin tools, future "show linked"
+ * toggle, integrity scans) should add a new function rather than passing a
+ * flag through here — keeps the default safe.
+ */
 export function getAllVaultFiles(): ReturnType<typeof mapVaultFile>[] {
-  const rows = getDb().prepare('SELECT * FROM vault_files ORDER BY last_modified DESC').all() as VaultFileRow[]
+  const rows = getDb().prepare(
+    'SELECT * FROM vault_files WHERE linked_memory_id IS NULL ORDER BY last_modified DESC'
+  ).all() as VaultFileRow[]
   return rows.map(mapVaultFile)
 }
 
@@ -592,9 +657,12 @@ export function deleteVaultFileById(id: string): void {
 }
 
 export function searchVaultFiles(query: string): ReturnType<typeof mapVaultFile>[] {
+  // Excludes linked files — same rationale as getAllVaultFiles. The memory
+  // for that conversation will surface via searchMemories instead, so the
+  // user still finds it; they just don't see two hits for the same content.
   const escaped = escapeLike(query)
   const rows = getDb().prepare(
-    "SELECT * FROM vault_files WHERE filename LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\' ORDER BY last_modified DESC LIMIT 50"
+    "SELECT * FROM vault_files WHERE linked_memory_id IS NULL AND (filename LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\') ORDER BY last_modified DESC LIMIT 50"
   ).all(`%${escaped}%`, `%${escaped}%`) as VaultFileRow[]
   return rows.map(mapVaultFile)
 }
