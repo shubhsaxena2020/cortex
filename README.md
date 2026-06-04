@@ -2,6 +2,17 @@
 
 Cortex is a desktop app that gives you one searchable place for everything you've ever told an AI. Save snippets from Claude, ChatGPT, Gemini, or anywhere else with a right-click; browse them as notes; visualize how they connect in a graph; search them by keyword or semantic similarity — all backed by a local SQLite database on your machine. No cloud, no telemetry, no account.
 
+## Status
+
+**Latest release:** [v0.1.0-beta](https://github.com/shubhsaxena2020/cortex/releases/tag/v0.1.0-beta) (Pre-Release, Windows installer). See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md).
+
+**Recent progress** (2026-06-04):
+- v0.2 P0 #1 shipped — conversation deduplication by canonical URL with cross-pipeline absorption ([`1d7d0e1`](https://github.com/shubhsaxena2020/cortex/commit/1d7d0e1) · [`c015dfe`](https://github.com/shubhsaxena2020/cortex/commit/c015dfe))
+- v0.2 P0 #2 shipped — smart capture filtering for ChatGPT system + tool messages ([`9f24fb8`](https://github.com/shubhsaxena2020/cortex/commit/9f24fb8))
+- 198 tests passing; build green; v0.2 P0 #4 (search latency) is next
+
+Roadmap: [`v0.2-FULL-ROADMAP.md`](./v0.2-FULL-ROADMAP.md) (Council-vetted).
+
 ---
 
 ## Table of contents
