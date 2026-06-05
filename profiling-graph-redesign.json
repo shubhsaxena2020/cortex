@@ -1,0 +1,6069 @@
+{
+  "generatedAt": "2026-06-05T07:15:32.595Z",
+  "notes": "JS pipeline cost only (cull + bucket fill + node classify). Real paint via in-app overlay.",
+  "config": {
+    "nodes": 10000,
+    "edges": 19997,
+    "frames": 200,
+    "hover_frames": 100,
+    "viewport": {
+      "w": 1200,
+      "h": 800
+    }
+  },
+  "summary": {
+    "all-visible (worst case)": {
+      "frames": 200,
+      "visible_nodes_mean": 10000,
+      "visible_nodes_max": 10000,
+      "visible_edges_mean": 19997,
+      "pipeline_p50_ms": 1.4757,
+      "pipeline_p95_ms": 3.1623,
+      "pipeline_p99_ms": 6.6638,
+      "quadtree_build_ms": 2.869,
+      "derived_fps_capacity_pipeline_only": 588
+    },
+    "medium working zoom": {
+      "frames": 200,
+      "visible_nodes_mean": 4611,
+      "visible_nodes_max": 4655,
+      "visible_edges_mean": 14130,
+      "pipeline_p50_ms": 1.3741,
+      "pipeline_p95_ms": 2.4209,
+      "pipeline_p99_ms": 3.6494,
+      "quadtree_build_ms": 4.243,
+      "derived_fps_capacity_pipeline_only": 661
+    },
+    "close-up + labels": {
+      "frames": 200,
+      "visible_nodes_mean": 672,
+      "visible_nodes_max": 696,
+      "visible_edges_mean": 2601,
+      "pipeline_p50_ms": 0.6872,
+      "pipeline_p95_ms": 1.4401,
+      "pipeline_p99_ms": 2.3767,
+      "quadtree_build_ms": 1.654,
+      "derived_fps_capacity_pipeline_only": 1191
+    }
+  },
+  "samples": [
+    {
+      "zoom": 0.15,
+      "label": "all-visible (worst case)",
+      "samples": [
+        {
+          "frame": 0,
+          "cull_ms": 4.803,
+          "edges_ms": 1.6053,
+          "nodes_ms": 0.236,
+          "total_ms": 6.6638,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 1,
+          "cull_ms": 1.6667,
+          "edges_ms": 1.3649,
+          "nodes_ms": 0.2077,
+          "total_ms": 3.2723,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 2,
+          "cull_ms": 4.3767,
+          "edges_ms": 1.525,
+          "nodes_ms": 5.3013,
+          "total_ms": 11.2103,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 3,
+          "cull_ms": 3.315,
+          "edges_ms": 1.3845,
+          "nodes_ms": 0.1587,
+          "total_ms": 4.8683,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 4,
+          "cull_ms": 1.3781,
+          "edges_ms": 1.5022,
+          "nodes_ms": 0.1652,
+          "total_ms": 3.0481,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 5,
+          "cull_ms": 1.3988,
+          "edges_ms": 1.3478,
+          "nodes_ms": 0.502,
+          "total_ms": 3.2507,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 6,
+          "cull_ms": 0.9309,
+          "edges_ms": 0.4221,
+          "nodes_ms": 0.0394,
+          "total_ms": 1.3941,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 7,
+          "cull_ms": 0.7208,
+          "edges_ms": 0.4004,
+          "nodes_ms": 0.0439,
+          "total_ms": 1.1664,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 8,
+          "cull_ms": 0.6972,
+          "edges_ms": 0.4627,
+          "nodes_ms": 0.036,
+          "total_ms": 1.1969,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 9,
+          "cull_ms": 0.7189,
+          "edges_ms": 0.4269,
+          "nodes_ms": 0.0397,
+          "total_ms": 1.1864,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 10,
+          "cull_ms": 0.657,
+          "edges_ms": 0.406,
+          "nodes_ms": 0.6766,
+          "total_ms": 1.7407,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 11,
+          "cull_ms": 1.3279,
+          "edges_ms": 0.6833,
+          "nodes_ms": 0.0479,
+          "total_ms": 2.0703,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 12,
+          "cull_ms": 1.1357,
+          "edges_ms": 0.4931,
+          "nodes_ms": 0.0392,
+          "total_ms": 1.6697,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 13,
+          "cull_ms": 0.9226,
+          "edges_ms": 0.6228,
+          "nodes_ms": 0.0504,
+          "total_ms": 1.5977,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 14,
+          "cull_ms": 0.7195,
+          "edges_ms": 0.3996,
+          "nodes_ms": 0.0368,
+          "total_ms": 1.1572,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 15,
+          "cull_ms": 0.644,
+          "edges_ms": 0.3983,
+          "nodes_ms": 0.3628,
+          "total_ms": 1.4062,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 16,
+          "cull_ms": 0.6387,
+          "edges_ms": 0.3882,
+          "nodes_ms": 0.0354,
+          "total_ms": 1.0638,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 17,
+          "cull_ms": 0.7189,
+          "edges_ms": 0.411,
+          "nodes_ms": 0.0367,
+          "total_ms": 1.1678,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 18,
+          "cull_ms": 0.6228,
+          "edges_ms": 0.3937,
+          "nodes_ms": 0.0353,
+          "total_ms": 1.0528,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 19,
+          "cull_ms": 0.6458,
+          "edges_ms": 0.3874,
+          "nodes_ms": 0.0354,
+          "total_ms": 1.0696,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 20,
+          "cull_ms": 0.6193,
+          "edges_ms": 0.3949,
+          "nodes_ms": 0.0368,
+          "total_ms": 1.052,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 21,
+          "cull_ms": 0.9076,
+          "edges_ms": 0.3877,
+          "nodes_ms": 0.0361,
+          "total_ms": 1.3329,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 22,
+          "cull_ms": 0.6426,
+          "edges_ms": 0.3969,
+          "nodes_ms": 0.0404,
+          "total_ms": 1.081,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 23,
+          "cull_ms": 0.6801,
+          "edges_ms": 0.4992,
+          "nodes_ms": 0.0428,
+          "total_ms": 1.2253,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 24,
+          "cull_ms": 0.84,
+          "edges_ms": 0.4317,
+          "nodes_ms": 0.0388,
+          "total_ms": 1.313,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 25,
+          "cull_ms": 0.6708,
+          "edges_ms": 0.4148,
+          "nodes_ms": 0.0353,
+          "total_ms": 1.1225,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 26,
+          "cull_ms": 1.1051,
+          "edges_ms": 0.4519,
+          "nodes_ms": 0.1031,
+          "total_ms": 1.6631,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 27,
+          "cull_ms": 0.7425,
+          "edges_ms": 0.4576,
+          "nodes_ms": 0.036,
+          "total_ms": 1.2371,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 28,
+          "cull_ms": 0.6143,
+          "edges_ms": 0.3999,
+          "nodes_ms": 0.0346,
+          "total_ms": 1.0497,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 29,
+          "cull_ms": 0.6174,
+          "edges_ms": 0.4289,
+          "nodes_ms": 0.0364,
+          "total_ms": 1.0835,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 30,
+          "cull_ms": 0.6278,
+          "edges_ms": 0.4378,
+          "nodes_ms": 0.0379,
+          "total_ms": 1.1047,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 31,
+          "cull_ms": 0.9032,
+          "edges_ms": 0.4223,
+          "nodes_ms": 0.0351,
+          "total_ms": 1.3619,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 32,
+          "cull_ms": 0.6497,
+          "edges_ms": 0.3885,
+          "nodes_ms": 0.0353,
+          "total_ms": 1.0745,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 33,
+          "cull_ms": 0.6155,
+          "edges_ms": 0.3878,
+          "nodes_ms": 0.0357,
+          "total_ms": 1.0399,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 34,
+          "cull_ms": 0.6195,
+          "edges_ms": 0.3853,
+          "nodes_ms": 0.0344,
+          "total_ms": 1.0406,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 35,
+          "cull_ms": 0.6403,
+          "edges_ms": 0.3978,
+          "nodes_ms": 0.0354,
+          "total_ms": 1.0746,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 36,
+          "cull_ms": 0.8661,
+          "edges_ms": 0.4074,
+          "nodes_ms": 0.0754,
+          "total_ms": 1.3506,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 37,
+          "cull_ms": 0.7424,
+          "edges_ms": 0.4763,
+          "nodes_ms": 0.0615,
+          "total_ms": 1.2811,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 38,
+          "cull_ms": 0.8187,
+          "edges_ms": 0.5476,
+          "nodes_ms": 0.0412,
+          "total_ms": 1.4119,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 39,
+          "cull_ms": 0.8032,
+          "edges_ms": 0.3927,
+          "nodes_ms": 0.0367,
+          "total_ms": 1.235,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 40,
+          "cull_ms": 0.6723,
+          "edges_ms": 0.4007,
+          "nodes_ms": 0.0358,
+          "total_ms": 1.1105,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 41,
+          "cull_ms": 1.9213,
+          "edges_ms": 0.4215,
+          "nodes_ms": 0.0347,
+          "total_ms": 2.3792,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 42,
+          "cull_ms": 0.6458,
+          "edges_ms": 0.3892,
+          "nodes_ms": 0.036,
+          "total_ms": 1.0719,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 43,
+          "cull_ms": 0.6224,
+          "edges_ms": 0.3882,
+          "nodes_ms": 0.0351,
+          "total_ms": 1.0468,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 44,
+          "cull_ms": 0.6121,
+          "edges_ms": 0.3953,
+          "nodes_ms": 0.0348,
+          "total_ms": 1.0433,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 45,
+          "cull_ms": 0.6155,
+          "edges_ms": 0.3872,
+          "nodes_ms": 0.036,
+          "total_ms": 1.0398,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 46,
+          "cull_ms": 0.6734,
+          "edges_ms": 0.4843,
+          "nodes_ms": 0.1021,
+          "total_ms": 1.2608,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 47,
+          "cull_ms": 0.7262,
+          "edges_ms": 0.4749,
+          "nodes_ms": 0.0981,
+          "total_ms": 1.3006,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 48,
+          "cull_ms": 0.7324,
+          "edges_ms": 0.4804,
+          "nodes_ms": 0.1073,
+          "total_ms": 1.3212,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 49,
+          "cull_ms": 0.7341,
+          "edges_ms": 0.5496,
+          "nodes_ms": 0.1226,
+          "total_ms": 1.4074,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 50,
+          "cull_ms": 1.2334,
+          "edges_ms": 1.6008,
+          "nodes_ms": 0.3052,
+          "total_ms": 3.1623,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 51,
+          "cull_ms": 2.5632,
+          "edges_ms": 0.5396,
+          "nodes_ms": 0.0412,
+          "total_ms": 3.1468,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 52,
+          "cull_ms": 0.8353,
+          "edges_ms": 0.3933,
+          "nodes_ms": 0.0343,
+          "total_ms": 1.2638,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 53,
+          "cull_ms": 0.6478,
+          "edges_ms": 0.3933,
+          "nodes_ms": 0.035,
+          "total_ms": 1.0769,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 54,
+          "cull_ms": 0.6333,
+          "edges_ms": 0.3935,
+          "nodes_ms": 0.0359,
+          "total_ms": 1.0638,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 55,
+          "cull_ms": 0.623,
+          "edges_ms": 0.3881,
+          "nodes_ms": 0.0345,
+          "total_ms": 1.0464,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 56,
+          "cull_ms": 0.6352,
+          "edges_ms": 0.4791,
+          "nodes_ms": 0.1057,
+          "total_ms": 1.2208,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 57,
+          "cull_ms": 0.7458,
+          "edges_ms": 0.506,
+          "nodes_ms": 0.1043,
+          "total_ms": 1.3569,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 58,
+          "cull_ms": 0.7287,
+          "edges_ms": 0.4822,
+          "nodes_ms": 0.1143,
+          "total_ms": 1.3261,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 59,
+          "cull_ms": 0.8522,
+          "edges_ms": 0.5871,
+          "nodes_ms": 0.1376,
+          "total_ms": 1.578,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 60,
+          "cull_ms": 0.953,
+          "edges_ms": 0.5605,
+          "nodes_ms": 0.1221,
+          "total_ms": 1.6374,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 61,
+          "cull_ms": 1.7151,
+          "edges_ms": 0.4035,
+          "nodes_ms": 0.0337,
+          "total_ms": 2.1587,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 62,
+          "cull_ms": 0.717,
+          "edges_ms": 0.4931,
+          "nodes_ms": 0.0827,
+          "total_ms": 1.2954,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 63,
+          "cull_ms": 0.8258,
+          "edges_ms": 0.4089,
+          "nodes_ms": 0.0373,
+          "total_ms": 1.2728,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 64,
+          "cull_ms": 0.6314,
+          "edges_ms": 0.392,
+          "nodes_ms": 0.034,
+          "total_ms": 1.0581,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 65,
+          "cull_ms": 0.6161,
+          "edges_ms": 0.3884,
+          "nodes_ms": 0.0357,
+          "total_ms": 1.0411,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 66,
+          "cull_ms": 0.629,
+          "edges_ms": 0.3888,
+          "nodes_ms": 0.0455,
+          "total_ms": 1.0642,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 67,
+          "cull_ms": 0.6182,
+          "edges_ms": 0.3981,
+          "nodes_ms": 0.0367,
+          "total_ms": 1.0541,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 68,
+          "cull_ms": 0.6144,
+          "edges_ms": 0.3862,
+          "nodes_ms": 0.045,
+          "total_ms": 1.0465,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 69,
+          "cull_ms": 0.6207,
+          "edges_ms": 0.3916,
+          "nodes_ms": 0.0456,
+          "total_ms": 1.0588,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 70,
+          "cull_ms": 0.6471,
+          "edges_ms": 0.3889,
+          "nodes_ms": 0.0378,
+          "total_ms": 1.0747,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 71,
+          "cull_ms": 1.0212,
+          "edges_ms": 0.4645,
+          "nodes_ms": 0.0359,
+          "total_ms": 1.523,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 72,
+          "cull_ms": 0.6252,
+          "edges_ms": 0.3973,
+          "nodes_ms": 0.0425,
+          "total_ms": 1.066,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 73,
+          "cull_ms": 0.6563,
+          "edges_ms": 0.4163,
+          "nodes_ms": 0.0778,
+          "total_ms": 1.1512,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 74,
+          "cull_ms": 0.7725,
+          "edges_ms": 0.4655,
+          "nodes_ms": 0.0457,
+          "total_ms": 1.2861,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 75,
+          "cull_ms": 0.7745,
+          "edges_ms": 0.4042,
+          "nodes_ms": 0.0346,
+          "total_ms": 1.2149,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 76,
+          "cull_ms": 0.6622,
+          "edges_ms": 0.4343,
+          "nodes_ms": 0.1023,
+          "total_ms": 1.1998,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 77,
+          "cull_ms": 0.7663,
+          "edges_ms": 0.4105,
+          "nodes_ms": 0.036,
+          "total_ms": 1.2135,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 78,
+          "cull_ms": 0.6277,
+          "edges_ms": 0.3902,
+          "nodes_ms": 0.035,
+          "total_ms": 1.0537,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 79,
+          "cull_ms": 0.6175,
+          "edges_ms": 0.3959,
+          "nodes_ms": 0.0359,
+          "total_ms": 1.05,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 80,
+          "cull_ms": 0.6252,
+          "edges_ms": 0.394,
+          "nodes_ms": 0.0358,
+          "total_ms": 1.0559,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 81,
+          "cull_ms": 1.1476,
+          "edges_ms": 0.4184,
+          "nodes_ms": 0.0362,
+          "total_ms": 1.6038,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 82,
+          "cull_ms": 0.6335,
+          "edges_ms": 0.3886,
+          "nodes_ms": 0.0343,
+          "total_ms": 1.0573,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 83,
+          "cull_ms": 0.6153,
+          "edges_ms": 0.3967,
+          "nodes_ms": 0.0354,
+          "total_ms": 1.0483,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 84,
+          "cull_ms": 0.6054,
+          "edges_ms": 0.3899,
+          "nodes_ms": 0.0345,
+          "total_ms": 1.0305,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 85,
+          "cull_ms": 0.6248,
+          "edges_ms": 0.4029,
+          "nodes_ms": 0.0356,
+          "total_ms": 1.0642,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 86,
+          "cull_ms": 0.6172,
+          "edges_ms": 0.3951,
+          "nodes_ms": 0.0571,
+          "total_ms": 1.0702,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 87,
+          "cull_ms": 0.7049,
+          "edges_ms": 0.4159,
+          "nodes_ms": 0.0754,
+          "total_ms": 1.197,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 88,
+          "cull_ms": 0.7318,
+          "edges_ms": 0.4297,
+          "nodes_ms": 0.0639,
+          "total_ms": 1.2264,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 89,
+          "cull_ms": 0.806,
+          "edges_ms": 0.7629,
+          "nodes_ms": 0.0691,
+          "total_ms": 1.6479,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 90,
+          "cull_ms": 1.9646,
+          "edges_ms": 0.89,
+          "nodes_ms": 0.0594,
+          "total_ms": 2.918,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 91,
+          "cull_ms": 1.7319,
+          "edges_ms": 0.5099,
+          "nodes_ms": 0.0397,
+          "total_ms": 2.2831,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 92,
+          "cull_ms": 0.6843,
+          "edges_ms": 0.39,
+          "nodes_ms": 0.0348,
+          "total_ms": 1.11,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 93,
+          "cull_ms": 0.6153,
+          "edges_ms": 0.3903,
+          "nodes_ms": 0.0386,
+          "total_ms": 1.0452,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 94,
+          "cull_ms": 0.6153,
+          "edges_ms": 0.3906,
+          "nodes_ms": 0.0349,
+          "total_ms": 1.0416,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 95,
+          "cull_ms": 0.6138,
+          "edges_ms": 0.3934,
+          "nodes_ms": 0.0351,
+          "total_ms": 1.0432,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 96,
+          "cull_ms": 0.618,
+          "edges_ms": 0.4283,
+          "nodes_ms": 0.0379,
+          "total_ms": 1.0855,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 97,
+          "cull_ms": 0.6533,
+          "edges_ms": 0.4007,
+          "nodes_ms": 0.0431,
+          "total_ms": 1.0981,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 98,
+          "cull_ms": 0.6661,
+          "edges_ms": 0.3936,
+          "nodes_ms": 0.0439,
+          "total_ms": 1.1051,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 99,
+          "cull_ms": 0.6574,
+          "edges_ms": 0.4638,
+          "nodes_ms": 0.0443,
+          "total_ms": 1.1687,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": false
+        },
+        {
+          "frame": 100,
+          "cull_ms": 0.7856,
+          "edges_ms": 2.5347,
+          "nodes_ms": 0.899,
+          "total_ms": 4.3815,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 101,
+          "cull_ms": 2.1864,
+          "edges_ms": 1.3306,
+          "nodes_ms": 0.3347,
+          "total_ms": 3.8597,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 102,
+          "cull_ms": 0.7908,
+          "edges_ms": 1.36,
+          "nodes_ms": 0.3829,
+          "total_ms": 2.5371,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 103,
+          "cull_ms": 0.7535,
+          "edges_ms": 2.9146,
+          "nodes_ms": 0.8556,
+          "total_ms": 4.5327,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 104,
+          "cull_ms": 1.7614,
+          "edges_ms": 2.3887,
+          "nodes_ms": 0.4669,
+          "total_ms": 4.636,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 105,
+          "cull_ms": 0.868,
+          "edges_ms": 0.7138,
+          "nodes_ms": 0.1658,
+          "total_ms": 1.7608,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 106,
+          "cull_ms": 0.6968,
+          "edges_ms": 0.6136,
+          "nodes_ms": 0.1385,
+          "total_ms": 1.459,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 107,
+          "cull_ms": 0.6149,
+          "edges_ms": 0.6542,
+          "nodes_ms": 0.1469,
+          "total_ms": 1.4178,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 108,
+          "cull_ms": 0.6113,
+          "edges_ms": 0.7357,
+          "nodes_ms": 0.1802,
+          "total_ms": 1.5293,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 109,
+          "cull_ms": 0.6146,
+          "edges_ms": 0.7048,
+          "nodes_ms": 0.1829,
+          "total_ms": 1.505,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 110,
+          "cull_ms": 0.68,
+          "edges_ms": 1.2647,
+          "nodes_ms": 0.2022,
+          "total_ms": 2.15,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 111,
+          "cull_ms": 0.6376,
+          "edges_ms": 0.6732,
+          "nodes_ms": 0.1687,
+          "total_ms": 1.4817,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 112,
+          "cull_ms": 0.6181,
+          "edges_ms": 0.7548,
+          "nodes_ms": 0.2136,
+          "total_ms": 1.5896,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 113,
+          "cull_ms": 0.8359,
+          "edges_ms": 0.864,
+          "nodes_ms": 0.2031,
+          "total_ms": 1.9097,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 114,
+          "cull_ms": 0.9485,
+          "edges_ms": 0.6767,
+          "nodes_ms": 0.1668,
+          "total_ms": 1.7951,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 115,
+          "cull_ms": 0.6935,
+          "edges_ms": 0.7436,
+          "nodes_ms": 0.2346,
+          "total_ms": 1.6755,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 116,
+          "cull_ms": 0.6734,
+          "edges_ms": 0.7215,
+          "nodes_ms": 0.1571,
+          "total_ms": 1.5544,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 117,
+          "cull_ms": 0.6173,
+          "edges_ms": 0.7086,
+          "nodes_ms": 0.1685,
+          "total_ms": 1.4962,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 118,
+          "cull_ms": 0.6324,
+          "edges_ms": 0.7119,
+          "nodes_ms": 0.2026,
+          "total_ms": 1.5491,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 119,
+          "cull_ms": 0.61,
+          "edges_ms": 0.7016,
+          "nodes_ms": 0.1734,
+          "total_ms": 1.4873,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 120,
+          "cull_ms": 0.6153,
+          "edges_ms": 1.2431,
+          "nodes_ms": 0.1672,
+          "total_ms": 2.0282,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 121,
+          "cull_ms": 0.6313,
+          "edges_ms": 0.6831,
+          "nodes_ms": 0.1587,
+          "total_ms": 1.4756,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 122,
+          "cull_ms": 0.6685,
+          "edges_ms": 0.6439,
+          "nodes_ms": 0.1482,
+          "total_ms": 1.4642,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 123,
+          "cull_ms": 0.7092,
+          "edges_ms": 0.9157,
+          "nodes_ms": 0.4619,
+          "total_ms": 2.0936,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 124,
+          "cull_ms": 0.9328,
+          "edges_ms": 0.7415,
+          "nodes_ms": 0.1925,
+          "total_ms": 1.8738,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 125,
+          "cull_ms": 0.9779,
+          "edges_ms": 0.6965,
+          "nodes_ms": 0.1469,
+          "total_ms": 1.8263,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 126,
+          "cull_ms": 0.6398,
+          "edges_ms": 0.5551,
+          "nodes_ms": 0.1034,
+          "total_ms": 1.3007,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 127,
+          "cull_ms": 0.6146,
+          "edges_ms": 0.6113,
+          "nodes_ms": 0.1131,
+          "total_ms": 1.3413,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 128,
+          "cull_ms": 0.6147,
+          "edges_ms": 0.6321,
+          "nodes_ms": 0.1445,
+          "total_ms": 1.3934,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 129,
+          "cull_ms": 0.6191,
+          "edges_ms": 0.7485,
+          "nodes_ms": 0.1741,
+          "total_ms": 1.5442,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 130,
+          "cull_ms": 0.615,
+          "edges_ms": 0.6858,
+          "nodes_ms": 0.647,
+          "total_ms": 1.9499,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 131,
+          "cull_ms": 0.6263,
+          "edges_ms": 0.715,
+          "nodes_ms": 0.2081,
+          "total_ms": 1.5519,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 132,
+          "cull_ms": 0.6767,
+          "edges_ms": 0.6423,
+          "nodes_ms": 0.153,
+          "total_ms": 1.4744,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 133,
+          "cull_ms": 0.7938,
+          "edges_ms": 0.7687,
+          "nodes_ms": 0.3968,
+          "total_ms": 1.9649,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 134,
+          "cull_ms": 1.047,
+          "edges_ms": 0.7666,
+          "nodes_ms": 0.2116,
+          "total_ms": 2.0356,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 135,
+          "cull_ms": 0.7993,
+          "edges_ms": 0.8753,
+          "nodes_ms": 0.2491,
+          "total_ms": 1.9274,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 136,
+          "cull_ms": 0.7381,
+          "edges_ms": 0.6538,
+          "nodes_ms": 0.1523,
+          "total_ms": 1.5473,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 137,
+          "cull_ms": 0.6224,
+          "edges_ms": 0.6921,
+          "nodes_ms": 0.1504,
+          "total_ms": 1.4672,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 138,
+          "cull_ms": 0.6239,
+          "edges_ms": 0.6827,
+          "nodes_ms": 0.1614,
+          "total_ms": 1.4701,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 139,
+          "cull_ms": 0.6451,
+          "edges_ms": 0.633,
+          "nodes_ms": 0.1439,
+          "total_ms": 1.4244,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 140,
+          "cull_ms": 0.6315,
+          "edges_ms": 0.6366,
+          "nodes_ms": 0.1474,
+          "total_ms": 1.4175,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 141,
+          "cull_ms": 1.2161,
+          "edges_ms": 0.5606,
+          "nodes_ms": 0.0902,
+          "total_ms": 1.8697,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 142,
+          "cull_ms": 0.6024,
+          "edges_ms": 0.747,
+          "nodes_ms": 0.1744,
+          "total_ms": 1.526,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 143,
+          "cull_ms": 0.781,
+          "edges_ms": 0.9623,
+          "nodes_ms": 0.5361,
+          "total_ms": 2.2867,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 144,
+          "cull_ms": 0.9662,
+          "edges_ms": 0.6947,
+          "nodes_ms": 0.2262,
+          "total_ms": 1.8955,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 145,
+          "cull_ms": 0.7753,
+          "edges_ms": 0.7678,
+          "nodes_ms": 0.2678,
+          "total_ms": 1.8153,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 146,
+          "cull_ms": 0.7196,
+          "edges_ms": 0.6766,
+          "nodes_ms": 0.1638,
+          "total_ms": 1.5624,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 147,
+          "cull_ms": 0.618,
+          "edges_ms": 0.6826,
+          "nodes_ms": 0.1704,
+          "total_ms": 1.4732,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 148,
+          "cull_ms": 0.607,
+          "edges_ms": 0.629,
+          "nodes_ms": 0.125,
+          "total_ms": 1.363,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 149,
+          "cull_ms": 0.6469,
+          "edges_ms": 0.6679,
+          "nodes_ms": 0.1591,
+          "total_ms": 1.4757,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 150,
+          "cull_ms": 0.6275,
+          "edges_ms": 0.6985,
+          "nodes_ms": 0.1604,
+          "total_ms": 1.4886,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 151,
+          "cull_ms": 1.1389,
+          "edges_ms": 0.6767,
+          "nodes_ms": 0.1713,
+          "total_ms": 1.9901,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 152,
+          "cull_ms": 0.6107,
+          "edges_ms": 0.5912,
+          "nodes_ms": 0.1147,
+          "total_ms": 1.3193,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 153,
+          "cull_ms": 1.0414,
+          "edges_ms": 0.8388,
+          "nodes_ms": 0.3322,
+          "total_ms": 2.2194,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 154,
+          "cull_ms": 1.0303,
+          "edges_ms": 0.8831,
+          "nodes_ms": 0.405,
+          "total_ms": 2.3241,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 155,
+          "cull_ms": 0.8778,
+          "edges_ms": 0.8232,
+          "nodes_ms": 0.2454,
+          "total_ms": 1.9496,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 156,
+          "cull_ms": 0.7049,
+          "edges_ms": 0.6509,
+          "nodes_ms": 0.1221,
+          "total_ms": 1.4808,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 157,
+          "cull_ms": 0.6179,
+          "edges_ms": 0.8769,
+          "nodes_ms": 0.2827,
+          "total_ms": 1.7814,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 158,
+          "cull_ms": 0.8428,
+          "edges_ms": 0.7762,
+          "nodes_ms": 0.1891,
+          "total_ms": 1.8114,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 159,
+          "cull_ms": 0.7407,
+          "edges_ms": 0.8011,
+          "nodes_ms": 0.1642,
+          "total_ms": 1.7127,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 160,
+          "cull_ms": 0.7821,
+          "edges_ms": 0.7249,
+          "nodes_ms": 0.1835,
+          "total_ms": 1.6937,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 161,
+          "cull_ms": 1.2238,
+          "edges_ms": 0.7981,
+          "nodes_ms": 0.2159,
+          "total_ms": 2.2422,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 162,
+          "cull_ms": 1.8208,
+          "edges_ms": 0.6977,
+          "nodes_ms": 0.1803,
+          "total_ms": 2.7117,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 163,
+          "cull_ms": 0.8052,
+          "edges_ms": 0.8564,
+          "nodes_ms": 0.2547,
+          "total_ms": 1.9208,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 164,
+          "cull_ms": 0.7588,
+          "edges_ms": 0.7237,
+          "nodes_ms": 0.2015,
+          "total_ms": 1.6864,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 165,
+          "cull_ms": 0.6645,
+          "edges_ms": 0.6815,
+          "nodes_ms": 0.1511,
+          "total_ms": 1.4993,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 166,
+          "cull_ms": 0.7382,
+          "edges_ms": 0.728,
+          "nodes_ms": 0.1696,
+          "total_ms": 1.6384,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 167,
+          "cull_ms": 0.6732,
+          "edges_ms": 0.6267,
+          "nodes_ms": 0.1279,
+          "total_ms": 1.43,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 168,
+          "cull_ms": 0.6457,
+          "edges_ms": 0.6433,
+          "nodes_ms": 0.1435,
+          "total_ms": 1.4348,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 169,
+          "cull_ms": 0.607,
+          "edges_ms": 0.6154,
+          "nodes_ms": 0.1255,
+          "total_ms": 1.3499,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 170,
+          "cull_ms": 0.6395,
+          "edges_ms": 0.7268,
+          "nodes_ms": 0.1567,
+          "total_ms": 1.5252,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 171,
+          "cull_ms": 1.4808,
+          "edges_ms": 1.2097,
+          "nodes_ms": 0.3511,
+          "total_ms": 3.0515,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 172,
+          "cull_ms": 1.0634,
+          "edges_ms": 0.7564,
+          "nodes_ms": 0.1874,
+          "total_ms": 2.0149,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 173,
+          "cull_ms": 1.1831,
+          "edges_ms": 0.8445,
+          "nodes_ms": 0.2625,
+          "total_ms": 2.2938,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 174,
+          "cull_ms": 0.689,
+          "edges_ms": 0.8087,
+          "nodes_ms": 0.2354,
+          "total_ms": 1.7355,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 175,
+          "cull_ms": 0.6753,
+          "edges_ms": 0.6374,
+          "nodes_ms": 0.1218,
+          "total_ms": 1.4372,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 176,
+          "cull_ms": 0.6548,
+          "edges_ms": 0.716,
+          "nodes_ms": 0.1891,
+          "total_ms": 1.5624,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 177,
+          "cull_ms": 0.6473,
+          "edges_ms": 0.7357,
+          "nodes_ms": 0.1859,
+          "total_ms": 1.571,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 178,
+          "cull_ms": 0.6768,
+          "edges_ms": 0.7048,
+          "nodes_ms": 0.1234,
+          "total_ms": 1.5072,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 179,
+          "cull_ms": 0.6545,
+          "edges_ms": 0.795,
+          "nodes_ms": 0.2243,
+          "total_ms": 1.6763,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 180,
+          "cull_ms": 0.6979,
+          "edges_ms": 1.2539,
+          "nodes_ms": 0.3588,
+          "total_ms": 2.3164,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 181,
+          "cull_ms": 1.5987,
+          "edges_ms": 0.6986,
+          "nodes_ms": 0.1571,
+          "total_ms": 2.4633,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 182,
+          "cull_ms": 1.2011,
+          "edges_ms": 0.8692,
+          "nodes_ms": 0.236,
+          "total_ms": 2.3086,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 183,
+          "cull_ms": 0.7592,
+          "edges_ms": 0.679,
+          "nodes_ms": 0.1626,
+          "total_ms": 1.6032,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 184,
+          "cull_ms": 0.7008,
+          "edges_ms": 0.7364,
+          "nodes_ms": 0.1648,
+          "total_ms": 1.6046,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 185,
+          "cull_ms": 0.6537,
+          "edges_ms": 0.6731,
+          "nodes_ms": 0.1544,
+          "total_ms": 1.4836,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 186,
+          "cull_ms": 0.6517,
+          "edges_ms": 0.7359,
+          "nodes_ms": 0.1814,
+          "total_ms": 1.5715,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 187,
+          "cull_ms": 0.663,
+          "edges_ms": 0.7235,
+          "nodes_ms": 0.1618,
+          "total_ms": 1.55,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 188,
+          "cull_ms": 0.6772,
+          "edges_ms": 0.7387,
+          "nodes_ms": 0.1548,
+          "total_ms": 1.5729,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 189,
+          "cull_ms": 0.6692,
+          "edges_ms": 1.1157,
+          "nodes_ms": 0.276,
+          "total_ms": 2.0653,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 190,
+          "cull_ms": 0.8956,
+          "edges_ms": 0.9111,
+          "nodes_ms": 0.2538,
+          "total_ms": 2.0649,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 191,
+          "cull_ms": 1.4544,
+          "edges_ms": 0.8474,
+          "nodes_ms": 0.2401,
+          "total_ms": 2.5461,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 192,
+          "cull_ms": 0.7752,
+          "edges_ms": 0.718,
+          "nodes_ms": 0.1699,
+          "total_ms": 1.6655,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 193,
+          "cull_ms": 0.6603,
+          "edges_ms": 0.6703,
+          "nodes_ms": 0.1754,
+          "total_ms": 1.5082,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 194,
+          "cull_ms": 0.6177,
+          "edges_ms": 0.6972,
+          "nodes_ms": 0.1581,
+          "total_ms": 1.4753,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 195,
+          "cull_ms": 0.6271,
+          "edges_ms": 0.685,
+          "nodes_ms": 0.1594,
+          "total_ms": 1.4735,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 196,
+          "cull_ms": 0.6306,
+          "edges_ms": 0.5779,
+          "nodes_ms": 0.0943,
+          "total_ms": 1.3049,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 197,
+          "cull_ms": 0.6724,
+          "edges_ms": 0.742,
+          "nodes_ms": 0.1638,
+          "total_ms": 1.5807,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 198,
+          "cull_ms": 0.6232,
+          "edges_ms": 0.6999,
+          "nodes_ms": 0.1806,
+          "total_ms": 1.5055,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        },
+        {
+          "frame": 199,
+          "cull_ms": 1.6833,
+          "edges_ms": 1.1189,
+          "nodes_ms": 0.1931,
+          "total_ms": 3.0233,
+          "visible_nodes": 10000,
+          "visible_edges": 19997,
+          "hovered": true
+        }
+      ]
+    },
+    {
+      "zoom": 1,
+      "label": "medium working zoom",
+      "samples": [
+        {
+          "frame": 0,
+          "cull_ms": 0.422,
+          "edges_ms": 1.3761,
+          "nodes_ms": 0.0723,
+          "total_ms": 1.8716,
+          "visible_nodes": 4613,
+          "visible_edges": 14148,
+          "hovered": false
+        },
+        {
+          "frame": 1,
+          "cull_ms": 0.4997,
+          "edges_ms": 1.6932,
+          "nodes_ms": 0.0713,
+          "total_ms": 2.2663,
+          "visible_nodes": 4606,
+          "visible_edges": 14131,
+          "hovered": false
+        },
+        {
+          "frame": 2,
+          "cull_ms": 0.5053,
+          "edges_ms": 1.3774,
+          "nodes_ms": 0.0701,
+          "total_ms": 1.9536,
+          "visible_nodes": 4610,
+          "visible_edges": 14122,
+          "hovered": false
+        },
+        {
+          "frame": 3,
+          "cull_ms": 0.4127,
+          "edges_ms": 1.4003,
+          "nodes_ms": 0.0645,
+          "total_ms": 1.8788,
+          "visible_nodes": 4615,
+          "visible_edges": 14116,
+          "hovered": false
+        },
+        {
+          "frame": 4,
+          "cull_ms": 0.395,
+          "edges_ms": 1.4554,
+          "nodes_ms": 0.1126,
+          "total_ms": 1.9658,
+          "visible_nodes": 4622,
+          "visible_edges": 14121,
+          "hovered": false
+        },
+        {
+          "frame": 5,
+          "cull_ms": 0.7294,
+          "edges_ms": 2.0551,
+          "nodes_ms": 0.0719,
+          "total_ms": 2.8655,
+          "visible_nodes": 4610,
+          "visible_edges": 14087,
+          "hovered": false
+        },
+        {
+          "frame": 6,
+          "cull_ms": 0.6776,
+          "edges_ms": 1.5947,
+          "nodes_ms": 0.1328,
+          "total_ms": 2.4075,
+          "visible_nodes": 4606,
+          "visible_edges": 14080,
+          "hovered": false
+        },
+        {
+          "frame": 7,
+          "cull_ms": 0.7129,
+          "edges_ms": 1.3822,
+          "nodes_ms": 0.0669,
+          "total_ms": 2.1634,
+          "visible_nodes": 4611,
+          "visible_edges": 14087,
+          "hovered": false
+        },
+        {
+          "frame": 8,
+          "cull_ms": 0.4515,
+          "edges_ms": 1.3088,
+          "nodes_ms": 0.075,
+          "total_ms": 1.8367,
+          "visible_nodes": 4622,
+          "visible_edges": 14115,
+          "hovered": false
+        },
+        {
+          "frame": 9,
+          "cull_ms": 1.854,
+          "edges_ms": 1.7116,
+          "nodes_ms": 0.0788,
+          "total_ms": 3.6494,
+          "visible_nodes": 4615,
+          "visible_edges": 14092,
+          "hovered": false
+        },
+        {
+          "frame": 10,
+          "cull_ms": 0.5308,
+          "edges_ms": 1.4315,
+          "nodes_ms": 0.0893,
+          "total_ms": 2.0532,
+          "visible_nodes": 4611,
+          "visible_edges": 14076,
+          "hovered": false
+        },
+        {
+          "frame": 11,
+          "cull_ms": 0.6136,
+          "edges_ms": 1.81,
+          "nodes_ms": 0.1057,
+          "total_ms": 2.5324,
+          "visible_nodes": 4608,
+          "visible_edges": 14070,
+          "hovered": false
+        },
+        {
+          "frame": 12,
+          "cull_ms": 0.6793,
+          "edges_ms": 1.7236,
+          "nodes_ms": 0.0873,
+          "total_ms": 2.4931,
+          "visible_nodes": 4611,
+          "visible_edges": 14086,
+          "hovered": false
+        },
+        {
+          "frame": 13,
+          "cull_ms": 0.7571,
+          "edges_ms": 1.5996,
+          "nodes_ms": 0.0748,
+          "total_ms": 2.4342,
+          "visible_nodes": 4638,
+          "visible_edges": 14147,
+          "hovered": false
+        },
+        {
+          "frame": 14,
+          "cull_ms": 0.4335,
+          "edges_ms": 1.3249,
+          "nodes_ms": 0.0826,
+          "total_ms": 1.8418,
+          "visible_nodes": 4643,
+          "visible_edges": 14168,
+          "hovered": false
+        },
+        {
+          "frame": 15,
+          "cull_ms": 0.4281,
+          "edges_ms": 1.3817,
+          "nodes_ms": 0.2689,
+          "total_ms": 2.0799,
+          "visible_nodes": 4609,
+          "visible_edges": 14107,
+          "hovered": false
+        },
+        {
+          "frame": 16,
+          "cull_ms": 0.6988,
+          "edges_ms": 0.8761,
+          "nodes_ms": 0.006,
+          "total_ms": 1.5879,
+          "visible_nodes": 4586,
+          "visible_edges": 14055,
+          "hovered": false
+        },
+        {
+          "frame": 17,
+          "cull_ms": 0.4286,
+          "edges_ms": 0.7573,
+          "nodes_ms": 0.0175,
+          "total_ms": 1.205,
+          "visible_nodes": 4574,
+          "visible_edges": 14014,
+          "hovered": false
+        },
+        {
+          "frame": 18,
+          "cull_ms": 0.3295,
+          "edges_ms": 0.7313,
+          "nodes_ms": 0.0166,
+          "total_ms": 1.0781,
+          "visible_nodes": 4574,
+          "visible_edges": 14023,
+          "hovered": false
+        },
+        {
+          "frame": 19,
+          "cull_ms": 0.3304,
+          "edges_ms": 0.8662,
+          "nodes_ms": 0.0238,
+          "total_ms": 1.2234,
+          "visible_nodes": 4571,
+          "visible_edges": 14030,
+          "hovered": false
+        },
+        {
+          "frame": 20,
+          "cull_ms": 1.2728,
+          "edges_ms": 1.0211,
+          "nodes_ms": 0.0203,
+          "total_ms": 2.3226,
+          "visible_nodes": 4575,
+          "visible_edges": 14036,
+          "hovered": false
+        },
+        {
+          "frame": 21,
+          "cull_ms": 0.857,
+          "edges_ms": 0.9736,
+          "nodes_ms": 0.0177,
+          "total_ms": 1.8559,
+          "visible_nodes": 4572,
+          "visible_edges": 14022,
+          "hovered": false
+        },
+        {
+          "frame": 22,
+          "cull_ms": 0.4257,
+          "edges_ms": 1.2416,
+          "nodes_ms": 0.0599,
+          "total_ms": 1.7298,
+          "visible_nodes": 4570,
+          "visible_edges": 14016,
+          "hovered": false
+        },
+        {
+          "frame": 23,
+          "cull_ms": 0.8086,
+          "edges_ms": 0.9108,
+          "nodes_ms": 0.0186,
+          "total_ms": 1.743,
+          "visible_nodes": 4563,
+          "visible_edges": 14000,
+          "hovered": false
+        },
+        {
+          "frame": 24,
+          "cull_ms": 0.4171,
+          "edges_ms": 0.8389,
+          "nodes_ms": 0.0183,
+          "total_ms": 1.2758,
+          "visible_nodes": 4583,
+          "visible_edges": 14056,
+          "hovered": false
+        },
+        {
+          "frame": 25,
+          "cull_ms": 0.4026,
+          "edges_ms": 0.8109,
+          "nodes_ms": 0.0162,
+          "total_ms": 1.2309,
+          "visible_nodes": 4570,
+          "visible_edges": 14027,
+          "hovered": false
+        },
+        {
+          "frame": 26,
+          "cull_ms": 0.3639,
+          "edges_ms": 0.7775,
+          "nodes_ms": 0.0184,
+          "total_ms": 1.1608,
+          "visible_nodes": 4577,
+          "visible_edges": 14039,
+          "hovered": false
+        },
+        {
+          "frame": 27,
+          "cull_ms": 0.371,
+          "edges_ms": 0.7191,
+          "nodes_ms": 0.0169,
+          "total_ms": 1.1078,
+          "visible_nodes": 4576,
+          "visible_edges": 14031,
+          "hovered": false
+        },
+        {
+          "frame": 28,
+          "cull_ms": 0.3219,
+          "edges_ms": 0.7297,
+          "nodes_ms": 0.0166,
+          "total_ms": 1.0691,
+          "visible_nodes": 4574,
+          "visible_edges": 14014,
+          "hovered": false
+        },
+        {
+          "frame": 29,
+          "cull_ms": 0.3338,
+          "edges_ms": 0.7184,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.0703,
+          "visible_nodes": 4574,
+          "visible_edges": 14019,
+          "hovered": false
+        },
+        {
+          "frame": 30,
+          "cull_ms": 0.3222,
+          "edges_ms": 0.746,
+          "nodes_ms": 0.0169,
+          "total_ms": 1.086,
+          "visible_nodes": 4574,
+          "visible_edges": 14013,
+          "hovered": false
+        },
+        {
+          "frame": 31,
+          "cull_ms": 0.319,
+          "edges_ms": 0.7246,
+          "nodes_ms": 0.0164,
+          "total_ms": 1.0606,
+          "visible_nodes": 4579,
+          "visible_edges": 14025,
+          "hovered": false
+        },
+        {
+          "frame": 32,
+          "cull_ms": 0.3196,
+          "edges_ms": 1.9572,
+          "nodes_ms": 0.0202,
+          "total_ms": 2.3052,
+          "visible_nodes": 4576,
+          "visible_edges": 14041,
+          "hovered": false
+        },
+        {
+          "frame": 33,
+          "cull_ms": 0.8395,
+          "edges_ms": 0.7662,
+          "nodes_ms": 0.0179,
+          "total_ms": 1.6288,
+          "visible_nodes": 4576,
+          "visible_edges": 14054,
+          "hovered": false
+        },
+        {
+          "frame": 34,
+          "cull_ms": 0.3857,
+          "edges_ms": 0.7747,
+          "nodes_ms": 0.0166,
+          "total_ms": 1.178,
+          "visible_nodes": 4588,
+          "visible_edges": 14095,
+          "hovered": false
+        },
+        {
+          "frame": 35,
+          "cull_ms": 0.3521,
+          "edges_ms": 0.7974,
+          "nodes_ms": 0.0453,
+          "total_ms": 1.1959,
+          "visible_nodes": 4600,
+          "visible_edges": 14126,
+          "hovered": false
+        },
+        {
+          "frame": 36,
+          "cull_ms": 0.4137,
+          "edges_ms": 0.8034,
+          "nodes_ms": 0.0193,
+          "total_ms": 1.2376,
+          "visible_nodes": 4628,
+          "visible_edges": 14185,
+          "hovered": false
+        },
+        {
+          "frame": 37,
+          "cull_ms": 0.3438,
+          "edges_ms": 0.7327,
+          "nodes_ms": 0.0165,
+          "total_ms": 1.0938,
+          "visible_nodes": 4614,
+          "visible_edges": 14156,
+          "hovered": false
+        },
+        {
+          "frame": 38,
+          "cull_ms": 0.3254,
+          "edges_ms": 0.7264,
+          "nodes_ms": 0.017,
+          "total_ms": 1.0696,
+          "visible_nodes": 4584,
+          "visible_edges": 14089,
+          "hovered": false
+        },
+        {
+          "frame": 39,
+          "cull_ms": 0.324,
+          "edges_ms": 0.7993,
+          "nodes_ms": 0.0178,
+          "total_ms": 1.1436,
+          "visible_nodes": 4587,
+          "visible_edges": 14087,
+          "hovered": false
+        },
+        {
+          "frame": 40,
+          "cull_ms": 0.3647,
+          "edges_ms": 0.733,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.1157,
+          "visible_nodes": 4600,
+          "visible_edges": 14105,
+          "hovered": false
+        },
+        {
+          "frame": 41,
+          "cull_ms": 0.3178,
+          "edges_ms": 0.7398,
+          "nodes_ms": 0.0185,
+          "total_ms": 1.0771,
+          "visible_nodes": 4615,
+          "visible_edges": 14148,
+          "hovered": false
+        },
+        {
+          "frame": 42,
+          "cull_ms": 0.3419,
+          "edges_ms": 0.7908,
+          "nodes_ms": 0.0181,
+          "total_ms": 1.1516,
+          "visible_nodes": 4610,
+          "visible_edges": 14172,
+          "hovered": false
+        },
+        {
+          "frame": 43,
+          "cull_ms": 0.3526,
+          "edges_ms": 0.8025,
+          "nodes_ms": 0.0167,
+          "total_ms": 1.1726,
+          "visible_nodes": 4605,
+          "visible_edges": 14156,
+          "hovered": false
+        },
+        {
+          "frame": 44,
+          "cull_ms": 0.369,
+          "edges_ms": 0.7846,
+          "nodes_ms": 0.019,
+          "total_ms": 1.1739,
+          "visible_nodes": 4600,
+          "visible_edges": 14130,
+          "hovered": false
+        },
+        {
+          "frame": 45,
+          "cull_ms": 0.7868,
+          "edges_ms": 0.7613,
+          "nodes_ms": 0.0183,
+          "total_ms": 1.5683,
+          "visible_nodes": 4607,
+          "visible_edges": 14127,
+          "hovered": false
+        },
+        {
+          "frame": 46,
+          "cull_ms": 0.722,
+          "edges_ms": 0.971,
+          "nodes_ms": 0.0183,
+          "total_ms": 1.7213,
+          "visible_nodes": 4613,
+          "visible_edges": 14143,
+          "hovered": false
+        },
+        {
+          "frame": 47,
+          "cull_ms": 0.515,
+          "edges_ms": 0.8904,
+          "nodes_ms": 0.0377,
+          "total_ms": 1.4445,
+          "visible_nodes": 4616,
+          "visible_edges": 14140,
+          "hovered": false
+        },
+        {
+          "frame": 48,
+          "cull_ms": 0.6993,
+          "edges_ms": 0.7904,
+          "nodes_ms": 0.0178,
+          "total_ms": 1.5084,
+          "visible_nodes": 4608,
+          "visible_edges": 14133,
+          "hovered": false
+        },
+        {
+          "frame": 49,
+          "cull_ms": 0.404,
+          "edges_ms": 0.734,
+          "nodes_ms": 0.0174,
+          "total_ms": 1.1563,
+          "visible_nodes": 4602,
+          "visible_edges": 14137,
+          "hovered": false
+        },
+        {
+          "frame": 50,
+          "cull_ms": 0.3512,
+          "edges_ms": 0.7266,
+          "nodes_ms": 0.0167,
+          "total_ms": 1.0954,
+          "visible_nodes": 4609,
+          "visible_edges": 14156,
+          "hovered": false
+        },
+        {
+          "frame": 51,
+          "cull_ms": 0.3507,
+          "edges_ms": 0.7462,
+          "nodes_ms": 0.0175,
+          "total_ms": 1.1155,
+          "visible_nodes": 4626,
+          "visible_edges": 14188,
+          "hovered": false
+        },
+        {
+          "frame": 52,
+          "cull_ms": 0.4017,
+          "edges_ms": 0.8472,
+          "nodes_ms": 0.0173,
+          "total_ms": 1.2743,
+          "visible_nodes": 4629,
+          "visible_edges": 14169,
+          "hovered": false
+        },
+        {
+          "frame": 53,
+          "cull_ms": 0.3716,
+          "edges_ms": 0.7434,
+          "nodes_ms": 0.0168,
+          "total_ms": 1.1332,
+          "visible_nodes": 4640,
+          "visible_edges": 14197,
+          "hovered": false
+        },
+        {
+          "frame": 54,
+          "cull_ms": 0.3551,
+          "edges_ms": 0.7371,
+          "nodes_ms": 0.0179,
+          "total_ms": 1.1113,
+          "visible_nodes": 4637,
+          "visible_edges": 14188,
+          "hovered": false
+        },
+        {
+          "frame": 55,
+          "cull_ms": 0.3535,
+          "edges_ms": 0.7561,
+          "nodes_ms": 0.017,
+          "total_ms": 1.1275,
+          "visible_nodes": 4639,
+          "visible_edges": 14203,
+          "hovered": false
+        },
+        {
+          "frame": 56,
+          "cull_ms": 0.3374,
+          "edges_ms": 0.7326,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.0884,
+          "visible_nodes": 4635,
+          "visible_edges": 14217,
+          "hovered": false
+        },
+        {
+          "frame": 57,
+          "cull_ms": 0.3853,
+          "edges_ms": 1.1948,
+          "nodes_ms": 0.0176,
+          "total_ms": 1.5997,
+          "visible_nodes": 4640,
+          "visible_edges": 14235,
+          "hovered": false
+        },
+        {
+          "frame": 58,
+          "cull_ms": 0.3727,
+          "edges_ms": 0.9179,
+          "nodes_ms": 0.0208,
+          "total_ms": 1.3172,
+          "visible_nodes": 4631,
+          "visible_edges": 14184,
+          "hovered": false
+        },
+        {
+          "frame": 59,
+          "cull_ms": 0.6328,
+          "edges_ms": 1.031,
+          "nodes_ms": 0.0197,
+          "total_ms": 1.6937,
+          "visible_nodes": 4636,
+          "visible_edges": 14206,
+          "hovered": false
+        },
+        {
+          "frame": 60,
+          "cull_ms": 0.5137,
+          "edges_ms": 0.9062,
+          "nodes_ms": 0.0186,
+          "total_ms": 1.44,
+          "visible_nodes": 4624,
+          "visible_edges": 14173,
+          "hovered": false
+        },
+        {
+          "frame": 61,
+          "cull_ms": 0.4447,
+          "edges_ms": 0.9083,
+          "nodes_ms": 0.0605,
+          "total_ms": 1.4146,
+          "visible_nodes": 4623,
+          "visible_edges": 14176,
+          "hovered": false
+        },
+        {
+          "frame": 62,
+          "cull_ms": 0.4607,
+          "edges_ms": 0.908,
+          "nodes_ms": 0.0183,
+          "total_ms": 1.3886,
+          "visible_nodes": 4638,
+          "visible_edges": 14227,
+          "hovered": false
+        },
+        {
+          "frame": 63,
+          "cull_ms": 0.3804,
+          "edges_ms": 0.7658,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.1644,
+          "visible_nodes": 4640,
+          "visible_edges": 14248,
+          "hovered": false
+        },
+        {
+          "frame": 64,
+          "cull_ms": 0.3539,
+          "edges_ms": 0.7343,
+          "nodes_ms": 0.0178,
+          "total_ms": 1.107,
+          "visible_nodes": 4648,
+          "visible_edges": 14285,
+          "hovered": false
+        },
+        {
+          "frame": 65,
+          "cull_ms": 0.341,
+          "edges_ms": 0.7298,
+          "nodes_ms": 0.0171,
+          "total_ms": 1.0891,
+          "visible_nodes": 4642,
+          "visible_edges": 14256,
+          "hovered": false
+        },
+        {
+          "frame": 66,
+          "cull_ms": 0.3248,
+          "edges_ms": 0.7424,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.0852,
+          "visible_nodes": 4618,
+          "visible_edges": 14207,
+          "hovered": false
+        },
+        {
+          "frame": 67,
+          "cull_ms": 0.3638,
+          "edges_ms": 0.744,
+          "nodes_ms": 0.0174,
+          "total_ms": 1.1263,
+          "visible_nodes": 4615,
+          "visible_edges": 14185,
+          "hovered": false
+        },
+        {
+          "frame": 68,
+          "cull_ms": 0.344,
+          "edges_ms": 0.7342,
+          "nodes_ms": 0.0179,
+          "total_ms": 1.0971,
+          "visible_nodes": 4615,
+          "visible_edges": 14175,
+          "hovered": false
+        },
+        {
+          "frame": 69,
+          "cull_ms": 0.3214,
+          "edges_ms": 0.7302,
+          "nodes_ms": 0.0198,
+          "total_ms": 1.0722,
+          "visible_nodes": 4608,
+          "visible_edges": 14140,
+          "hovered": false
+        },
+        {
+          "frame": 70,
+          "cull_ms": 0.7762,
+          "edges_ms": 0.7327,
+          "nodes_ms": 0.0173,
+          "total_ms": 1.5282,
+          "visible_nodes": 4594,
+          "visible_edges": 14108,
+          "hovered": false
+        },
+        {
+          "frame": 71,
+          "cull_ms": 0.4357,
+          "edges_ms": 3.3697,
+          "nodes_ms": 0.0278,
+          "total_ms": 3.8452,
+          "visible_nodes": 4586,
+          "visible_edges": 14086,
+          "hovered": false
+        },
+        {
+          "frame": 72,
+          "cull_ms": 1.0396,
+          "edges_ms": 1.0855,
+          "nodes_ms": 0.0467,
+          "total_ms": 2.1783,
+          "visible_nodes": 4588,
+          "visible_edges": 14081,
+          "hovered": false
+        },
+        {
+          "frame": 73,
+          "cull_ms": 0.7221,
+          "edges_ms": 1.2502,
+          "nodes_ms": 0.0208,
+          "total_ms": 2.0019,
+          "visible_nodes": 4594,
+          "visible_edges": 14097,
+          "hovered": false
+        },
+        {
+          "frame": 74,
+          "cull_ms": 0.5507,
+          "edges_ms": 1.031,
+          "nodes_ms": 0.0197,
+          "total_ms": 1.6045,
+          "visible_nodes": 4596,
+          "visible_edges": 14101,
+          "hovered": false
+        },
+        {
+          "frame": 75,
+          "cull_ms": 0.5704,
+          "edges_ms": 1.0979,
+          "nodes_ms": 0.0261,
+          "total_ms": 1.704,
+          "visible_nodes": 4591,
+          "visible_edges": 14095,
+          "hovered": false
+        },
+        {
+          "frame": 76,
+          "cull_ms": 0.7503,
+          "edges_ms": 1.1711,
+          "nodes_ms": 0.019,
+          "total_ms": 1.9489,
+          "visible_nodes": 4603,
+          "visible_edges": 14122,
+          "hovered": false
+        },
+        {
+          "frame": 77,
+          "cull_ms": 0.4966,
+          "edges_ms": 1.0437,
+          "nodes_ms": 0.0174,
+          "total_ms": 1.5596,
+          "visible_nodes": 4595,
+          "visible_edges": 14113,
+          "hovered": false
+        },
+        {
+          "frame": 78,
+          "cull_ms": 0.4106,
+          "edges_ms": 1.0872,
+          "nodes_ms": 0.0195,
+          "total_ms": 1.5227,
+          "visible_nodes": 4599,
+          "visible_edges": 14128,
+          "hovered": false
+        },
+        {
+          "frame": 79,
+          "cull_ms": 0.4341,
+          "edges_ms": 0.9196,
+          "nodes_ms": 0.0244,
+          "total_ms": 1.3826,
+          "visible_nodes": 4604,
+          "visible_edges": 14140,
+          "hovered": false
+        },
+        {
+          "frame": 80,
+          "cull_ms": 0.7251,
+          "edges_ms": 1.6632,
+          "nodes_ms": 0.0204,
+          "total_ms": 2.4209,
+          "visible_nodes": 4615,
+          "visible_edges": 14165,
+          "hovered": false
+        },
+        {
+          "frame": 81,
+          "cull_ms": 0.5941,
+          "edges_ms": 0.885,
+          "nodes_ms": 0.0366,
+          "total_ms": 1.5195,
+          "visible_nodes": 4615,
+          "visible_edges": 14156,
+          "hovered": false
+        },
+        {
+          "frame": 82,
+          "cull_ms": 0.6496,
+          "edges_ms": 1.2806,
+          "nodes_ms": 0.0179,
+          "total_ms": 1.9497,
+          "visible_nodes": 4623,
+          "visible_edges": 14164,
+          "hovered": false
+        },
+        {
+          "frame": 83,
+          "cull_ms": 0.3732,
+          "edges_ms": 0.7265,
+          "nodes_ms": 0.0164,
+          "total_ms": 1.1171,
+          "visible_nodes": 4618,
+          "visible_edges": 14150,
+          "hovered": false
+        },
+        {
+          "frame": 84,
+          "cull_ms": 0.3761,
+          "edges_ms": 0.7316,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.1259,
+          "visible_nodes": 4624,
+          "visible_edges": 14173,
+          "hovered": false
+        },
+        {
+          "frame": 85,
+          "cull_ms": 0.3324,
+          "edges_ms": 0.7798,
+          "nodes_ms": 0.0172,
+          "total_ms": 1.1302,
+          "visible_nodes": 4646,
+          "visible_edges": 14223,
+          "hovered": false
+        },
+        {
+          "frame": 86,
+          "cull_ms": 0.3516,
+          "edges_ms": 0.7325,
+          "nodes_ms": 0.0182,
+          "total_ms": 1.1032,
+          "visible_nodes": 4655,
+          "visible_edges": 14246,
+          "hovered": false
+        },
+        {
+          "frame": 87,
+          "cull_ms": 0.3343,
+          "edges_ms": 0.785,
+          "nodes_ms": 0.0171,
+          "total_ms": 1.1373,
+          "visible_nodes": 4650,
+          "visible_edges": 14201,
+          "hovered": false
+        },
+        {
+          "frame": 88,
+          "cull_ms": 0.3559,
+          "edges_ms": 0.7303,
+          "nodes_ms": 0.0165,
+          "total_ms": 1.1035,
+          "visible_nodes": 4642,
+          "visible_edges": 14173,
+          "hovered": false
+        },
+        {
+          "frame": 89,
+          "cull_ms": 0.3326,
+          "edges_ms": 0.8145,
+          "nodes_ms": 0.0209,
+          "total_ms": 1.1698,
+          "visible_nodes": 4636,
+          "visible_edges": 14153,
+          "hovered": false
+        },
+        {
+          "frame": 90,
+          "cull_ms": 0.4869,
+          "edges_ms": 0.8056,
+          "nodes_ms": 0.0178,
+          "total_ms": 1.3122,
+          "visible_nodes": 4633,
+          "visible_edges": 14159,
+          "hovered": false
+        },
+        {
+          "frame": 91,
+          "cull_ms": 0.3632,
+          "edges_ms": 0.7437,
+          "nodes_ms": 0.0195,
+          "total_ms": 1.1277,
+          "visible_nodes": 4636,
+          "visible_edges": 14166,
+          "hovered": false
+        },
+        {
+          "frame": 92,
+          "cull_ms": 0.3556,
+          "edges_ms": 0.9523,
+          "nodes_ms": 0.0325,
+          "total_ms": 1.3457,
+          "visible_nodes": 4640,
+          "visible_edges": 14178,
+          "hovered": false
+        },
+        {
+          "frame": 93,
+          "cull_ms": 0.509,
+          "edges_ms": 1.1343,
+          "nodes_ms": 0.0224,
+          "total_ms": 1.6685,
+          "visible_nodes": 4640,
+          "visible_edges": 14182,
+          "hovered": false
+        },
+        {
+          "frame": 94,
+          "cull_ms": 0.5797,
+          "edges_ms": 0.9413,
+          "nodes_ms": 0.0519,
+          "total_ms": 1.5746,
+          "visible_nodes": 4631,
+          "visible_edges": 14173,
+          "hovered": false
+        },
+        {
+          "frame": 95,
+          "cull_ms": 1.2614,
+          "edges_ms": 0.8567,
+          "nodes_ms": 0.0175,
+          "total_ms": 2.1379,
+          "visible_nodes": 4636,
+          "visible_edges": 14168,
+          "hovered": false
+        },
+        {
+          "frame": 96,
+          "cull_ms": 0.3523,
+          "edges_ms": 0.8214,
+          "nodes_ms": 0.0169,
+          "total_ms": 1.1919,
+          "visible_nodes": 4637,
+          "visible_edges": 14169,
+          "hovered": false
+        },
+        {
+          "frame": 97,
+          "cull_ms": 0.3274,
+          "edges_ms": 0.7666,
+          "nodes_ms": 0.0171,
+          "total_ms": 1.1124,
+          "visible_nodes": 4635,
+          "visible_edges": 14173,
+          "hovered": false
+        },
+        {
+          "frame": 98,
+          "cull_ms": 0.3468,
+          "edges_ms": 0.8025,
+          "nodes_ms": 0.0179,
+          "total_ms": 1.1684,
+          "visible_nodes": 4626,
+          "visible_edges": 14157,
+          "hovered": false
+        },
+        {
+          "frame": 99,
+          "cull_ms": 0.3576,
+          "edges_ms": 0.7907,
+          "nodes_ms": 0.0171,
+          "total_ms": 1.1663,
+          "visible_nodes": 4623,
+          "visible_edges": 14164,
+          "hovered": false
+        },
+        {
+          "frame": 100,
+          "cull_ms": 0.342,
+          "edges_ms": 1.0263,
+          "nodes_ms": 0.0936,
+          "total_ms": 1.4666,
+          "visible_nodes": 4613,
+          "visible_edges": 14148,
+          "hovered": true
+        },
+        {
+          "frame": 101,
+          "cull_ms": 0.3659,
+          "edges_ms": 1.0807,
+          "nodes_ms": 0.0853,
+          "total_ms": 1.5365,
+          "visible_nodes": 4606,
+          "visible_edges": 14131,
+          "hovered": true
+        },
+        {
+          "frame": 102,
+          "cull_ms": 0.3482,
+          "edges_ms": 0.951,
+          "nodes_ms": 0.0982,
+          "total_ms": 1.3998,
+          "visible_nodes": 4610,
+          "visible_edges": 14122,
+          "hovered": true
+        },
+        {
+          "frame": 103,
+          "cull_ms": 0.3505,
+          "edges_ms": 0.9128,
+          "nodes_ms": 0.0492,
+          "total_ms": 1.3149,
+          "visible_nodes": 4615,
+          "visible_edges": 14116,
+          "hovered": true
+        },
+        {
+          "frame": 104,
+          "cull_ms": 0.4083,
+          "edges_ms": 1.2451,
+          "nodes_ms": 0.098,
+          "total_ms": 1.7553,
+          "visible_nodes": 4622,
+          "visible_edges": 14121,
+          "hovered": true
+        },
+        {
+          "frame": 105,
+          "cull_ms": 0.4399,
+          "edges_ms": 1.1535,
+          "nodes_ms": 0.1304,
+          "total_ms": 1.7282,
+          "visible_nodes": 4610,
+          "visible_edges": 14087,
+          "hovered": true
+        },
+        {
+          "frame": 106,
+          "cull_ms": 0.5829,
+          "edges_ms": 0.9733,
+          "nodes_ms": 0.0771,
+          "total_ms": 1.6361,
+          "visible_nodes": 4606,
+          "visible_edges": 14080,
+          "hovered": true
+        },
+        {
+          "frame": 107,
+          "cull_ms": 0.3563,
+          "edges_ms": 1.3434,
+          "nodes_ms": 0.0776,
+          "total_ms": 1.7813,
+          "visible_nodes": 4611,
+          "visible_edges": 14087,
+          "hovered": true
+        },
+        {
+          "frame": 108,
+          "cull_ms": 0.3379,
+          "edges_ms": 0.9492,
+          "nodes_ms": 0.0814,
+          "total_ms": 1.3719,
+          "visible_nodes": 4622,
+          "visible_edges": 14115,
+          "hovered": true
+        },
+        {
+          "frame": 109,
+          "cull_ms": 0.3458,
+          "edges_ms": 0.9328,
+          "nodes_ms": 0.0934,
+          "total_ms": 1.3741,
+          "visible_nodes": 4615,
+          "visible_edges": 14092,
+          "hovered": true
+        },
+        {
+          "frame": 110,
+          "cull_ms": 0.3337,
+          "edges_ms": 0.9317,
+          "nodes_ms": 0.0966,
+          "total_ms": 1.3642,
+          "visible_nodes": 4611,
+          "visible_edges": 14076,
+          "hovered": true
+        },
+        {
+          "frame": 111,
+          "cull_ms": 0.3141,
+          "edges_ms": 0.9022,
+          "nodes_ms": 0.0741,
+          "total_ms": 1.2923,
+          "visible_nodes": 4608,
+          "visible_edges": 14070,
+          "hovered": true
+        },
+        {
+          "frame": 112,
+          "cull_ms": 0.3081,
+          "edges_ms": 1.1414,
+          "nodes_ms": 0.0871,
+          "total_ms": 1.5384,
+          "visible_nodes": 4611,
+          "visible_edges": 14086,
+          "hovered": true
+        },
+        {
+          "frame": 113,
+          "cull_ms": 0.4031,
+          "edges_ms": 0.9547,
+          "nodes_ms": 0.086,
+          "total_ms": 1.446,
+          "visible_nodes": 4638,
+          "visible_edges": 14147,
+          "hovered": true
+        },
+        {
+          "frame": 114,
+          "cull_ms": 0.3328,
+          "edges_ms": 1.0094,
+          "nodes_ms": 0.0848,
+          "total_ms": 1.4295,
+          "visible_nodes": 4643,
+          "visible_edges": 14168,
+          "hovered": true
+        },
+        {
+          "frame": 115,
+          "cull_ms": 0.4699,
+          "edges_ms": 1.4036,
+          "nodes_ms": 0.08,
+          "total_ms": 1.9617,
+          "visible_nodes": 4609,
+          "visible_edges": 14107,
+          "hovered": true
+        },
+        {
+          "frame": 116,
+          "cull_ms": 0.4329,
+          "edges_ms": 1.1926,
+          "nodes_ms": 0.1355,
+          "total_ms": 1.767,
+          "visible_nodes": 4586,
+          "visible_edges": 14055,
+          "hovered": true
+        },
+        {
+          "frame": 117,
+          "cull_ms": 0.7662,
+          "edges_ms": 1.3158,
+          "nodes_ms": 0.1245,
+          "total_ms": 2.2107,
+          "visible_nodes": 4574,
+          "visible_edges": 14014,
+          "hovered": true
+        },
+        {
+          "frame": 118,
+          "cull_ms": 0.4672,
+          "edges_ms": 0.9627,
+          "nodes_ms": 0.0658,
+          "total_ms": 1.4989,
+          "visible_nodes": 4574,
+          "visible_edges": 14023,
+          "hovered": true
+        },
+        {
+          "frame": 119,
+          "cull_ms": 0.3662,
+          "edges_ms": 0.9361,
+          "nodes_ms": 0.075,
+          "total_ms": 1.3798,
+          "visible_nodes": 4571,
+          "visible_edges": 14030,
+          "hovered": true
+        },
+        {
+          "frame": 120,
+          "cull_ms": 0.801,
+          "edges_ms": 0.9187,
+          "nodes_ms": 0.09,
+          "total_ms": 1.8143,
+          "visible_nodes": 4575,
+          "visible_edges": 14036,
+          "hovered": true
+        },
+        {
+          "frame": 121,
+          "cull_ms": 0.3432,
+          "edges_ms": 0.9522,
+          "nodes_ms": 0.0763,
+          "total_ms": 1.3739,
+          "visible_nodes": 4572,
+          "visible_edges": 14022,
+          "hovered": true
+        },
+        {
+          "frame": 122,
+          "cull_ms": 0.3637,
+          "edges_ms": 0.9558,
+          "nodes_ms": 0.0722,
+          "total_ms": 1.3941,
+          "visible_nodes": 4570,
+          "visible_edges": 14016,
+          "hovered": true
+        },
+        {
+          "frame": 123,
+          "cull_ms": 0.3433,
+          "edges_ms": 0.9164,
+          "nodes_ms": 0.0654,
+          "total_ms": 1.3272,
+          "visible_nodes": 4563,
+          "visible_edges": 14000,
+          "hovered": true
+        },
+        {
+          "frame": 124,
+          "cull_ms": 0.3112,
+          "edges_ms": 0.9636,
+          "nodes_ms": 0.0838,
+          "total_ms": 1.3606,
+          "visible_nodes": 4583,
+          "visible_edges": 14056,
+          "hovered": true
+        },
+        {
+          "frame": 125,
+          "cull_ms": 0.3368,
+          "edges_ms": 1.0652,
+          "nodes_ms": 0.0858,
+          "total_ms": 1.49,
+          "visible_nodes": 4570,
+          "visible_edges": 14027,
+          "hovered": true
+        },
+        {
+          "frame": 126,
+          "cull_ms": 0.4224,
+          "edges_ms": 0.9521,
+          "nodes_ms": 0.0766,
+          "total_ms": 1.4531,
+          "visible_nodes": 4577,
+          "visible_edges": 14039,
+          "hovered": true
+        },
+        {
+          "frame": 127,
+          "cull_ms": 0.353,
+          "edges_ms": 0.9155,
+          "nodes_ms": 0.087,
+          "total_ms": 1.3575,
+          "visible_nodes": 4576,
+          "visible_edges": 14031,
+          "hovered": true
+        },
+        {
+          "frame": 128,
+          "cull_ms": 0.4604,
+          "edges_ms": 0.986,
+          "nodes_ms": 0.0891,
+          "total_ms": 1.5427,
+          "visible_nodes": 4574,
+          "visible_edges": 14014,
+          "hovered": true
+        },
+        {
+          "frame": 129,
+          "cull_ms": 0.3305,
+          "edges_ms": 0.903,
+          "nodes_ms": 0.083,
+          "total_ms": 1.3188,
+          "visible_nodes": 4574,
+          "visible_edges": 14019,
+          "hovered": true
+        },
+        {
+          "frame": 130,
+          "cull_ms": 0.3385,
+          "edges_ms": 0.908,
+          "nodes_ms": 0.0793,
+          "total_ms": 1.3286,
+          "visible_nodes": 4574,
+          "visible_edges": 14013,
+          "hovered": true
+        },
+        {
+          "frame": 131,
+          "cull_ms": 0.3202,
+          "edges_ms": 0.876,
+          "nodes_ms": 0.0685,
+          "total_ms": 1.2666,
+          "visible_nodes": 4579,
+          "visible_edges": 14025,
+          "hovered": true
+        },
+        {
+          "frame": 132,
+          "cull_ms": 0.2962,
+          "edges_ms": 1.2974,
+          "nodes_ms": 0.07,
+          "total_ms": 1.6658,
+          "visible_nodes": 4576,
+          "visible_edges": 14041,
+          "hovered": true
+        },
+        {
+          "frame": 133,
+          "cull_ms": 0.3129,
+          "edges_ms": 0.9676,
+          "nodes_ms": 0.0747,
+          "total_ms": 1.3575,
+          "visible_nodes": 4576,
+          "visible_edges": 14054,
+          "hovered": true
+        },
+        {
+          "frame": 134,
+          "cull_ms": 0.3298,
+          "edges_ms": 0.8549,
+          "nodes_ms": 0.0729,
+          "total_ms": 1.2605,
+          "visible_nodes": 4588,
+          "visible_edges": 14095,
+          "hovered": true
+        },
+        {
+          "frame": 135,
+          "cull_ms": 0.3168,
+          "edges_ms": 0.8028,
+          "nodes_ms": 0.0522,
+          "total_ms": 1.1736,
+          "visible_nodes": 4600,
+          "visible_edges": 14126,
+          "hovered": true
+        },
+        {
+          "frame": 136,
+          "cull_ms": 0.2951,
+          "edges_ms": 0.8839,
+          "nodes_ms": 0.0797,
+          "total_ms": 1.2609,
+          "visible_nodes": 4628,
+          "visible_edges": 14185,
+          "hovered": true
+        },
+        {
+          "frame": 137,
+          "cull_ms": 0.3558,
+          "edges_ms": 1.0241,
+          "nodes_ms": 0.109,
+          "total_ms": 1.491,
+          "visible_nodes": 4614,
+          "visible_edges": 14156,
+          "hovered": true
+        },
+        {
+          "frame": 138,
+          "cull_ms": 0.9703,
+          "edges_ms": 1.0729,
+          "nodes_ms": 0.0824,
+          "total_ms": 2.1357,
+          "visible_nodes": 4584,
+          "visible_edges": 14089,
+          "hovered": true
+        },
+        {
+          "frame": 139,
+          "cull_ms": 0.3685,
+          "edges_ms": 0.9575,
+          "nodes_ms": 0.0853,
+          "total_ms": 1.4141,
+          "visible_nodes": 4587,
+          "visible_edges": 14087,
+          "hovered": true
+        },
+        {
+          "frame": 140,
+          "cull_ms": 0.3526,
+          "edges_ms": 0.9263,
+          "nodes_ms": 0.0758,
+          "total_ms": 1.3569,
+          "visible_nodes": 4600,
+          "visible_edges": 14105,
+          "hovered": true
+        },
+        {
+          "frame": 141,
+          "cull_ms": 0.3409,
+          "edges_ms": 0.9092,
+          "nodes_ms": 0.0763,
+          "total_ms": 1.3286,
+          "visible_nodes": 4615,
+          "visible_edges": 14148,
+          "hovered": true
+        },
+        {
+          "frame": 142,
+          "cull_ms": 0.3437,
+          "edges_ms": 1.0036,
+          "nodes_ms": 0.0966,
+          "total_ms": 1.4459,
+          "visible_nodes": 4610,
+          "visible_edges": 14172,
+          "hovered": true
+        },
+        {
+          "frame": 143,
+          "cull_ms": 0.318,
+          "edges_ms": 0.9421,
+          "nodes_ms": 0.0807,
+          "total_ms": 1.343,
+          "visible_nodes": 4605,
+          "visible_edges": 14156,
+          "hovered": true
+        },
+        {
+          "frame": 144,
+          "cull_ms": 0.3463,
+          "edges_ms": 0.9464,
+          "nodes_ms": 0.0851,
+          "total_ms": 1.3799,
+          "visible_nodes": 4600,
+          "visible_edges": 14130,
+          "hovered": true
+        },
+        {
+          "frame": 145,
+          "cull_ms": 0.7474,
+          "edges_ms": 0.9347,
+          "nodes_ms": 0.081,
+          "total_ms": 1.7657,
+          "visible_nodes": 4607,
+          "visible_edges": 14127,
+          "hovered": true
+        },
+        {
+          "frame": 146,
+          "cull_ms": 0.3425,
+          "edges_ms": 0.9548,
+          "nodes_ms": 0.0837,
+          "total_ms": 1.3833,
+          "visible_nodes": 4613,
+          "visible_edges": 14143,
+          "hovered": true
+        },
+        {
+          "frame": 147,
+          "cull_ms": 0.3212,
+          "edges_ms": 0.8399,
+          "nodes_ms": 0.0451,
+          "total_ms": 1.2079,
+          "visible_nodes": 4616,
+          "visible_edges": 14140,
+          "hovered": true
+        },
+        {
+          "frame": 148,
+          "cull_ms": 0.3305,
+          "edges_ms": 1.1445,
+          "nodes_ms": 0.1644,
+          "total_ms": 1.6471,
+          "visible_nodes": 4608,
+          "visible_edges": 14133,
+          "hovered": true
+        },
+        {
+          "frame": 149,
+          "cull_ms": 0.5481,
+          "edges_ms": 0.9694,
+          "nodes_ms": 0.0758,
+          "total_ms": 1.6027,
+          "visible_nodes": 4602,
+          "visible_edges": 14137,
+          "hovered": true
+        },
+        {
+          "frame": 150,
+          "cull_ms": 0.3902,
+          "edges_ms": 0.9432,
+          "nodes_ms": 0.0778,
+          "total_ms": 1.4139,
+          "visible_nodes": 4609,
+          "visible_edges": 14156,
+          "hovered": true
+        },
+        {
+          "frame": 151,
+          "cull_ms": 0.4235,
+          "edges_ms": 1.0495,
+          "nodes_ms": 0.0854,
+          "total_ms": 1.5627,
+          "visible_nodes": 4626,
+          "visible_edges": 14188,
+          "hovered": true
+        },
+        {
+          "frame": 152,
+          "cull_ms": 0.3553,
+          "edges_ms": 0.948,
+          "nodes_ms": 0.0835,
+          "total_ms": 1.3891,
+          "visible_nodes": 4629,
+          "visible_edges": 14169,
+          "hovered": true
+        },
+        {
+          "frame": 153,
+          "cull_ms": 0.3158,
+          "edges_ms": 0.8875,
+          "nodes_ms": 0.0727,
+          "total_ms": 1.2778,
+          "visible_nodes": 4640,
+          "visible_edges": 14197,
+          "hovered": true
+        },
+        {
+          "frame": 154,
+          "cull_ms": 0.2984,
+          "edges_ms": 0.8915,
+          "nodes_ms": 0.0948,
+          "total_ms": 1.2863,
+          "visible_nodes": 4637,
+          "visible_edges": 14188,
+          "hovered": true
+        },
+        {
+          "frame": 155,
+          "cull_ms": 0.315,
+          "edges_ms": 0.9384,
+          "nodes_ms": 0.081,
+          "total_ms": 1.3366,
+          "visible_nodes": 4639,
+          "visible_edges": 14203,
+          "hovered": true
+        },
+        {
+          "frame": 156,
+          "cull_ms": 0.332,
+          "edges_ms": 1.7122,
+          "nodes_ms": 0.1659,
+          "total_ms": 2.2178,
+          "visible_nodes": 4635,
+          "visible_edges": 14217,
+          "hovered": true
+        },
+        {
+          "frame": 157,
+          "cull_ms": 0.5851,
+          "edges_ms": 1.6359,
+          "nodes_ms": 0.092,
+          "total_ms": 2.317,
+          "visible_nodes": 4640,
+          "visible_edges": 14235,
+          "hovered": true
+        },
+        {
+          "frame": 158,
+          "cull_ms": 0.3126,
+          "edges_ms": 1.1784,
+          "nodes_ms": 0.1861,
+          "total_ms": 1.6833,
+          "visible_nodes": 4631,
+          "visible_edges": 14184,
+          "hovered": true
+        },
+        {
+          "frame": 159,
+          "cull_ms": 0.4324,
+          "edges_ms": 1.0836,
+          "nodes_ms": 0.1554,
+          "total_ms": 1.6804,
+          "visible_nodes": 4636,
+          "visible_edges": 14206,
+          "hovered": true
+        },
+        {
+          "frame": 160,
+          "cull_ms": 0.4121,
+          "edges_ms": 0.8464,
+          "nodes_ms": 0.0717,
+          "total_ms": 1.333,
+          "visible_nodes": 4624,
+          "visible_edges": 14173,
+          "hovered": true
+        },
+        {
+          "frame": 161,
+          "cull_ms": 0.5171,
+          "edges_ms": 0.8822,
+          "nodes_ms": 0.2123,
+          "total_ms": 1.6164,
+          "visible_nodes": 4623,
+          "visible_edges": 14176,
+          "hovered": true
+        },
+        {
+          "frame": 162,
+          "cull_ms": 0.3754,
+          "edges_ms": 0.8536,
+          "nodes_ms": 0.0726,
+          "total_ms": 1.304,
+          "visible_nodes": 4638,
+          "visible_edges": 14227,
+          "hovered": true
+        },
+        {
+          "frame": 163,
+          "cull_ms": 0.3061,
+          "edges_ms": 0.9082,
+          "nodes_ms": 0.1126,
+          "total_ms": 1.3291,
+          "visible_nodes": 4640,
+          "visible_edges": 14248,
+          "hovered": true
+        },
+        {
+          "frame": 164,
+          "cull_ms": 0.3288,
+          "edges_ms": 0.8557,
+          "nodes_ms": 0.0741,
+          "total_ms": 1.2605,
+          "visible_nodes": 4648,
+          "visible_edges": 14285,
+          "hovered": true
+        },
+        {
+          "frame": 165,
+          "cull_ms": 0.3307,
+          "edges_ms": 1.0853,
+          "nodes_ms": 0.1142,
+          "total_ms": 1.5354,
+          "visible_nodes": 4642,
+          "visible_edges": 14256,
+          "hovered": true
+        },
+        {
+          "frame": 166,
+          "cull_ms": 0.3944,
+          "edges_ms": 0.8448,
+          "nodes_ms": 0.0603,
+          "total_ms": 1.3027,
+          "visible_nodes": 4618,
+          "visible_edges": 14207,
+          "hovered": true
+        },
+        {
+          "frame": 167,
+          "cull_ms": 0.3454,
+          "edges_ms": 0.8845,
+          "nodes_ms": 0.0963,
+          "total_ms": 1.3283,
+          "visible_nodes": 4615,
+          "visible_edges": 14185,
+          "hovered": true
+        },
+        {
+          "frame": 168,
+          "cull_ms": 0.325,
+          "edges_ms": 0.8664,
+          "nodes_ms": 0.0843,
+          "total_ms": 1.278,
+          "visible_nodes": 4615,
+          "visible_edges": 14175,
+          "hovered": true
+        },
+        {
+          "frame": 169,
+          "cull_ms": 0.3436,
+          "edges_ms": 0.8619,
+          "nodes_ms": 0.0829,
+          "total_ms": 1.2905,
+          "visible_nodes": 4608,
+          "visible_edges": 14140,
+          "hovered": true
+        },
+        {
+          "frame": 170,
+          "cull_ms": 0.8329,
+          "edges_ms": 2.2043,
+          "nodes_ms": 0.1384,
+          "total_ms": 3.1879,
+          "visible_nodes": 4594,
+          "visible_edges": 14108,
+          "hovered": true
+        },
+        {
+          "frame": 171,
+          "cull_ms": 0.4751,
+          "edges_ms": 0.9382,
+          "nodes_ms": 0.0889,
+          "total_ms": 1.5066,
+          "visible_nodes": 4586,
+          "visible_edges": 14086,
+          "hovered": true
+        },
+        {
+          "frame": 172,
+          "cull_ms": 0.4807,
+          "edges_ms": 0.971,
+          "nodes_ms": 0.0876,
+          "total_ms": 1.5441,
+          "visible_nodes": 4588,
+          "visible_edges": 14081,
+          "hovered": true
+        },
+        {
+          "frame": 173,
+          "cull_ms": 0.3533,
+          "edges_ms": 0.893,
+          "nodes_ms": 0.0922,
+          "total_ms": 1.3417,
+          "visible_nodes": 4594,
+          "visible_edges": 14097,
+          "hovered": true
+        },
+        {
+          "frame": 174,
+          "cull_ms": 0.2962,
+          "edges_ms": 0.8414,
+          "nodes_ms": 0.0686,
+          "total_ms": 1.2087,
+          "visible_nodes": 4596,
+          "visible_edges": 14101,
+          "hovered": true
+        },
+        {
+          "frame": 175,
+          "cull_ms": 0.2931,
+          "edges_ms": 0.8408,
+          "nodes_ms": 0.0708,
+          "total_ms": 1.2067,
+          "visible_nodes": 4591,
+          "visible_edges": 14095,
+          "hovered": true
+        },
+        {
+          "frame": 176,
+          "cull_ms": 0.3156,
+          "edges_ms": 0.8439,
+          "nodes_ms": 0.0634,
+          "total_ms": 1.2254,
+          "visible_nodes": 4603,
+          "visible_edges": 14122,
+          "hovered": true
+        },
+        {
+          "frame": 177,
+          "cull_ms": 0.327,
+          "edges_ms": 0.9284,
+          "nodes_ms": 0.0838,
+          "total_ms": 1.3411,
+          "visible_nodes": 4595,
+          "visible_edges": 14113,
+          "hovered": true
+        },
+        {
+          "frame": 178,
+          "cull_ms": 0.3186,
+          "edges_ms": 0.8928,
+          "nodes_ms": 0.069,
+          "total_ms": 1.2823,
+          "visible_nodes": 4599,
+          "visible_edges": 14128,
+          "hovered": true
+        },
+        {
+          "frame": 179,
+          "cull_ms": 0.3177,
+          "edges_ms": 0.8672,
+          "nodes_ms": 0.0718,
+          "total_ms": 1.259,
+          "visible_nodes": 4604,
+          "visible_edges": 14140,
+          "hovered": true
+        },
+        {
+          "frame": 180,
+          "cull_ms": 0.3085,
+          "edges_ms": 0.8872,
+          "nodes_ms": 0.0786,
+          "total_ms": 1.2766,
+          "visible_nodes": 4615,
+          "visible_edges": 14165,
+          "hovered": true
+        },
+        {
+          "frame": 181,
+          "cull_ms": 0.3086,
+          "edges_ms": 1.2945,
+          "nodes_ms": 0.2341,
+          "total_ms": 1.8464,
+          "visible_nodes": 4615,
+          "visible_edges": 14156,
+          "hovered": true
+        },
+        {
+          "frame": 182,
+          "cull_ms": 0.6811,
+          "edges_ms": 1.5999,
+          "nodes_ms": 0.1437,
+          "total_ms": 2.4366,
+          "visible_nodes": 4623,
+          "visible_edges": 14164,
+          "hovered": true
+        },
+        {
+          "frame": 183,
+          "cull_ms": 0.3938,
+          "edges_ms": 0.9963,
+          "nodes_ms": 0.1217,
+          "total_ms": 1.5166,
+          "visible_nodes": 4618,
+          "visible_edges": 14150,
+          "hovered": true
+        },
+        {
+          "frame": 184,
+          "cull_ms": 0.4561,
+          "edges_ms": 0.9387,
+          "nodes_ms": 0.0976,
+          "total_ms": 1.4972,
+          "visible_nodes": 4624,
+          "visible_edges": 14173,
+          "hovered": true
+        },
+        {
+          "frame": 185,
+          "cull_ms": 0.3485,
+          "edges_ms": 0.8878,
+          "nodes_ms": 0.0782,
+          "total_ms": 1.3165,
+          "visible_nodes": 4646,
+          "visible_edges": 14223,
+          "hovered": true
+        },
+        {
+          "frame": 186,
+          "cull_ms": 0.3073,
+          "edges_ms": 0.8725,
+          "nodes_ms": 0.0681,
+          "total_ms": 1.2498,
+          "visible_nodes": 4655,
+          "visible_edges": 14246,
+          "hovered": true
+        },
+        {
+          "frame": 187,
+          "cull_ms": 0.3002,
+          "edges_ms": 0.9494,
+          "nodes_ms": 0.0914,
+          "total_ms": 1.3431,
+          "visible_nodes": 4650,
+          "visible_edges": 14201,
+          "hovered": true
+        },
+        {
+          "frame": 188,
+          "cull_ms": 0.2999,
+          "edges_ms": 0.8883,
+          "nodes_ms": 0.075,
+          "total_ms": 1.2649,
+          "visible_nodes": 4642,
+          "visible_edges": 14173,
+          "hovered": true
+        },
+        {
+          "frame": 189,
+          "cull_ms": 0.3155,
+          "edges_ms": 0.8656,
+          "nodes_ms": 0.0785,
+          "total_ms": 1.2617,
+          "visible_nodes": 4636,
+          "visible_edges": 14153,
+          "hovered": true
+        },
+        {
+          "frame": 190,
+          "cull_ms": 0.3127,
+          "edges_ms": 0.8541,
+          "nodes_ms": 0.0745,
+          "total_ms": 1.2432,
+          "visible_nodes": 4633,
+          "visible_edges": 14159,
+          "hovered": true
+        },
+        {
+          "frame": 191,
+          "cull_ms": 0.3151,
+          "edges_ms": 0.8586,
+          "nodes_ms": 0.0711,
+          "total_ms": 1.247,
+          "visible_nodes": 4636,
+          "visible_edges": 14166,
+          "hovered": true
+        },
+        {
+          "frame": 192,
+          "cull_ms": 0.2959,
+          "edges_ms": 0.9183,
+          "nodes_ms": 0.1041,
+          "total_ms": 1.3202,
+          "visible_nodes": 4640,
+          "visible_edges": 14178,
+          "hovered": true
+        },
+        {
+          "frame": 193,
+          "cull_ms": 0.3985,
+          "edges_ms": 1.1518,
+          "nodes_ms": 0.1246,
+          "total_ms": 1.6842,
+          "visible_nodes": 4640,
+          "visible_edges": 14182,
+          "hovered": true
+        },
+        {
+          "frame": 194,
+          "cull_ms": 0.4016,
+          "edges_ms": 0.9369,
+          "nodes_ms": 0.1018,
+          "total_ms": 1.4451,
+          "visible_nodes": 4631,
+          "visible_edges": 14173,
+          "hovered": true
+        },
+        {
+          "frame": 195,
+          "cull_ms": 0.8436,
+          "edges_ms": 1.5114,
+          "nodes_ms": 0.125,
+          "total_ms": 2.4886,
+          "visible_nodes": 4636,
+          "visible_edges": 14168,
+          "hovered": true
+        },
+        {
+          "frame": 196,
+          "cull_ms": 0.3877,
+          "edges_ms": 1.0123,
+          "nodes_ms": 0.071,
+          "total_ms": 1.4747,
+          "visible_nodes": 4637,
+          "visible_edges": 14169,
+          "hovered": true
+        },
+        {
+          "frame": 197,
+          "cull_ms": 0.3569,
+          "edges_ms": 0.9644,
+          "nodes_ms": 0.0905,
+          "total_ms": 1.4141,
+          "visible_nodes": 4635,
+          "visible_edges": 14173,
+          "hovered": true
+        },
+        {
+          "frame": 198,
+          "cull_ms": 0.3528,
+          "edges_ms": 0.869,
+          "nodes_ms": 0.0765,
+          "total_ms": 1.3008,
+          "visible_nodes": 4626,
+          "visible_edges": 14157,
+          "hovered": true
+        },
+        {
+          "frame": 199,
+          "cull_ms": 0.3347,
+          "edges_ms": 0.8427,
+          "nodes_ms": 0.0775,
+          "total_ms": 1.2571,
+          "visible_nodes": 4623,
+          "visible_edges": 14164,
+          "hovered": true
+        }
+      ]
+    },
+    {
+      "zoom": 3,
+      "label": "close-up + labels",
+      "samples": [
+        {
+          "frame": 0,
+          "cull_ms": 0.0498,
+          "edges_ms": 1.0978,
+          "nodes_ms": 0.0102,
+          "total_ms": 1.1589,
+          "visible_nodes": 689,
+          "visible_edges": 2680,
+          "hovered": false
+        },
+        {
+          "frame": 1,
+          "cull_ms": 0.0611,
+          "edges_ms": 1.0572,
+          "nodes_ms": 0.0101,
+          "total_ms": 1.1289,
+          "visible_nodes": 682,
+          "visible_edges": 2656,
+          "hovered": false
+        },
+        {
+          "frame": 2,
+          "cull_ms": 0.0508,
+          "edges_ms": 1.178,
+          "nodes_ms": 0.0093,
+          "total_ms": 1.2389,
+          "visible_nodes": 687,
+          "visible_edges": 2689,
+          "hovered": false
+        },
+        {
+          "frame": 3,
+          "cull_ms": 0.0613,
+          "edges_ms": 2.1648,
+          "nodes_ms": 0.079,
+          "total_ms": 2.3126,
+          "visible_nodes": 683,
+          "visible_edges": 2660,
+          "hovered": false
+        },
+        {
+          "frame": 4,
+          "cull_ms": 0.1328,
+          "edges_ms": 1.3921,
+          "nodes_ms": 0.0115,
+          "total_ms": 1.538,
+          "visible_nodes": 683,
+          "visible_edges": 2667,
+          "hovered": false
+        },
+        {
+          "frame": 5,
+          "cull_ms": 0.0652,
+          "edges_ms": 1.3166,
+          "nodes_ms": 0.0346,
+          "total_ms": 1.4188,
+          "visible_nodes": 676,
+          "visible_edges": 2640,
+          "hovered": false
+        },
+        {
+          "frame": 6,
+          "cull_ms": 0.1178,
+          "edges_ms": 1.336,
+          "nodes_ms": 0.0131,
+          "total_ms": 1.4683,
+          "visible_nodes": 671,
+          "visible_edges": 2622,
+          "hovered": false
+        },
+        {
+          "frame": 7,
+          "cull_ms": 0.0772,
+          "edges_ms": 1.2561,
+          "nodes_ms": 0.0118,
+          "total_ms": 1.3464,
+          "visible_nodes": 668,
+          "visible_edges": 2602,
+          "hovered": false
+        },
+        {
+          "frame": 8,
+          "cull_ms": 1.1682,
+          "edges_ms": 1.1924,
+          "nodes_ms": 0.0121,
+          "total_ms": 2.3767,
+          "visible_nodes": 677,
+          "visible_edges": 2623,
+          "hovered": false
+        },
+        {
+          "frame": 9,
+          "cull_ms": 0.0661,
+          "edges_ms": 1.1361,
+          "nodes_ms": 0.0115,
+          "total_ms": 1.2146,
+          "visible_nodes": 676,
+          "visible_edges": 2630,
+          "hovered": false
+        },
+        {
+          "frame": 10,
+          "cull_ms": 0.0548,
+          "edges_ms": 1.137,
+          "nodes_ms": 0.0112,
+          "total_ms": 1.2038,
+          "visible_nodes": 672,
+          "visible_edges": 2600,
+          "hovered": false
+        },
+        {
+          "frame": 11,
+          "cull_ms": 0.0491,
+          "edges_ms": 1.1866,
+          "nodes_ms": 0.0116,
+          "total_ms": 1.2479,
+          "visible_nodes": 669,
+          "visible_edges": 2572,
+          "hovered": false
+        },
+        {
+          "frame": 12,
+          "cull_ms": 0.0494,
+          "edges_ms": 1.2025,
+          "nodes_ms": 0.012,
+          "total_ms": 1.2651,
+          "visible_nodes": 668,
+          "visible_edges": 2583,
+          "hovered": false
+        },
+        {
+          "frame": 13,
+          "cull_ms": 0.0567,
+          "edges_ms": 1.1947,
+          "nodes_ms": 0.0095,
+          "total_ms": 1.2621,
+          "visible_nodes": 669,
+          "visible_edges": 2572,
+          "hovered": false
+        },
+        {
+          "frame": 14,
+          "cull_ms": 0.0552,
+          "edges_ms": 2.4805,
+          "nodes_ms": 0.0119,
+          "total_ms": 2.5558,
+          "visible_nodes": 653,
+          "visible_edges": 2521,
+          "hovered": false
+        },
+        {
+          "frame": 15,
+          "cull_ms": 0.0944,
+          "edges_ms": 1.2284,
+          "nodes_ms": 0.0115,
+          "total_ms": 1.3355,
+          "visible_nodes": 649,
+          "visible_edges": 2503,
+          "hovered": false
+        },
+        {
+          "frame": 16,
+          "cull_ms": 0.07,
+          "edges_ms": 1.1723,
+          "nodes_ms": 0.0269,
+          "total_ms": 1.2705,
+          "visible_nodes": 653,
+          "visible_edges": 2503,
+          "hovered": false
+        },
+        {
+          "frame": 17,
+          "cull_ms": 0.0612,
+          "edges_ms": 1.2693,
+          "nodes_ms": 0.0106,
+          "total_ms": 1.3418,
+          "visible_nodes": 659,
+          "visible_edges": 2527,
+          "hovered": false
+        },
+        {
+          "frame": 18,
+          "cull_ms": 0.0574,
+          "edges_ms": 1.1993,
+          "nodes_ms": 0.0088,
+          "total_ms": 1.2662,
+          "visible_nodes": 662,
+          "visible_edges": 2563,
+          "hovered": false
+        },
+        {
+          "frame": 19,
+          "cull_ms": 0.0515,
+          "edges_ms": 1.1055,
+          "nodes_ms": 0.0098,
+          "total_ms": 1.1677,
+          "visible_nodes": 659,
+          "visible_edges": 2556,
+          "hovered": false
+        },
+        {
+          "frame": 20,
+          "cull_ms": 0.0496,
+          "edges_ms": 1.0855,
+          "nodes_ms": 0.0075,
+          "total_ms": 1.1435,
+          "visible_nodes": 665,
+          "visible_edges": 2570,
+          "hovered": false
+        },
+        {
+          "frame": 21,
+          "cull_ms": 0.0487,
+          "edges_ms": 1.087,
+          "nodes_ms": 0.0123,
+          "total_ms": 1.1491,
+          "visible_nodes": 662,
+          "visible_edges": 2562,
+          "hovered": false
+        },
+        {
+          "frame": 22,
+          "cull_ms": 0.0509,
+          "edges_ms": 1.081,
+          "nodes_ms": 0.0079,
+          "total_ms": 1.1406,
+          "visible_nodes": 669,
+          "visible_edges": 2583,
+          "hovered": false
+        },
+        {
+          "frame": 23,
+          "cull_ms": 0.0462,
+          "edges_ms": 1.1886,
+          "nodes_ms": 0.01,
+          "total_ms": 1.2457,
+          "visible_nodes": 659,
+          "visible_edges": 2551,
+          "hovered": false
+        },
+        {
+          "frame": 24,
+          "cull_ms": 0.0511,
+          "edges_ms": 2.0001,
+          "nodes_ms": 0.0113,
+          "total_ms": 2.0646,
+          "visible_nodes": 671,
+          "visible_edges": 2599,
+          "hovered": false
+        },
+        {
+          "frame": 25,
+          "cull_ms": 0.0597,
+          "edges_ms": 1.0864,
+          "nodes_ms": 0.0107,
+          "total_ms": 1.1574,
+          "visible_nodes": 673,
+          "visible_edges": 2610,
+          "hovered": false
+        },
+        {
+          "frame": 26,
+          "cull_ms": 0.0549,
+          "edges_ms": 1.3692,
+          "nodes_ms": 0.0146,
+          "total_ms": 1.4401,
+          "visible_nodes": 673,
+          "visible_edges": 2605,
+          "hovered": false
+        },
+        {
+          "frame": 27,
+          "cull_ms": 0.0689,
+          "edges_ms": 1.4848,
+          "nodes_ms": 0.0139,
+          "total_ms": 1.5728,
+          "visible_nodes": 654,
+          "visible_edges": 2536,
+          "hovered": false
+        },
+        {
+          "frame": 28,
+          "cull_ms": 0.0794,
+          "edges_ms": 1.2415,
+          "nodes_ms": 0.0132,
+          "total_ms": 1.3348,
+          "visible_nodes": 668,
+          "visible_edges": 2585,
+          "hovered": false
+        },
+        {
+          "frame": 29,
+          "cull_ms": 0.058,
+          "edges_ms": 1.3336,
+          "nodes_ms": 0.0127,
+          "total_ms": 1.4053,
+          "visible_nodes": 675,
+          "visible_edges": 2595,
+          "hovered": false
+        },
+        {
+          "frame": 30,
+          "cull_ms": 0.0656,
+          "edges_ms": 1.5593,
+          "nodes_ms": 0.0116,
+          "total_ms": 1.6378,
+          "visible_nodes": 676,
+          "visible_edges": 2595,
+          "hovered": false
+        },
+        {
+          "frame": 31,
+          "cull_ms": 0.05,
+          "edges_ms": 0.6683,
+          "nodes_ms": 0.0031,
+          "total_ms": 0.7226,
+          "visible_nodes": 670,
+          "visible_edges": 2573,
+          "hovered": false
+        },
+        {
+          "frame": 32,
+          "cull_ms": 0.0394,
+          "edges_ms": 0.6281,
+          "nodes_ms": 0.0027,
+          "total_ms": 0.6711,
+          "visible_nodes": 671,
+          "visible_edges": 2575,
+          "hovered": false
+        },
+        {
+          "frame": 33,
+          "cull_ms": 0.0415,
+          "edges_ms": 0.6535,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6987,
+          "visible_nodes": 659,
+          "visible_edges": 2516,
+          "hovered": false
+        },
+        {
+          "frame": 34,
+          "cull_ms": 0.0418,
+          "edges_ms": 0.6186,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6642,
+          "visible_nodes": 663,
+          "visible_edges": 2521,
+          "hovered": false
+        },
+        {
+          "frame": 35,
+          "cull_ms": 0.0418,
+          "edges_ms": 0.6358,
+          "nodes_ms": 0.0027,
+          "total_ms": 0.681,
+          "visible_nodes": 657,
+          "visible_edges": 2513,
+          "hovered": false
+        },
+        {
+          "frame": 36,
+          "cull_ms": 0.0412,
+          "edges_ms": 0.618,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6629,
+          "visible_nodes": 654,
+          "visible_edges": 2501,
+          "hovered": false
+        },
+        {
+          "frame": 37,
+          "cull_ms": 0.0405,
+          "edges_ms": 0.6251,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6693,
+          "visible_nodes": 659,
+          "visible_edges": 2534,
+          "hovered": false
+        },
+        {
+          "frame": 38,
+          "cull_ms": 0.0414,
+          "edges_ms": 0.6028,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6474,
+          "visible_nodes": 649,
+          "visible_edges": 2481,
+          "hovered": false
+        },
+        {
+          "frame": 39,
+          "cull_ms": 0.0391,
+          "edges_ms": 0.6441,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6867,
+          "visible_nodes": 644,
+          "visible_edges": 2475,
+          "hovered": false
+        },
+        {
+          "frame": 40,
+          "cull_ms": 0.0436,
+          "edges_ms": 0.6017,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6488,
+          "visible_nodes": 656,
+          "visible_edges": 2518,
+          "hovered": false
+        },
+        {
+          "frame": 41,
+          "cull_ms": 0.0403,
+          "edges_ms": 0.6314,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6748,
+          "visible_nodes": 661,
+          "visible_edges": 2542,
+          "hovered": false
+        },
+        {
+          "frame": 42,
+          "cull_ms": 0.049,
+          "edges_ms": 0.6179,
+          "nodes_ms": 0.0045,
+          "total_ms": 0.6721,
+          "visible_nodes": 669,
+          "visible_edges": 2567,
+          "hovered": false
+        },
+        {
+          "frame": 43,
+          "cull_ms": 0.2637,
+          "edges_ms": 0.6275,
+          "nodes_ms": 0.0031,
+          "total_ms": 0.8955,
+          "visible_nodes": 666,
+          "visible_edges": 2558,
+          "hovered": false
+        },
+        {
+          "frame": 44,
+          "cull_ms": 0.0428,
+          "edges_ms": 0.64,
+          "nodes_ms": 0.0033,
+          "total_ms": 0.6869,
+          "visible_nodes": 667,
+          "visible_edges": 2565,
+          "hovered": false
+        },
+        {
+          "frame": 45,
+          "cull_ms": 0.0534,
+          "edges_ms": 0.7899,
+          "nodes_ms": 0.003,
+          "total_ms": 0.8473,
+          "visible_nodes": 673,
+          "visible_edges": 2579,
+          "hovered": false
+        },
+        {
+          "frame": 46,
+          "cull_ms": 0.0984,
+          "edges_ms": 0.6555,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.7608,
+          "visible_nodes": 672,
+          "visible_edges": 2570,
+          "hovered": false
+        },
+        {
+          "frame": 47,
+          "cull_ms": 0.0442,
+          "edges_ms": 0.642,
+          "nodes_ms": 0.003,
+          "total_ms": 0.69,
+          "visible_nodes": 670,
+          "visible_edges": 2569,
+          "hovered": false
+        },
+        {
+          "frame": 48,
+          "cull_ms": 0.0429,
+          "edges_ms": 0.6086,
+          "nodes_ms": 0.003,
+          "total_ms": 0.6552,
+          "visible_nodes": 672,
+          "visible_edges": 2582,
+          "hovered": false
+        },
+        {
+          "frame": 49,
+          "cull_ms": 0.0454,
+          "edges_ms": 0.6441,
+          "nodes_ms": 0.0093,
+          "total_ms": 0.6993,
+          "visible_nodes": 665,
+          "visible_edges": 2550,
+          "hovered": false
+        },
+        {
+          "frame": 50,
+          "cull_ms": 0.0536,
+          "edges_ms": 0.6166,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6736,
+          "visible_nodes": 666,
+          "visible_edges": 2555,
+          "hovered": false
+        },
+        {
+          "frame": 51,
+          "cull_ms": 0.0438,
+          "edges_ms": 0.6635,
+          "nodes_ms": 0.0035,
+          "total_ms": 0.7114,
+          "visible_nodes": 673,
+          "visible_edges": 2590,
+          "hovered": false
+        },
+        {
+          "frame": 52,
+          "cull_ms": 0.04,
+          "edges_ms": 0.5984,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.6415,
+          "visible_nodes": 659,
+          "visible_edges": 2526,
+          "hovered": false
+        },
+        {
+          "frame": 53,
+          "cull_ms": 0.0396,
+          "edges_ms": 0.6186,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6614,
+          "visible_nodes": 656,
+          "visible_edges": 2519,
+          "hovered": false
+        },
+        {
+          "frame": 54,
+          "cull_ms": 0.0441,
+          "edges_ms": 0.605,
+          "nodes_ms": 0.0024,
+          "total_ms": 0.6521,
+          "visible_nodes": 660,
+          "visible_edges": 2544,
+          "hovered": false
+        },
+        {
+          "frame": 55,
+          "cull_ms": 0.0403,
+          "edges_ms": 0.6048,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.6482,
+          "visible_nodes": 653,
+          "visible_edges": 2524,
+          "hovered": false
+        },
+        {
+          "frame": 56,
+          "cull_ms": 0.0394,
+          "edges_ms": 0.6306,
+          "nodes_ms": 0.0031,
+          "total_ms": 0.6739,
+          "visible_nodes": 653,
+          "visible_edges": 2529,
+          "hovered": false
+        },
+        {
+          "frame": 57,
+          "cull_ms": 0.0427,
+          "edges_ms": 0.6414,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.6875,
+          "visible_nodes": 657,
+          "visible_edges": 2555,
+          "hovered": false
+        },
+        {
+          "frame": 58,
+          "cull_ms": 0.0417,
+          "edges_ms": 0.6157,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.6605,
+          "visible_nodes": 655,
+          "visible_edges": 2546,
+          "hovered": false
+        },
+        {
+          "frame": 59,
+          "cull_ms": 0.0409,
+          "edges_ms": 0.6166,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6609,
+          "visible_nodes": 641,
+          "visible_edges": 2488,
+          "hovered": false
+        },
+        {
+          "frame": 60,
+          "cull_ms": 0.0414,
+          "edges_ms": 0.602,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6467,
+          "visible_nodes": 655,
+          "visible_edges": 2551,
+          "hovered": false
+        },
+        {
+          "frame": 61,
+          "cull_ms": 0.0404,
+          "edges_ms": 0.8981,
+          "nodes_ms": 0.0053,
+          "total_ms": 0.9467,
+          "visible_nodes": 660,
+          "visible_edges": 2564,
+          "hovered": false
+        },
+        {
+          "frame": 62,
+          "cull_ms": 0.0432,
+          "edges_ms": 0.7394,
+          "nodes_ms": 0.0035,
+          "total_ms": 0.7874,
+          "visible_nodes": 675,
+          "visible_edges": 2601,
+          "hovered": false
+        },
+        {
+          "frame": 63,
+          "cull_ms": 0.0518,
+          "edges_ms": 0.6119,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6673,
+          "visible_nodes": 676,
+          "visible_edges": 2602,
+          "hovered": false
+        },
+        {
+          "frame": 64,
+          "cull_ms": 0.0485,
+          "edges_ms": 0.5983,
+          "nodes_ms": 0.0035,
+          "total_ms": 0.6509,
+          "visible_nodes": 680,
+          "visible_edges": 2612,
+          "hovered": false
+        },
+        {
+          "frame": 65,
+          "cull_ms": 0.0449,
+          "edges_ms": 0.5819,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6305,
+          "visible_nodes": 686,
+          "visible_edges": 2649,
+          "hovered": false
+        },
+        {
+          "frame": 66,
+          "cull_ms": 0.0412,
+          "edges_ms": 0.6271,
+          "nodes_ms": 0.0037,
+          "total_ms": 0.6727,
+          "visible_nodes": 694,
+          "visible_edges": 2674,
+          "hovered": false
+        },
+        {
+          "frame": 67,
+          "cull_ms": 0.0399,
+          "edges_ms": 0.5911,
+          "nodes_ms": 0.0032,
+          "total_ms": 0.6351,
+          "visible_nodes": 691,
+          "visible_edges": 2656,
+          "hovered": false
+        },
+        {
+          "frame": 68,
+          "cull_ms": 0.0407,
+          "edges_ms": 0.7277,
+          "nodes_ms": 0.0033,
+          "total_ms": 0.775,
+          "visible_nodes": 696,
+          "visible_edges": 2697,
+          "hovered": false
+        },
+        {
+          "frame": 69,
+          "cull_ms": 0.0517,
+          "edges_ms": 0.751,
+          "nodes_ms": 0.0031,
+          "total_ms": 0.8071,
+          "visible_nodes": 694,
+          "visible_edges": 2696,
+          "hovered": false
+        },
+        {
+          "frame": 70,
+          "cull_ms": 0.0592,
+          "edges_ms": 0.7601,
+          "nodes_ms": 0.0034,
+          "total_ms": 0.8266,
+          "visible_nodes": 685,
+          "visible_edges": 2654,
+          "hovered": false
+        },
+        {
+          "frame": 71,
+          "cull_ms": 0.0436,
+          "edges_ms": 0.5774,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6247,
+          "visible_nodes": 684,
+          "visible_edges": 2659,
+          "hovered": false
+        },
+        {
+          "frame": 72,
+          "cull_ms": 0.0399,
+          "edges_ms": 0.603,
+          "nodes_ms": 0.0034,
+          "total_ms": 0.6471,
+          "visible_nodes": 694,
+          "visible_edges": 2695,
+          "hovered": false
+        },
+        {
+          "frame": 73,
+          "cull_ms": 0.0396,
+          "edges_ms": 0.6475,
+          "nodes_ms": 0.0094,
+          "total_ms": 0.6971,
+          "visible_nodes": 691,
+          "visible_edges": 2687,
+          "hovered": false
+        },
+        {
+          "frame": 74,
+          "cull_ms": 0.0512,
+          "edges_ms": 0.5985,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6531,
+          "visible_nodes": 684,
+          "visible_edges": 2650,
+          "hovered": false
+        },
+        {
+          "frame": 75,
+          "cull_ms": 0.0398,
+          "edges_ms": 0.6106,
+          "nodes_ms": 0.0032,
+          "total_ms": 0.6542,
+          "visible_nodes": 686,
+          "visible_edges": 2654,
+          "hovered": false
+        },
+        {
+          "frame": 76,
+          "cull_ms": 0.0402,
+          "edges_ms": 0.6137,
+          "nodes_ms": 0.0027,
+          "total_ms": 0.6573,
+          "visible_nodes": 689,
+          "visible_edges": 2661,
+          "hovered": false
+        },
+        {
+          "frame": 77,
+          "cull_ms": 0.0393,
+          "edges_ms": 0.6084,
+          "nodes_ms": 0.0034,
+          "total_ms": 0.6516,
+          "visible_nodes": 693,
+          "visible_edges": 2683,
+          "hovered": false
+        },
+        {
+          "frame": 78,
+          "cull_ms": 0.0415,
+          "edges_ms": 0.6172,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6621,
+          "visible_nodes": 692,
+          "visible_edges": 2689,
+          "hovered": false
+        },
+        {
+          "frame": 79,
+          "cull_ms": 0.0407,
+          "edges_ms": 0.5719,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6161,
+          "visible_nodes": 687,
+          "visible_edges": 2674,
+          "hovered": false
+        },
+        {
+          "frame": 80,
+          "cull_ms": 0.2413,
+          "edges_ms": 0.5831,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.8277,
+          "visible_nodes": 677,
+          "visible_edges": 2638,
+          "hovered": false
+        },
+        {
+          "frame": 81,
+          "cull_ms": 0.0383,
+          "edges_ms": 0.5754,
+          "nodes_ms": 0.0031,
+          "total_ms": 0.6174,
+          "visible_nodes": 677,
+          "visible_edges": 2657,
+          "hovered": false
+        },
+        {
+          "frame": 82,
+          "cull_ms": 0.0404,
+          "edges_ms": 0.6026,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.6461,
+          "visible_nodes": 678,
+          "visible_edges": 2651,
+          "hovered": false
+        },
+        {
+          "frame": 83,
+          "cull_ms": 0.0414,
+          "edges_ms": 0.5627,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6071,
+          "visible_nodes": 674,
+          "visible_edges": 2633,
+          "hovered": false
+        },
+        {
+          "frame": 84,
+          "cull_ms": 0.0389,
+          "edges_ms": 0.5709,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6134,
+          "visible_nodes": 679,
+          "visible_edges": 2653,
+          "hovered": false
+        },
+        {
+          "frame": 85,
+          "cull_ms": 0.039,
+          "edges_ms": 0.6147,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6573,
+          "visible_nodes": 680,
+          "visible_edges": 2656,
+          "hovered": false
+        },
+        {
+          "frame": 86,
+          "cull_ms": 0.0417,
+          "edges_ms": 0.5877,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.633,
+          "visible_nodes": 692,
+          "visible_edges": 2697,
+          "hovered": false
+        },
+        {
+          "frame": 87,
+          "cull_ms": 0.0359,
+          "edges_ms": 0.5723,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6113,
+          "visible_nodes": 691,
+          "visible_edges": 2704,
+          "hovered": false
+        },
+        {
+          "frame": 88,
+          "cull_ms": 0.0396,
+          "edges_ms": 0.5916,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6348,
+          "visible_nodes": 682,
+          "visible_edges": 2668,
+          "hovered": false
+        },
+        {
+          "frame": 89,
+          "cull_ms": 0.0382,
+          "edges_ms": 0.5761,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.6179,
+          "visible_nodes": 675,
+          "visible_edges": 2635,
+          "hovered": false
+        },
+        {
+          "frame": 90,
+          "cull_ms": 0.0444,
+          "edges_ms": 0.5745,
+          "nodes_ms": 0.0026,
+          "total_ms": 0.6222,
+          "visible_nodes": 670,
+          "visible_edges": 2629,
+          "hovered": false
+        },
+        {
+          "frame": 91,
+          "cull_ms": 0.0388,
+          "edges_ms": 0.5545,
+          "nodes_ms": 0.0025,
+          "total_ms": 0.5963,
+          "visible_nodes": 665,
+          "visible_edges": 2613,
+          "hovered": false
+        },
+        {
+          "frame": 92,
+          "cull_ms": 0.0387,
+          "edges_ms": 0.5649,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.607,
+          "visible_nodes": 664,
+          "visible_edges": 2615,
+          "hovered": false
+        },
+        {
+          "frame": 93,
+          "cull_ms": 0.0389,
+          "edges_ms": 0.6102,
+          "nodes_ms": 0.0028,
+          "total_ms": 0.6526,
+          "visible_nodes": 668,
+          "visible_edges": 2631,
+          "hovered": false
+        },
+        {
+          "frame": 94,
+          "cull_ms": 0.0427,
+          "edges_ms": 0.6677,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.714,
+          "visible_nodes": 666,
+          "visible_edges": 2615,
+          "hovered": false
+        },
+        {
+          "frame": 95,
+          "cull_ms": 0.0471,
+          "edges_ms": 0.6176,
+          "nodes_ms": 0.0033,
+          "total_ms": 0.6694,
+          "visible_nodes": 674,
+          "visible_edges": 2637,
+          "hovered": false
+        },
+        {
+          "frame": 96,
+          "cull_ms": 0.042,
+          "edges_ms": 0.5689,
+          "nodes_ms": 0.0027,
+          "total_ms": 0.6145,
+          "visible_nodes": 680,
+          "visible_edges": 2647,
+          "hovered": false
+        },
+        {
+          "frame": 97,
+          "cull_ms": 0.037,
+          "edges_ms": 0.5585,
+          "nodes_ms": 0.0029,
+          "total_ms": 0.5988,
+          "visible_nodes": 687,
+          "visible_edges": 2681,
+          "hovered": false
+        },
+        {
+          "frame": 98,
+          "cull_ms": 0.04,
+          "edges_ms": 1.0161,
+          "nodes_ms": 0.008,
+          "total_ms": 1.0656,
+          "visible_nodes": 690,
+          "visible_edges": 2689,
+          "hovered": false
+        },
+        {
+          "frame": 99,
+          "cull_ms": 0.0622,
+          "edges_ms": 0.5754,
+          "nodes_ms": 0.0034,
+          "total_ms": 0.6419,
+          "visible_nodes": 696,
+          "visible_edges": 2719,
+          "hovered": false
+        },
+        {
+          "frame": 100,
+          "cull_ms": 0.0403,
+          "edges_ms": 0.652,
+          "nodes_ms": 0.012,
+          "total_ms": 0.7153,
+          "visible_nodes": 689,
+          "visible_edges": 2680,
+          "hovered": true
+        },
+        {
+          "frame": 101,
+          "cull_ms": 0.0375,
+          "edges_ms": 0.7185,
+          "nodes_ms": 0.0143,
+          "total_ms": 0.7732,
+          "visible_nodes": 682,
+          "visible_edges": 2656,
+          "hovered": true
+        },
+        {
+          "frame": 102,
+          "cull_ms": 0.0359,
+          "edges_ms": 0.5884,
+          "nodes_ms": 0.011,
+          "total_ms": 0.6379,
+          "visible_nodes": 687,
+          "visible_edges": 2689,
+          "hovered": true
+        },
+        {
+          "frame": 103,
+          "cull_ms": 0.0406,
+          "edges_ms": 0.6128,
+          "nodes_ms": 0.011,
+          "total_ms": 0.6662,
+          "visible_nodes": 683,
+          "visible_edges": 2660,
+          "hovered": true
+        },
+        {
+          "frame": 104,
+          "cull_ms": 0.0373,
+          "edges_ms": 0.5867,
+          "nodes_ms": 0.0111,
+          "total_ms": 0.6369,
+          "visible_nodes": 683,
+          "visible_edges": 2667,
+          "hovered": true
+        },
+        {
+          "frame": 105,
+          "cull_ms": 0.0366,
+          "edges_ms": 0.6263,
+          "nodes_ms": 0.013,
+          "total_ms": 0.6779,
+          "visible_nodes": 676,
+          "visible_edges": 2640,
+          "hovered": true
+        },
+        {
+          "frame": 106,
+          "cull_ms": 0.0374,
+          "edges_ms": 0.5831,
+          "nodes_ms": 0.0102,
+          "total_ms": 0.632,
+          "visible_nodes": 671,
+          "visible_edges": 2622,
+          "hovered": true
+        },
+        {
+          "frame": 107,
+          "cull_ms": 0.0369,
+          "edges_ms": 0.5981,
+          "nodes_ms": 0.0108,
+          "total_ms": 0.6476,
+          "visible_nodes": 668,
+          "visible_edges": 2602,
+          "hovered": true
+        },
+        {
+          "frame": 108,
+          "cull_ms": 0.0348,
+          "edges_ms": 0.5961,
+          "nodes_ms": 0.0112,
+          "total_ms": 0.6441,
+          "visible_nodes": 677,
+          "visible_edges": 2623,
+          "hovered": true
+        },
+        {
+          "frame": 109,
+          "cull_ms": 0.0361,
+          "edges_ms": 0.7017,
+          "nodes_ms": 0.015,
+          "total_ms": 0.7546,
+          "visible_nodes": 676,
+          "visible_edges": 2630,
+          "hovered": true
+        },
+        {
+          "frame": 110,
+          "cull_ms": 0.0373,
+          "edges_ms": 0.6068,
+          "nodes_ms": 0.0115,
+          "total_ms": 0.6575,
+          "visible_nodes": 672,
+          "visible_edges": 2600,
+          "hovered": true
+        },
+        {
+          "frame": 111,
+          "cull_ms": 0.0372,
+          "edges_ms": 0.6245,
+          "nodes_ms": 0.0141,
+          "total_ms": 0.6778,
+          "visible_nodes": 669,
+          "visible_edges": 2572,
+          "hovered": true
+        },
+        {
+          "frame": 112,
+          "cull_ms": 0.0338,
+          "edges_ms": 0.6025,
+          "nodes_ms": 0.0123,
+          "total_ms": 0.6508,
+          "visible_nodes": 668,
+          "visible_edges": 2583,
+          "hovered": true
+        },
+        {
+          "frame": 113,
+          "cull_ms": 0.0367,
+          "edges_ms": 0.6019,
+          "nodes_ms": 0.013,
+          "total_ms": 0.6536,
+          "visible_nodes": 669,
+          "visible_edges": 2572,
+          "hovered": true
+        },
+        {
+          "frame": 114,
+          "cull_ms": 0.0407,
+          "edges_ms": 0.5829,
+          "nodes_ms": 0.0108,
+          "total_ms": 0.636,
+          "visible_nodes": 653,
+          "visible_edges": 2521,
+          "hovered": true
+        },
+        {
+          "frame": 115,
+          "cull_ms": 0.0367,
+          "edges_ms": 0.6173,
+          "nodes_ms": 0.012,
+          "total_ms": 0.6676,
+          "visible_nodes": 649,
+          "visible_edges": 2503,
+          "hovered": true
+        },
+        {
+          "frame": 116,
+          "cull_ms": 0.0349,
+          "edges_ms": 0.5974,
+          "nodes_ms": 0.0133,
+          "total_ms": 0.6472,
+          "visible_nodes": 653,
+          "visible_edges": 2503,
+          "hovered": true
+        },
+        {
+          "frame": 117,
+          "cull_ms": 0.204,
+          "edges_ms": 0.6502,
+          "nodes_ms": 0.01,
+          "total_ms": 0.8664,
+          "visible_nodes": 659,
+          "visible_edges": 2527,
+          "hovered": true
+        },
+        {
+          "frame": 118,
+          "cull_ms": 0.0412,
+          "edges_ms": 0.9397,
+          "nodes_ms": 0.0207,
+          "total_ms": 1.0079,
+          "visible_nodes": 662,
+          "visible_edges": 2563,
+          "hovered": true
+        },
+        {
+          "frame": 119,
+          "cull_ms": 0.0594,
+          "edges_ms": 0.894,
+          "nodes_ms": 0.015,
+          "total_ms": 0.9742,
+          "visible_nodes": 659,
+          "visible_edges": 2556,
+          "hovered": true
+        },
+        {
+          "frame": 120,
+          "cull_ms": 0.0415,
+          "edges_ms": 0.632,
+          "nodes_ms": 0.0091,
+          "total_ms": 0.6851,
+          "visible_nodes": 665,
+          "visible_edges": 2570,
+          "hovered": true
+        },
+        {
+          "frame": 121,
+          "cull_ms": 0.042,
+          "edges_ms": 0.6623,
+          "nodes_ms": 0.0141,
+          "total_ms": 0.721,
+          "visible_nodes": 662,
+          "visible_edges": 2562,
+          "hovered": true
+        },
+        {
+          "frame": 122,
+          "cull_ms": 0.0504,
+          "edges_ms": 0.6359,
+          "nodes_ms": 0.0145,
+          "total_ms": 0.7059,
+          "visible_nodes": 669,
+          "visible_edges": 2583,
+          "hovered": true
+        },
+        {
+          "frame": 123,
+          "cull_ms": 0.0367,
+          "edges_ms": 0.648,
+          "nodes_ms": 0.0098,
+          "total_ms": 0.6963,
+          "visible_nodes": 659,
+          "visible_edges": 2551,
+          "hovered": true
+        },
+        {
+          "frame": 124,
+          "cull_ms": 0.0371,
+          "edges_ms": 0.6061,
+          "nodes_ms": 0.0104,
+          "total_ms": 0.6553,
+          "visible_nodes": 671,
+          "visible_edges": 2599,
+          "hovered": true
+        },
+        {
+          "frame": 125,
+          "cull_ms": 0.0356,
+          "edges_ms": 0.6406,
+          "nodes_ms": 0.0115,
+          "total_ms": 0.6895,
+          "visible_nodes": 673,
+          "visible_edges": 2610,
+          "hovered": true
+        },
+        {
+          "frame": 126,
+          "cull_ms": 0.0346,
+          "edges_ms": 0.6106,
+          "nodes_ms": 0.014,
+          "total_ms": 0.6609,
+          "visible_nodes": 673,
+          "visible_edges": 2605,
+          "hovered": true
+        },
+        {
+          "frame": 127,
+          "cull_ms": 0.0388,
+          "edges_ms": 0.6565,
+          "nodes_ms": 0.0111,
+          "total_ms": 0.7079,
+          "visible_nodes": 654,
+          "visible_edges": 2536,
+          "hovered": true
+        },
+        {
+          "frame": 128,
+          "cull_ms": 0.0427,
+          "edges_ms": 0.6082,
+          "nodes_ms": 0.0103,
+          "total_ms": 0.663,
+          "visible_nodes": 668,
+          "visible_edges": 2585,
+          "hovered": true
+        },
+        {
+          "frame": 129,
+          "cull_ms": 0.0373,
+          "edges_ms": 0.6191,
+          "nodes_ms": 0.007,
+          "total_ms": 0.665,
+          "visible_nodes": 675,
+          "visible_edges": 2595,
+          "hovered": true
+        },
+        {
+          "frame": 130,
+          "cull_ms": 0.0387,
+          "edges_ms": 0.6031,
+          "nodes_ms": 0.0073,
+          "total_ms": 0.6508,
+          "visible_nodes": 676,
+          "visible_edges": 2595,
+          "hovered": true
+        },
+        {
+          "frame": 131,
+          "cull_ms": 0.036,
+          "edges_ms": 0.6027,
+          "nodes_ms": 0.0097,
+          "total_ms": 0.6498,
+          "visible_nodes": 670,
+          "visible_edges": 2573,
+          "hovered": true
+        },
+        {
+          "frame": 132,
+          "cull_ms": 0.0368,
+          "edges_ms": 0.6374,
+          "nodes_ms": 0.0114,
+          "total_ms": 0.6872,
+          "visible_nodes": 671,
+          "visible_edges": 2575,
+          "hovered": true
+        },
+        {
+          "frame": 133,
+          "cull_ms": 0.0357,
+          "edges_ms": 0.6494,
+          "nodes_ms": 0.0111,
+          "total_ms": 0.6977,
+          "visible_nodes": 659,
+          "visible_edges": 2516,
+          "hovered": true
+        },
+        {
+          "frame": 134,
+          "cull_ms": 0.0372,
+          "edges_ms": 0.6038,
+          "nodes_ms": 0.0115,
+          "total_ms": 0.654,
+          "visible_nodes": 663,
+          "visible_edges": 2521,
+          "hovered": true
+        },
+        {
+          "frame": 135,
+          "cull_ms": 0.0372,
+          "edges_ms": 0.837,
+          "nodes_ms": 0.013,
+          "total_ms": 0.8893,
+          "visible_nodes": 657,
+          "visible_edges": 2513,
+          "hovered": true
+        },
+        {
+          "frame": 136,
+          "cull_ms": 0.0366,
+          "edges_ms": 0.6008,
+          "nodes_ms": 0.01,
+          "total_ms": 0.6494,
+          "visible_nodes": 654,
+          "visible_edges": 2501,
+          "hovered": true
+        },
+        {
+          "frame": 137,
+          "cull_ms": 0.0375,
+          "edges_ms": 0.614,
+          "nodes_ms": 0.0104,
+          "total_ms": 0.6635,
+          "visible_nodes": 659,
+          "visible_edges": 2534,
+          "hovered": true
+        },
+        {
+          "frame": 138,
+          "cull_ms": 0.0355,
+          "edges_ms": 0.5961,
+          "nodes_ms": 0.0116,
+          "total_ms": 0.6445,
+          "visible_nodes": 649,
+          "visible_edges": 2481,
+          "hovered": true
+        },
+        {
+          "frame": 139,
+          "cull_ms": 0.0365,
+          "edges_ms": 0.6019,
+          "nodes_ms": 0.0124,
+          "total_ms": 0.6528,
+          "visible_nodes": 644,
+          "visible_edges": 2475,
+          "hovered": true
+        },
+        {
+          "frame": 140,
+          "cull_ms": 0.0383,
+          "edges_ms": 0.6502,
+          "nodes_ms": 0.0127,
+          "total_ms": 0.7047,
+          "visible_nodes": 656,
+          "visible_edges": 2518,
+          "hovered": true
+        },
+        {
+          "frame": 141,
+          "cull_ms": 0.0464,
+          "edges_ms": 0.8408,
+          "nodes_ms": 0.0145,
+          "total_ms": 0.9062,
+          "visible_nodes": 661,
+          "visible_edges": 2542,
+          "hovered": true
+        },
+        {
+          "frame": 142,
+          "cull_ms": 0.0566,
+          "edges_ms": 1.337,
+          "nodes_ms": 0.019,
+          "total_ms": 1.419,
+          "visible_nodes": 669,
+          "visible_edges": 2567,
+          "hovered": true
+        },
+        {
+          "frame": 143,
+          "cull_ms": 0.0774,
+          "edges_ms": 0.853,
+          "nodes_ms": 0.014,
+          "total_ms": 0.9479,
+          "visible_nodes": 666,
+          "visible_edges": 2558,
+          "hovered": true
+        },
+        {
+          "frame": 144,
+          "cull_ms": 0.042,
+          "edges_ms": 0.7067,
+          "nodes_ms": 0.0109,
+          "total_ms": 0.7634,
+          "visible_nodes": 667,
+          "visible_edges": 2565,
+          "hovered": true
+        },
+        {
+          "frame": 145,
+          "cull_ms": 0.058,
+          "edges_ms": 0.7562,
+          "nodes_ms": 0.0146,
+          "total_ms": 0.8342,
+          "visible_nodes": 673,
+          "visible_edges": 2579,
+          "hovered": true
+        },
+        {
+          "frame": 146,
+          "cull_ms": 0.0424,
+          "edges_ms": 0.6233,
+          "nodes_ms": 0.0109,
+          "total_ms": 0.6784,
+          "visible_nodes": 672,
+          "visible_edges": 2570,
+          "hovered": true
+        },
+        {
+          "frame": 147,
+          "cull_ms": 0.0377,
+          "edges_ms": 0.6348,
+          "nodes_ms": 0.0137,
+          "total_ms": 0.6882,
+          "visible_nodes": 670,
+          "visible_edges": 2569,
+          "hovered": true
+        },
+        {
+          "frame": 148,
+          "cull_ms": 0.0388,
+          "edges_ms": 0.6021,
+          "nodes_ms": 0.0098,
+          "total_ms": 0.6524,
+          "visible_nodes": 672,
+          "visible_edges": 2582,
+          "hovered": true
+        },
+        {
+          "frame": 149,
+          "cull_ms": 0.0404,
+          "edges_ms": 0.6045,
+          "nodes_ms": 0.0084,
+          "total_ms": 0.6552,
+          "visible_nodes": 665,
+          "visible_edges": 2550,
+          "hovered": true
+        },
+        {
+          "frame": 150,
+          "cull_ms": 0.0367,
+          "edges_ms": 0.6004,
+          "nodes_ms": 0.0125,
+          "total_ms": 0.6513,
+          "visible_nodes": 666,
+          "visible_edges": 2555,
+          "hovered": true
+        },
+        {
+          "frame": 151,
+          "cull_ms": 0.0378,
+          "edges_ms": 0.6711,
+          "nodes_ms": 0.0129,
+          "total_ms": 0.7235,
+          "visible_nodes": 673,
+          "visible_edges": 2590,
+          "hovered": true
+        },
+        {
+          "frame": 152,
+          "cull_ms": 0.0366,
+          "edges_ms": 1.1753,
+          "nodes_ms": 0.0187,
+          "total_ms": 1.2358,
+          "visible_nodes": 659,
+          "visible_edges": 2526,
+          "hovered": true
+        },
+        {
+          "frame": 153,
+          "cull_ms": 0.048,
+          "edges_ms": 1.065,
+          "nodes_ms": 0.0155,
+          "total_ms": 1.1344,
+          "visible_nodes": 656,
+          "visible_edges": 2519,
+          "hovered": true
+        },
+        {
+          "frame": 154,
+          "cull_ms": 0.0529,
+          "edges_ms": 1.0549,
+          "nodes_ms": 0.017,
+          "total_ms": 1.1302,
+          "visible_nodes": 660,
+          "visible_edges": 2544,
+          "hovered": true
+        },
+        {
+          "frame": 155,
+          "cull_ms": 0.0448,
+          "edges_ms": 0.6095,
+          "nodes_ms": 0.0125,
+          "total_ms": 0.6699,
+          "visible_nodes": 653,
+          "visible_edges": 2524,
+          "hovered": true
+        },
+        {
+          "frame": 156,
+          "cull_ms": 0.0382,
+          "edges_ms": 0.6299,
+          "nodes_ms": 0.0107,
+          "total_ms": 0.682,
+          "visible_nodes": 653,
+          "visible_edges": 2529,
+          "hovered": true
+        },
+        {
+          "frame": 157,
+          "cull_ms": 0.0381,
+          "edges_ms": 0.6015,
+          "nodes_ms": 0.0113,
+          "total_ms": 0.6526,
+          "visible_nodes": 657,
+          "visible_edges": 2555,
+          "hovered": true
+        },
+        {
+          "frame": 158,
+          "cull_ms": 0.0376,
+          "edges_ms": 0.6014,
+          "nodes_ms": 0.0084,
+          "total_ms": 0.6494,
+          "visible_nodes": 655,
+          "visible_edges": 2546,
+          "hovered": true
+        },
+        {
+          "frame": 159,
+          "cull_ms": 0.0356,
+          "edges_ms": 0.5882,
+          "nodes_ms": 0.0099,
+          "total_ms": 0.6355,
+          "visible_nodes": 641,
+          "visible_edges": 2488,
+          "hovered": true
+        },
+        {
+          "frame": 160,
+          "cull_ms": 0.0392,
+          "edges_ms": 0.6316,
+          "nodes_ms": 0.0122,
+          "total_ms": 0.6849,
+          "visible_nodes": 655,
+          "visible_edges": 2551,
+          "hovered": true
+        },
+        {
+          "frame": 161,
+          "cull_ms": 0.1762,
+          "edges_ms": 0.8258,
+          "nodes_ms": 0.014,
+          "total_ms": 1.029,
+          "visible_nodes": 660,
+          "visible_edges": 2564,
+          "hovered": true
+        },
+        {
+          "frame": 162,
+          "cull_ms": 0.0509,
+          "edges_ms": 1.4904,
+          "nodes_ms": 0.0369,
+          "total_ms": 1.5873,
+          "visible_nodes": 675,
+          "visible_edges": 2601,
+          "hovered": true
+        },
+        {
+          "frame": 163,
+          "cull_ms": 0.1023,
+          "edges_ms": 1.0834,
+          "nodes_ms": 0.0164,
+          "total_ms": 1.2081,
+          "visible_nodes": 676,
+          "visible_edges": 2602,
+          "hovered": true
+        },
+        {
+          "frame": 164,
+          "cull_ms": 0.0548,
+          "edges_ms": 0.6513,
+          "nodes_ms": 0.0107,
+          "total_ms": 0.722,
+          "visible_nodes": 680,
+          "visible_edges": 2612,
+          "hovered": true
+        },
+        {
+          "frame": 165,
+          "cull_ms": 0.0407,
+          "edges_ms": 0.755,
+          "nodes_ms": 0.0082,
+          "total_ms": 0.8076,
+          "visible_nodes": 686,
+          "visible_edges": 2649,
+          "hovered": true
+        },
+        {
+          "frame": 166,
+          "cull_ms": 0.0412,
+          "edges_ms": 0.6399,
+          "nodes_ms": 0.0072,
+          "total_ms": 0.6908,
+          "visible_nodes": 694,
+          "visible_edges": 2674,
+          "hovered": true
+        },
+        {
+          "frame": 167,
+          "cull_ms": 0.0386,
+          "edges_ms": 0.6117,
+          "nodes_ms": 0.0134,
+          "total_ms": 0.666,
+          "visible_nodes": 691,
+          "visible_edges": 2656,
+          "hovered": true
+        },
+        {
+          "frame": 168,
+          "cull_ms": 0.0367,
+          "edges_ms": 0.6175,
+          "nodes_ms": 0.0127,
+          "total_ms": 0.6686,
+          "visible_nodes": 696,
+          "visible_edges": 2697,
+          "hovered": true
+        },
+        {
+          "frame": 169,
+          "cull_ms": 0.0426,
+          "edges_ms": 0.6213,
+          "nodes_ms": 0.0133,
+          "total_ms": 0.679,
+          "visible_nodes": 694,
+          "visible_edges": 2696,
+          "hovered": true
+        },
+        {
+          "frame": 170,
+          "cull_ms": 0.1734,
+          "edges_ms": 0.6527,
+          "nodes_ms": 0.0126,
+          "total_ms": 0.8424,
+          "visible_nodes": 685,
+          "visible_edges": 2654,
+          "hovered": true
+        },
+        {
+          "frame": 171,
+          "cull_ms": 0.0423,
+          "edges_ms": 0.867,
+          "nodes_ms": 0.0164,
+          "total_ms": 0.9286,
+          "visible_nodes": 684,
+          "visible_edges": 2659,
+          "hovered": true
+        },
+        {
+          "frame": 172,
+          "cull_ms": 0.0478,
+          "edges_ms": 0.9335,
+          "nodes_ms": 0.0184,
+          "total_ms": 1.0023,
+          "visible_nodes": 694,
+          "visible_edges": 2695,
+          "hovered": true
+        },
+        {
+          "frame": 173,
+          "cull_ms": 0.0443,
+          "edges_ms": 0.659,
+          "nodes_ms": 0.0162,
+          "total_ms": 0.7287,
+          "visible_nodes": 691,
+          "visible_edges": 2687,
+          "hovered": true
+        },
+        {
+          "frame": 174,
+          "cull_ms": 0.0387,
+          "edges_ms": 0.6439,
+          "nodes_ms": 0.0119,
+          "total_ms": 0.6964,
+          "visible_nodes": 684,
+          "visible_edges": 2650,
+          "hovered": true
+        },
+        {
+          "frame": 175,
+          "cull_ms": 0.0368,
+          "edges_ms": 0.638,
+          "nodes_ms": 0.0124,
+          "total_ms": 0.6889,
+          "visible_nodes": 686,
+          "visible_edges": 2654,
+          "hovered": true
+        },
+        {
+          "frame": 176,
+          "cull_ms": 0.043,
+          "edges_ms": 0.6495,
+          "nodes_ms": 0.0124,
+          "total_ms": 0.7066,
+          "visible_nodes": 689,
+          "visible_edges": 2661,
+          "hovered": true
+        },
+        {
+          "frame": 177,
+          "cull_ms": 0.0373,
+          "edges_ms": 0.6384,
+          "nodes_ms": 0.0129,
+          "total_ms": 0.6904,
+          "visible_nodes": 693,
+          "visible_edges": 2683,
+          "hovered": true
+        },
+        {
+          "frame": 178,
+          "cull_ms": 0.0376,
+          "edges_ms": 0.6513,
+          "nodes_ms": 0.014,
+          "total_ms": 0.7041,
+          "visible_nodes": 692,
+          "visible_edges": 2689,
+          "hovered": true
+        },
+        {
+          "frame": 179,
+          "cull_ms": 0.0382,
+          "edges_ms": 0.6116,
+          "nodes_ms": 0.0112,
+          "total_ms": 0.6626,
+          "visible_nodes": 687,
+          "visible_edges": 2674,
+          "hovered": true
+        },
+        {
+          "frame": 180,
+          "cull_ms": 0.0374,
+          "edges_ms": 0.744,
+          "nodes_ms": 0.0161,
+          "total_ms": 0.7991,
+          "visible_nodes": 677,
+          "visible_edges": 2638,
+          "hovered": true
+        },
+        {
+          "frame": 181,
+          "cull_ms": 0.2067,
+          "edges_ms": 1.0507,
+          "nodes_ms": 0.033,
+          "total_ms": 1.2991,
+          "visible_nodes": 677,
+          "visible_edges": 2657,
+          "hovered": true
+        },
+        {
+          "frame": 182,
+          "cull_ms": 0.0559,
+          "edges_ms": 0.8319,
+          "nodes_ms": 0.0219,
+          "total_ms": 0.9142,
+          "visible_nodes": 678,
+          "visible_edges": 2651,
+          "hovered": true
+        },
+        {
+          "frame": 183,
+          "cull_ms": 0.0537,
+          "edges_ms": 0.782,
+          "nodes_ms": 0.0172,
+          "total_ms": 0.8568,
+          "visible_nodes": 674,
+          "visible_edges": 2633,
+          "hovered": true
+        },
+        {
+          "frame": 184,
+          "cull_ms": 0.051,
+          "edges_ms": 0.7257,
+          "nodes_ms": 0.0186,
+          "total_ms": 0.7989,
+          "visible_nodes": 679,
+          "visible_edges": 2653,
+          "hovered": true
+        },
+        {
+          "frame": 185,
+          "cull_ms": 0.0467,
+          "edges_ms": 0.8319,
+          "nodes_ms": 0.016,
+          "total_ms": 0.8977,
+          "visible_nodes": 680,
+          "visible_edges": 2656,
+          "hovered": true
+        },
+        {
+          "frame": 186,
+          "cull_ms": 0.0522,
+          "edges_ms": 0.96,
+          "nodes_ms": 0.0149,
+          "total_ms": 1.0321,
+          "visible_nodes": 692,
+          "visible_edges": 2697,
+          "hovered": true
+        },
+        {
+          "frame": 187,
+          "cull_ms": 0.0446,
+          "edges_ms": 0.6418,
+          "nodes_ms": 0.0093,
+          "total_ms": 0.6977,
+          "visible_nodes": 691,
+          "visible_edges": 2704,
+          "hovered": true
+        },
+        {
+          "frame": 188,
+          "cull_ms": 0.0381,
+          "edges_ms": 0.7116,
+          "nodes_ms": 0.0122,
+          "total_ms": 0.7635,
+          "visible_nodes": 682,
+          "visible_edges": 2668,
+          "hovered": true
+        },
+        {
+          "frame": 189,
+          "cull_ms": 0.0369,
+          "edges_ms": 0.6127,
+          "nodes_ms": 0.0107,
+          "total_ms": 0.6617,
+          "visible_nodes": 675,
+          "visible_edges": 2635,
+          "hovered": true
+        },
+        {
+          "frame": 190,
+          "cull_ms": 0.0355,
+          "edges_ms": 0.6077,
+          "nodes_ms": 0.0121,
+          "total_ms": 0.6572,
+          "visible_nodes": 670,
+          "visible_edges": 2629,
+          "hovered": true
+        },
+        {
+          "frame": 191,
+          "cull_ms": 0.0377,
+          "edges_ms": 0.8518,
+          "nodes_ms": 0.0119,
+          "total_ms": 0.903,
+          "visible_nodes": 665,
+          "visible_edges": 2613,
+          "hovered": true
+        },
+        {
+          "frame": 192,
+          "cull_ms": 0.0493,
+          "edges_ms": 0.704,
+          "nodes_ms": 0.0134,
+          "total_ms": 0.7684,
+          "visible_nodes": 664,
+          "visible_edges": 2615,
+          "hovered": true
+        },
+        {
+          "frame": 193,
+          "cull_ms": 0.0349,
+          "edges_ms": 0.5864,
+          "nodes_ms": 0.011,
+          "total_ms": 0.6338,
+          "visible_nodes": 668,
+          "visible_edges": 2631,
+          "hovered": true
+        },
+        {
+          "frame": 194,
+          "cull_ms": 0.0363,
+          "edges_ms": 0.5981,
+          "nodes_ms": 0.0095,
+          "total_ms": 0.6454,
+          "visible_nodes": 666,
+          "visible_edges": 2615,
+          "hovered": true
+        },
+        {
+          "frame": 195,
+          "cull_ms": 0.0362,
+          "edges_ms": 0.5905,
+          "nodes_ms": 0.011,
+          "total_ms": 0.6392,
+          "visible_nodes": 674,
+          "visible_edges": 2637,
+          "hovered": true
+        },
+        {
+          "frame": 196,
+          "cull_ms": 0.0366,
+          "edges_ms": 0.5897,
+          "nodes_ms": 0.0108,
+          "total_ms": 0.6387,
+          "visible_nodes": 680,
+          "visible_edges": 2647,
+          "hovered": true
+        },
+        {
+          "frame": 197,
+          "cull_ms": 0.0343,
+          "edges_ms": 0.6028,
+          "nodes_ms": 0.0141,
+          "total_ms": 0.6524,
+          "visible_nodes": 687,
+          "visible_edges": 2681,
+          "hovered": true
+        },
+        {
+          "frame": 198,
+          "cull_ms": 0.0392,
+          "edges_ms": 0.626,
+          "nodes_ms": 0.0118,
+          "total_ms": 0.6787,
+          "visible_nodes": 690,
+          "visible_edges": 2689,
+          "hovered": true
+        },
+        {
+          "frame": 199,
+          "cull_ms": 0.0355,
+          "edges_ms": 0.6023,
+          "nodes_ms": 0.0119,
+          "total_ms": 0.6512,
+          "visible_nodes": 696,
+          "visible_edges": 2719,
+          "hovered": true
+        }
+      ]
+    }
+  ]
+}
