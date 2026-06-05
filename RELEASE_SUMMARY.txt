@@ -1,0 +1,40 @@
+# v0.2.0 Release Summary
+
+## Status: PUBLISHED (public, Latest) — pending smoke test
+
+Release: https://github.com/shubhsaxena2020/cortex/releases/tag/v0.2.0
+
+### What's Shipped
+- All 5 P0 items (dedup, smart capture filtering, graph rebuild, search latency, telemetry/feedback)
+- Obsidian graph pattern matching (radius formula, label fade, hover dim, physics)
+- Web Worker physics (10k-node graph, no UI freeze)
+- 245/245 tests passing
+- Clean build (all 3 processes + worker chunk)
+
+### Artifacts
+- Tag: v0.2.0 -> commit 4148822 (pushed; tag was moved to HEAD so the source matches the release content)
+- Portable: Cortex-0.2.0-win-x64-portable.zip (123 MB / 118 MiB)
+  SHA256: ced50d6ea5cf7b4e743a1b7bf30c90825ca8fe28d064cf9e3aa654334bdd7d8b
+  (rebuilt from the current win-unpacked so it INCLUDES the Obsidian graph work;
+   the earlier 17:50 zip predated that commit and was discarded)
+- Release body: release-body.md (with Smart App Control transparency)
+- Asset state on GitHub: uploaded, draft=false, prerelease=false
+
+### Known Limitations
+- NSIS installer: NOT shipped. Blocked by Windows 11 Smart App Control (Enforce mode)
+  which refuses to spawn the unsigned NSIS intermediate exe during build
+  ("An Application Control policy has blocked this file").
+  Fix: code-signing (v0.4 roadmap). Affects only the installer; the portable zip ships.
+- Unsigned portable may require right-click -> Unblock on Smart App Control machines,
+  and may be blocked entirely where SAC is in Enforce mode until signed.
+- Node zoom-scale deferred (documented in docs/OBSIDIAN-GAP-ANALYSIS.md; trade-off justified).
+
+### Next Steps
+1. Smoke test on Windows 11 using the portable zip + SMOKE-TEST-INSTRUCTIONS.md
+2. If smoke test fails, the release is already public — fix-forward to v0.2.1 or
+   mark the release as pre-release until verified.
+3. Plan v0.3/v0.4 (code-signing to unblock the installer + Smart App Control, medium-priority graph features).
+
+---
+
+Generated: 2026-06-05
