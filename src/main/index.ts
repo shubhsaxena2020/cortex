@@ -11,6 +11,9 @@ import { startHttpServer, stopHttpServer, armPairing } from './http'
 import { seedEmbeddingsIfNeeded, embedAndStore, memoryToText } from './seed-embeddings'
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
+import * as telemetry from './telemetry'
+import { version as appVersion } from '../../package.json'
+import type { TelemetryEventType, FeedbackSubmission } from '../types'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mammoth = require('mammoth') as typeof import('mammoth')
 
@@ -127,11 +130,22 @@ async function startServerWithRetry(): Promise<void> {
       broadcastMemoriesChanged({ memory })
       void embedAndStore(memory.id, memoryToText(memory))
       void saveConversationToVault(memory, url)
+      telemetry.capture('memory_created', {
+        source: memory.source,
+        size_bytes: Buffer.byteLength(memory.content ?? '', 'utf8'),
+      })
     },
     onMemoryDeleted: (memory: { id: string }) => {
       broadcastMemoriesChanged({ memory, deleted: true })
+      telemetry.capture('memory_deleted', { count: 1 })
     },
-    onExtensionPaired: () => broadcastExtensionPaired(),
+    onExtensionPaired: () => {
+      broadcastExtensionPaired()
+      telemetry.capture('extension_paired', {
+        extension_version: 'unknown',
+        vault_path_hash: currentVaultPath ? telemetry.hashPath(currentVaultPath) : null,
+      })
+    },
     saveVaultFile: async (filename: string, content: string, source: string) => {
       if (!currentVaultPath) return { success: false }
       try {
@@ -182,6 +196,9 @@ app.whenReady().then(async () => {
   })
 
   await db.initDb()
+  await telemetry.initTelemetry(app.getPath('userData')).catch(err =>
+    log.error('[telemetry] init failed:', err)
+  )
   registerIpcHandlers()
   try {
     await startServerWithRetry()
@@ -222,6 +239,14 @@ app.whenReady().then(async () => {
 app.on('before-quit', async () => {
   stopVaultWatcher()
   stopWatchFolderWatcher()
+  // Session summary (no-op if telemetry is off). Counts are cheap DB reads.
+  try {
+    const memoriesIndexed = db.getAllMemories().length
+    const filesIndexed = db.getAllVaultFiles().length
+    await telemetry.recordSessionEnd({ memoriesIndexed, filesIndexed })
+  } catch (err) {
+    log.error('[telemetry] session-end failed:', err)
+  }
   await stopHttpServer().catch(err => log.error('[cortex] stopHttpServer:', err))
 })
 
@@ -255,6 +280,10 @@ function registerIpcHandlers(): void {
     )
     // Fire-and-forget: response returns immediately; embedding lands async.
     void embedAndStore(id, memoryToText(row))
+    telemetry.capture('memory_created', {
+      source: row.source,
+      size_bytes: Buffer.byteLength(row.content ?? '', 'utf8'),
+    })
     return toMemory(row)
   })
 
@@ -276,11 +305,20 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('memories:delete', (_e, id: string) => {
     db.deleteMemory(id)
+    telemetry.capture('memory_deleted', { count: 1 })
   })
 
   ipcMain.handle('memories:search', (_e, query: string, tags?: string[], source?: string) => {
     // db.searchMemories signature: (query, source?, tags?)
+    const t0 = performance.now()
     const rows = db.searchMemories(query || '', source, tags)
+    const latency = performance.now() - t0
+    // Only the query LENGTH is recorded — never the query text.
+    telemetry.capture('search_executed', {
+      query_length: (query || '').length,
+      result_count: rows.length,
+      latency_ms: Math.round(latency * 100) / 100,
+    })
     return rows.map(r => ({ ...toMemory(r), highlight: makeHighlight(r.content || '', query || '') }))
   })
 
@@ -429,4 +467,20 @@ function registerIpcHandlers(): void {
     stopWatchFolderWatcher()
     broadcastVaultChanged()
   })
+
+  // ── Telemetry (opt-in, fully local) ──────────────────────────────────────
+  ipcMain.handle('telemetry:isEnabled', () => telemetry.isTelemetryEnabled())
+  ipcMain.handle('telemetry:setEnabled', (_e, enabled: boolean) => telemetry.setTelemetryEnabled(enabled))
+  // `send` (not invoke) for capture — fire-and-forget from the renderer.
+  ipcMain.on('telemetry:capture', (_e, type: TelemetryEventType, data: Record<string, unknown>) => {
+    telemetry.capture(type, data)
+  })
+  ipcMain.handle('telemetry:getAll', () => telemetry.getAllEvents())
+  ipcMain.handle('telemetry:getStats', () => telemetry.getTelemetryStats())
+  ipcMain.handle('telemetry:export', () => telemetry.exportEvents({ appVersion, platform: process.platform }))
+  ipcMain.handle('telemetry:clear', () => telemetry.clearAllEvents())
+
+  // ── Feedback (independent of telemetry opt-in) ───────────────────────────
+  ipcMain.handle('feedback:save', (_e, submission: FeedbackSubmission) => telemetry.saveFeedback(submission))
+  ipcMain.handle('feedback:getAll', () => telemetry.getAllFeedback())
 }

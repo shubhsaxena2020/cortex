@@ -158,6 +158,21 @@ export default function GraphCanvas({
     adjacencyRef.current = buildAdjacency(visNodes, visLinks)
     quadtreeDirty.current = true
 
+    // Throttled graph_interaction telemetry. No-op in the main process unless
+    // the user opted in; throttle here keeps IPC chatter low regardless.
+    const lastCaptureAt: Record<string, number> = {}
+    const GRAPH_TELEMETRY_THROTTLE_MS = 3000
+    function captureGraph(action: 'pan' | 'zoom' | 'hover' | 'click' | 'drag') {
+      const now = performance.now()
+      if (now - (lastCaptureAt[action] ?? 0) < GRAPH_TELEMETRY_THROTTLE_MS) return
+      lastCaptureAt[action] = now
+      window.electron.telemetry.capture('graph_interaction', {
+        action,
+        zoom_level: Math.round(transformRef.current.k * 1000) / 1000,
+        node_count: nodesRef.current.length,
+      })
+    }
+
     // ── Draw ────────────────────────────────────────────────────────────────
     function draw() {
       const t = transformRef.current
@@ -356,6 +371,8 @@ export default function GraphCanvas({
         // to the new visible viewport — same heuristic as the previous build.
         if (sim.alpha() < 0.05) sim.alpha(0.1).restart()
         draw()
+        // Classify wheel as zoom, drag as pan (throttled).
+        captureGraph(ev.sourceEvent instanceof WheelEvent ? 'zoom' : 'pan')
       })
     zoomRef.current = zoom
     d3.select(canvas).call(zoom).on('dblclick.zoom', null)
@@ -382,6 +399,7 @@ export default function GraphCanvas({
         hoverSetRef.current = null
       } else {
         hoverSetRef.current = highlightPath(newId, 1, adjacencyRef.current)
+        captureGraph('hover')
       }
       draw()
     }
@@ -438,6 +456,7 @@ export default function GraphCanvas({
         dragNode.fy = null
         sim.alphaTarget(0)
         dragNode = null
+        captureGraph('drag')
       }
     }
 
@@ -450,7 +469,7 @@ export default function GraphCanvas({
       const found = hitTest(sx, sy)
       selectedIdRef.current = found?.id ?? null
       onNodeSelect(found)
-      if (found) ensurePulseLoop()
+      if (found) { ensurePulseLoop(); captureGraph('click') }
       draw()
     }
 

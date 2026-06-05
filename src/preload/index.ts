@@ -43,6 +43,20 @@ const api: ElectronAPI = {
     setWatchPath: (watchPath) => ipcRenderer.invoke('vault:setWatchPath', watchPath),
     removeWatchPath: () => ipcRenderer.invoke('vault:removeWatchPath'),
   },
+  telemetry: {
+    isEnabled: () => ipcRenderer.invoke('telemetry:isEnabled'),
+    setEnabled: (enabled) => ipcRenderer.invoke('telemetry:setEnabled', enabled),
+    // Fire-and-forget — graph interactions fire often; no round-trip wait.
+    capture: (type, data) => { ipcRenderer.send('telemetry:capture', type, data) },
+    getAll: () => ipcRenderer.invoke('telemetry:getAll'),
+    getStats: () => ipcRenderer.invoke('telemetry:getStats'),
+    export: () => ipcRenderer.invoke('telemetry:export'),
+    clear: () => ipcRenderer.invoke('telemetry:clear'),
+  },
+  feedback: {
+    save: (submission) => ipcRenderer.invoke('feedback:save', submission),
+    getAll: () => ipcRenderer.invoke('feedback:getAll'),
+  },
   events: {
     onMemoriesChanged: (callback) => {
       const handler = (): void => callback()

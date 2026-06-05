@@ -65,6 +65,40 @@ export interface SearchResult extends Memory {
   highlight?: string
 }
 
+export type TelemetryEventType =
+  | 'search_executed'
+  | 'memory_created'
+  | 'memory_deleted'
+  | 'graph_interaction'
+  | 'extension_paired'
+  | 'app_session'
+
+export interface TelemetryEvent {
+  type: TelemetryEventType
+  data: Record<string, unknown>
+  timestamp: string
+}
+
+export interface TelemetryStats {
+  total: number
+  byType: Record<string, number>
+  earliest: string | null
+  latest: string | null
+}
+
+export type FeedbackType = 'bug' | 'feature' | 'other'
+
+export interface FeedbackSubmission {
+  type: FeedbackType
+  title: string
+  description: string
+}
+
+export interface StoredFeedback extends FeedbackSubmission {
+  id: string
+  timestamp: string
+}
+
 export interface ElectronAPI {
   memories: {
     getAll: () => Promise<Memory[]>
@@ -106,6 +140,19 @@ export interface ElectronAPI {
     semanticSearch: (query: string) => Promise<VaultFile[]>
     setWatchPath: (watchPath: string) => Promise<void>
     removeWatchPath: () => Promise<void>
+  }
+  telemetry: {
+    isEnabled: () => Promise<boolean>
+    setEnabled: (enabled: boolean) => Promise<void>
+    capture: (type: TelemetryEventType, data: Record<string, unknown>) => void
+    getAll: () => Promise<TelemetryEvent[]>
+    getStats: () => Promise<TelemetryStats>
+    export: () => Promise<string>
+    clear: () => Promise<void>
+  }
+  feedback: {
+    save: (submission: FeedbackSubmission) => Promise<StoredFeedback>
+    getAll: () => Promise<StoredFeedback[]>
   }
   events: {
     onMemoriesChanged: (callback: () => void) => () => void  // returns unsubscribe

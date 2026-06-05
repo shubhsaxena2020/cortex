@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Copy, Check, Globe, Key, FileText, Link2, FolderOpen, FolderSearch, ExternalLink, Eye, EyeOff, Cpu, RefreshCw } from 'lucide-react'
 import { useStore } from '../store'
+import PrivacySettings from '../components/PrivacySettings'
 import type { ExtensionConfig, VaultConfig, SystemStatus } from '../../../types'
 
 type PairState =
@@ -241,6 +242,8 @@ export default function Settings(): React.ReactElement {
               <div className="text-sm text-[#555]">Loading…</div>
             ) : null}
           </section>
+
+          <PrivacySettings />
 
           <section className="opacity-60">
             <h2 className="text-base font-semibold text-[#E8E8E8] mb-1">Coming soon</h2>
