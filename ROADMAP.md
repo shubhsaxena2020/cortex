@@ -8,7 +8,7 @@ The moat is the **capture pipeline**: a Chrome extension + Electron app that pul
 
 Every phase below earns the right to exist by sharpening or extending that capture-to-retrieval loop. If a feature doesn't, it gets cut.
 
-## v0.1.0 — Infrastructure (current, GitHub Pre-Release `v0.1.0-beta`)
+## v0.1.0 — Infrastructure (GitHub Pre-Release `v0.1.0-beta`)
 
 The plumbing. Honestly framed: not the smart product yet.
 
@@ -23,21 +23,22 @@ The plumbing. Honestly framed: not the smart product yet.
 - [x] NSIS Windows installer
 - [x] GitHub Pre-Release
 
-## v0.2.0 — "The capture pipeline is correct, fast, and observable"
+## v0.2.0 — "The capture pipeline is correct, fast, and observable" ✅ SHIPPED (2026-06-05)
 
-Five P0 items. That is the entire scope. Everything previously in v0.2 that isn't on this list moved to v0.3 or later. The council reviewed this list and called it out as the smallest credible MVP that still defends the moat.
+All five P0 items landed. Two items (Web-worker force simulation, embedding throughput) that were scoped as v0.3-or-deferred shipped early because the graph work demanded them. See `RELEASE_NOTES.md` for the full changelog and measured numbers.
 
-- [ ] **Conversation deduplication** — same chat captured twice never creates two memories. Without this, the graph becomes a landfill within a week of real LLM usage. (P0 because correctness, not polish.)
-- [ ] **Smart capture filtering** — skip empty / single-message / system-error chats at the content-script layer.
-- [ ] **Graph LOD + viewport culling** — graph stays usable past 8k nodes. Web-worker force simulation is deferred to v0.3 unless culling alone isn't enough.
-- [ ] **<200 ms p95 search latency on a 10k-memory vault** — measured, not guessed. Keyword path first; vector path opportunistic.
-- [ ] **In-app feedback link + opt-in, local-only usage log** — the only realistic research instrument for a solo dev with zero users. User can read, export, and wipe the log from Settings. **Never leaves the machine.** This is how v0.3 priorities get set from real signal, not guesswork.
+- [x] **Conversation deduplication** — canonical-URL upsert (`upsertMemoryByUrl`); the same chat captured twice updates one memory in place instead of forking the graph.
+- [x] **Smart capture filtering** — content-script skips empty / single-message / system+tool-only chats before they reach the app.
+- [x] **Graph LOD + viewport culling** — quadtree culling + smooth label LOD, then a full Obsidian-style canvas redesign. **Shipped beyond scope:** force simulation moved to a Web Worker, and an O(memories×files) mention-edge explosion (1.35M edges → black canvas at 10k+5k scale) was root-caused via live DevTools-protocol inspection and fixed (inverted word→memory index, ~1k edges, ~0.4s build).
+- [x] **<200 ms p95 search latency on a 10k-memory vault** — `searchMemories` swapped to FTS5 `MATCH` + `idx_memories_updated`. Measured p95 **86.6 ms** on 10k synthetic memories (target 200 ms).
+- [x] **In-app feedback + opt-in, local-only usage log** — `telemetry.ts` (daily JSONL, PII-blocklist redaction, vault path hashed), feedback form, Settings view/export/clear. OFF by default; never leaves the machine. Verified end-to-end (toggle persistence, feedback file on disk) via live app inspection.
 
-### v0.2 kill criteria
+**Bonus shipped:** embedding seed parallelization (request-batching + concurrency + per-row fallback, ~2.1× with zero data loss); force-simulation Web Worker (physics off the main thread).
 
-- Ships by **end of Q3 2026** *or* the phase is reframed.
-- If <10 stars / 0 unsolicited installs by 30 days post-Pre-Release, v0.3 work stops and we do a positioning rewrite (README + landing) before more features.
-- If dedup + filtering land but the rest doesn't, ship as v0.2.0 anyway and call v0.3 the perf+search release. **Don't slip the release to ship the bullet.**
+### v0.2 result
+
+- 245/245 tests green · build clean · graph verified rendering live (6,603 non-background canvas pixels at 10k nodes, worker streaming).
+- **Still open (external):** third-party Windows 11 smoke test of the installer — see `docs/SMOKE-TEST-CHECKLIST.md`.
 
 ## v0.3.0 — "It feels smart"
 
@@ -47,7 +48,7 @@ The features the name "Cortex" implies. Earns the right to exist after v0.2 prov
 - [ ] Conversation summarization via local Ollama (`llama3.2:3b` or equivalent) — one-line + paragraph summaries
 - [ ] Auto-tagging from content; user can edit / lock tags
 - [ ] Multi-model Ollama picker (swap embedding + summarization models from Settings)
-- [ ] Graph force simulation in a web worker (only if v0.2 culling proved insufficient)
+- [x] ~~Graph force simulation in a web worker~~ — **shipped in v0.2.0** (culling alone wasn't enough at 10k nodes)
 - [ ] Embedding backfill UI — visible progress, pause/resume
 - [ ] Saved searches / smart folders
 - [ ] `db.test.disabled.ts` → vitest-electron — proper Electron-Node test runner; CI-green DB integration tests

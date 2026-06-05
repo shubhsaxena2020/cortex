@@ -1,6 +1,6 @@
 {
   "name": "cortex",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Cortex — a local AI memory layer with semantic search across notes, files, and conversations from Claude, ChatGPT, and Gemini.",
   "main": "dist/main/index.js",
   "author": "cortex",
