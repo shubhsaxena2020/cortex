@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-05T06:47:30.582Z",
+  "generatedAt": "2026-06-05T06:54:27.385Z",
   "dataset": {
     "memories": 10000,
     "vectors": 0,
@@ -13,12 +13,12 @@
   "stats": {
     "keyword": {
       "n": 51,
-      "min": 46.363,
-      "p50": 77.705,
-      "p95": 107.133,
-      "p99": 113.73,
-      "max": 113.73,
-      "mean": 79.232
+      "min": 0.021,
+      "p50": 70.718,
+      "p95": 86.577,
+      "p99": 91.432,
+      "max": 91.432,
+      "mean": 54.517
     },
     "semantic": {
       "n": 0,
@@ -32,75 +32,75 @@
     "byKind": {
       "common-1": {
         "n": 10,
-        "min": 57.476,
-        "p50": 81.493,
-        "p95": 105.11,
-        "p99": 105.11,
-        "max": 105.11,
-        "mean": 78.62
+        "min": 0.184,
+        "p50": 83.793,
+        "p95": 91.432,
+        "p99": 91.432,
+        "max": 91.432,
+        "mean": 73.17
       },
       "rare-1": {
         "n": 9,
-        "min": 65.773,
-        "p50": 84.461,
-        "p95": 107.133,
-        "p99": 107.133,
-        "max": 107.133,
-        "mean": 86.854
+        "min": 0.234,
+        "p50": 71.47,
+        "p95": 74.212,
+        "p99": 74.212,
+        "max": 74.212,
+        "mean": 63.69
       },
       "phrase": {
         "n": 15,
-        "min": 57.521,
-        "p50": 78.288,
-        "p95": 113.73,
-        "p99": 113.73,
-        "max": 113.73,
-        "mean": 81.4
+        "min": 69.348,
+        "p50": 70.718,
+        "p95": 76.675,
+        "p99": 76.675,
+        "max": 76.675,
+        "mean": 71.098
       },
       "long": {
         "n": 6,
-        "min": 83.126,
-        "p50": 99.825,
-        "p95": 108.035,
-        "p99": 108.035,
-        "max": 108.035,
-        "mean": 95.635
+        "min": 0.088,
+        "p50": 0.198,
+        "p95": 3.591,
+        "p99": 3.591,
+        "max": 3.591,
+        "mean": 0.736
       },
       "special": {
         "n": 4,
-        "min": 58.826,
-        "p50": 61.123,
-        "p95": 61.8,
-        "p99": 61.8,
-        "max": 61.8,
-        "mean": 60.605
+        "min": 0.021,
+        "p50": 0.025,
+        "p95": 0.041,
+        "p99": 0.041,
+        "max": 0.041,
+        "mean": 0.028
       },
       "empty": {
         "n": 2,
-        "min": 46.363,
-        "p50": 51.932,
-        "p95": 51.932,
-        "p99": 51.932,
-        "max": 51.932,
-        "mean": 49.148
+        "min": 0.597,
+        "p50": 0.67,
+        "p95": 0.67,
+        "p99": 0.67,
+        "max": 0.67,
+        "mean": 0.633
       },
       "filtered": {
         "n": 3,
-        "min": 53.491,
-        "p50": 61.578,
-        "p95": 77.705,
-        "p99": 77.705,
-        "max": 77.705,
-        "mean": 64.258
+        "min": 68.035,
+        "p50": 82.755,
+        "p95": 83.898,
+        "p99": 83.898,
+        "max": 83.898,
+        "mean": 78.229
       },
       "tagged": {
         "n": 2,
-        "min": 70.061,
-        "p50": 74.571,
-        "p95": 74.571,
-        "p99": 74.571,
-        "max": 74.571,
-        "mean": 72.316
+        "min": 78.839,
+        "p50": 89.671,
+        "p95": 89.671,
+        "p99": 89.671,
+        "max": 89.671,
+        "mean": 84.255
       }
     }
   },
@@ -109,770 +109,821 @@
       "query": "react",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 93.722,
+      "latency_ms": 71.947,
       "breakdown": {
-        "prepare_ms": 0.069,
-        "execute_ms": 93.612,
-        "marshal_ms": 0.04
+        "prepare_ms": 0.075,
+        "execute_ms": 71.841,
+        "marshal_ms": 0.032
       },
       "row_count": 50,
-      "timestamp": 1780642046633
+      "timestamp": 1780642464675
     },
     {
       "query": "typescript",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 93.53,
+      "latency_ms": 71.481,
       "breakdown": {
-        "prepare_ms": 0.081,
-        "execute_ms": 93.408,
-        "marshal_ms": 0.04
+        "prepare_ms": 0.075,
+        "execute_ms": 71.375,
+        "marshal_ms": 0.031
       },
       "row_count": 50,
-      "timestamp": 1780642046727
+      "timestamp": 1780642464747
     },
     {
       "query": "sqlite",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 105.11,
+      "latency_ms": 72.411,
       "breakdown": {
-        "prepare_ms": 0.098,
-        "execute_ms": 104.972,
-        "marshal_ms": 0.041
+        "prepare_ms": 0.082,
+        "execute_ms": 72.296,
+        "marshal_ms": 0.033
       },
       "row_count": 50,
-      "timestamp": 1780642046832
+      "timestamp": 1780642464819
     },
     {
       "query": "embedding",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 91.923,
+      "latency_ms": 0.184,
       "breakdown": {
-        "prepare_ms": 0.084,
-        "execute_ms": 91.804,
-        "marshal_ms": 0.035
+        "prepare_ms": 0.079,
+        "execute_ms": 0.104,
+        "marshal_ms": 0.001
       },
-      "row_count": 50,
-      "timestamp": 1780642046924
+      "row_count": 0,
+      "timestamp": 1780642464819
     },
     {
       "query": "service",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 64.388,
+      "latency_ms": 85.079,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 64.293,
-        "marshal_ms": 0.033
+        "prepare_ms": 0.026,
+        "execute_ms": 85.019,
+        "marshal_ms": 0.034
       },
       "row_count": 50,
-      "timestamp": 1780642046988
+      "timestamp": 1780642464905
     },
     {
       "query": "pipeline",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 71.757,
+      "latency_ms": 83.515,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 71.653,
-        "marshal_ms": 0.041
+        "prepare_ms": 0.076,
+        "execute_ms": 83.404,
+        "marshal_ms": 0.035
       },
       "row_count": 50,
-      "timestamp": 1780642047060
+      "timestamp": 1780642464988
     },
     {
       "query": "handler",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 81.493,
+      "latency_ms": 85.277,
       "breakdown": {
-        "prepare_ms": 0.082,
-        "execute_ms": 81.376,
-        "marshal_ms": 0.035
+        "prepare_ms": 0.079,
+        "execute_ms": 85.164,
+        "marshal_ms": 0.034
       },
       "row_count": 50,
-      "timestamp": 1780642047141
+      "timestamp": 1780642465073
     },
     {
       "query": "debugging",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 64.661,
+      "latency_ms": 86.577,
       "breakdown": {
-        "prepare_ms": 0.065,
-        "execute_ms": 64.534,
-        "marshal_ms": 0.063
+        "prepare_ms": 0.076,
+        "execute_ms": 86.467,
+        "marshal_ms": 0.034
       },
       "row_count": 50,
-      "timestamp": 1780642047206
+      "timestamp": 1780642465160
     },
     {
       "query": "optimizing",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 62.141,
+      "latency_ms": 83.793,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 62.033,
-        "marshal_ms": 0.044
+        "prepare_ms": 0.075,
+        "execute_ms": 83.661,
+        "marshal_ms": 0.057
       },
       "row_count": 50,
-      "timestamp": 1780642047268
+      "timestamp": 1780642465244
     },
     {
       "query": "profiling",
       "kind": "common-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 57.476,
+      "latency_ms": 91.432,
       "breakdown": {
-        "prepare_ms": 0.086,
-        "execute_ms": 57.367,
-        "marshal_ms": 0.023
+        "prepare_ms": 0.389,
+        "execute_ms": 91.002,
+        "marshal_ms": 0.041
       },
       "row_count": 50,
-      "timestamp": 1780642047326
+      "timestamp": 1780642465335
     },
     {
       "query": "mulberry32",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 73.731,
+      "latency_ms": 0.234,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 73.661,
-        "marshal_ms": 0.007
+        "prepare_ms": 0.086,
+        "execute_ms": 0.148,
+        "marshal_ms": 0.001
       },
       "row_count": 0,
-      "timestamp": 1780642047400
+      "timestamp": 1780642465336
     },
     {
       "query": "phantom",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 79.272,
+      "latency_ms": 73.025,
       "breakdown": {
-        "prepare_ms": 0.095,
-        "execute_ms": 79.151,
-        "marshal_ms": 0.026
+        "prepare_ms": 0.022,
+        "execute_ms": 72.978,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642047479
+      "timestamp": 1780642465409
     },
     {
       "query": "paxos",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 93.356,
+      "latency_ms": 68.758,
       "breakdown": {
-        "prepare_ms": 0.066,
-        "execute_ms": 93.261,
-        "marshal_ms": 0.029
+        "prepare_ms": 0.081,
+        "execute_ms": 68.653,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642047572
+      "timestamp": 1780642465477
     },
     {
       "query": "gossip",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 84.461,
+      "latency_ms": 70.416,
       "breakdown": {
-        "prepare_ms": 0.08,
-        "execute_ms": 84.351,
-        "marshal_ms": 0.03
+        "prepare_ms": 0.075,
+        "execute_ms": 70.317,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642047657
+      "timestamp": 1780642465548
     },
     {
       "query": "crdt",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 99.247,
+      "latency_ms": 70.479,
       "breakdown": {
-        "prepare_ms": 0.083,
-        "execute_ms": 99.133,
-        "marshal_ms": 0.03
+        "prepare_ms": 0.078,
+        "execute_ms": 70.374,
+        "marshal_ms": 0.028
       },
       "row_count": 50,
-      "timestamp": 1780642047756
+      "timestamp": 1780642465618
     },
     {
       "query": "hinted",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 75.753,
+      "latency_ms": 74.212,
       "breakdown": {
-        "prepare_ms": 0.082,
-        "execute_ms": 75.645,
-        "marshal_ms": 0.026
+        "prepare_ms": 0.084,
+        "execute_ms": 74.103,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642047832
+      "timestamp": 1780642465693
     },
     {
       "query": "levenshtein",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 65.773,
+      "latency_ms": 71.821,
       "breakdown": {
-        "prepare_ms": 0.064,
-        "execute_ms": 65.684,
+        "prepare_ms": 0.072,
+        "execute_ms": 71.723,
         "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642047898
+      "timestamp": 1780642465764
     },
     {
       "query": "tokenization",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 102.962,
+      "latency_ms": 72.797,
       "breakdown": {
-        "prepare_ms": 0.062,
-        "execute_ms": 102.871,
-        "marshal_ms": 0.028
+        "prepare_ms": 0.074,
+        "execute_ms": 72.698,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642048001
+      "timestamp": 1780642465837
     },
     {
       "query": "vector search",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 66.791,
+      "latency_ms": 70.718,
       "breakdown": {
-        "prepare_ms": 0.082,
-        "execute_ms": 66.684,
+        "prepare_ms": 0.073,
+        "execute_ms": 70.621,
         "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642048067
+      "timestamp": 1780642465908
     },
     {
       "query": "attention mechanism",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 77.525,
+      "latency_ms": 70.102,
       "breakdown": {
-        "prepare_ms": 0.065,
-        "execute_ms": 77.434,
-        "marshal_ms": 0.026
+        "prepare_ms": 0.074,
+        "execute_ms": 70.003,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642048145
+      "timestamp": 1780642465978
     },
     {
       "query": "red-black tree",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 71.534,
+      "latency_ms": 72.71,
       "breakdown": {
-        "prepare_ms": 0.064,
-        "execute_ms": 71.444,
-        "marshal_ms": 0.026
+        "prepare_ms": 0.072,
+        "execute_ms": 72.615,
+        "marshal_ms": 0.023
       },
       "row_count": 50,
-      "timestamp": 1780642048216
+      "timestamp": 1780642466051
     },
     {
       "query": "leader election",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 85.216,
+      "latency_ms": 69.348,
       "breakdown": {
-        "prepare_ms": 0.061,
-        "execute_ms": 85.128,
-        "marshal_ms": 0.028
+        "prepare_ms": 0.07,
+        "execute_ms": 69.256,
+        "marshal_ms": 0.023
       },
       "row_count": 50,
-      "timestamp": 1780642048302
+      "timestamp": 1780642466120
     },
     {
       "query": "gradient descent",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 88.813,
+      "latency_ms": 71.719,
       "breakdown": {
-        "prepare_ms": 0.083,
-        "execute_ms": 88.705,
-        "marshal_ms": 0.025
+        "prepare_ms": 0.071,
+        "execute_ms": 71.624,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642048391
+      "timestamp": 1780642466192
     },
     {
       "query": "window function",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 78.288,
+      "latency_ms": 70.716,
       "breakdown": {
-        "prepare_ms": 0.064,
-        "execute_ms": 78.194,
-        "marshal_ms": 0.03
+        "prepare_ms": 0.072,
+        "execute_ms": 70.617,
+        "marshal_ms": 0.026
       },
       "row_count": 50,
-      "timestamp": 1780642048469
+      "timestamp": 1780642466263
     },
     {
       "query": "recursive CTE",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 89.646,
+      "latency_ms": 70.549,
       "breakdown": {
-        "prepare_ms": 0.089,
-        "execute_ms": 89.525,
-        "marshal_ms": 0.032
+        "prepare_ms": 0.075,
+        "execute_ms": 70.449,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642048559
+      "timestamp": 1780642466333
     },
     {
       "query": "CORS preflight",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 73.935,
+      "latency_ms": 71.281,
       "breakdown": {
-        "prepare_ms": 0.067,
-        "execute_ms": 73.839,
-        "marshal_ms": 0.03
+        "prepare_ms": 0.075,
+        "execute_ms": 71.182,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642048633
+      "timestamp": 1780642466405
     },
     {
       "query": "CSP nonces",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 86.56,
+      "latency_ms": 70.931,
       "breakdown": {
-        "prepare_ms": 0.083,
-        "execute_ms": 86.448,
-        "marshal_ms": 0.029
+        "prepare_ms": 0.071,
+        "execute_ms": 70.836,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642048719
+      "timestamp": 1780642466476
     },
     {
       "query": "distributed lock",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 88.614,
+      "latency_ms": 71.143,
       "breakdown": {
-        "prepare_ms": 0.082,
-        "execute_ms": 88.503,
-        "marshal_ms": 0.028
+        "prepare_ms": 0.073,
+        "execute_ms": 71.046,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642048808
+      "timestamp": 1780642466547
     },
     {
       "query": "refactoring the authentication flow inside our pipeline",
       "kind": "long",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 107.086,
+      "latency_ms": 3.591,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 107.015,
-        "marshal_ms": 0.007
+        "prepare_ms": 0.071,
+        "execute_ms": 3.517,
+        "marshal_ms": 0.003
       },
       "row_count": 0,
-      "timestamp": 1780642048915
+      "timestamp": 1780642466550
     },
     {
       "query": "designing a new fastify routing subsystem",
       "kind": "long",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 108.035,
+      "latency_ms": 0.198,
       "breakdown": {
-        "prepare_ms": 0.087,
-        "execute_ms": 107.942,
-        "marshal_ms": 0.007
+        "prepare_ms": 0.057,
+        "execute_ms": 0.14,
+        "marshal_ms": 0.001
       },
       "row_count": 0,
-      "timestamp": 1780642049023
+      "timestamp": 1780642466550
     },
     {
       "query": "testing markdown rendering edge cases",
       "kind": "long",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 99.825,
+      "latency_ms": 0.088,
       "breakdown": {
-        "prepare_ms": 0.081,
-        "execute_ms": 99.738,
-        "marshal_ms": 0.007
+        "prepare_ms": 0.021,
+        "execute_ms": 0.066,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049123
+      "timestamp": 1780642466551
     },
     {
       "query": "profiling cosine similarity over a 10k corpus",
       "kind": "long",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 87.628,
+      "latency_ms": 0.117,
       "breakdown": {
-        "prepare_ms": 0.068,
-        "execute_ms": 87.553,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.016,
+        "execute_ms": 0.101,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049210
+      "timestamp": 1780642466551
     },
     {
       "query": "reviewing electron IPC contracts between processes",
       "kind": "long",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 88.113,
+      "latency_ms": 0.126,
       "breakdown": {
-        "prepare_ms": 0.067,
-        "execute_ms": 88.04,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.013,
+        "execute_ms": 0.113,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049299
+      "timestamp": 1780642466551
     },
     {
       "query": "50%",
       "kind": "special",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 60.67,
+      "latency_ms": 0.025,
       "breakdown": {
-        "prepare_ms": 0.068,
-        "execute_ms": 60.596,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.013,
+        "execute_ms": 0.012,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049359
+      "timestamp": 1780642466551
     },
     {
       "query": "foo_bar",
       "kind": "special",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 58.826,
+      "latency_ms": 0.024,
       "breakdown": {
-        "prepare_ms": 0.066,
-        "execute_ms": 58.754,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.011,
+        "execute_ms": 0.013,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049418
+      "timestamp": 1780642466551
     },
     {
       "query": "100\\%",
       "kind": "special",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 61.8,
+      "latency_ms": 0.021,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 61.731,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.011,
+        "execute_ms": 0.01,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049480
+      "timestamp": 1780642466551
     },
     {
       "query": "what's that?",
       "kind": "special",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 61.123,
+      "latency_ms": 0.041,
       "breakdown": {
-        "prepare_ms": 0.068,
-        "execute_ms": 61.049,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.01,
+        "execute_ms": 0.03,
+        "marshal_ms": 0
       },
       "row_count": 0,
-      "timestamp": 1780642049541
+      "timestamp": 1780642466551
     },
     {
       "query": "",
       "kind": "empty",
       "mode": "keyword",
+      "path": "like",
       "source": null,
       "tags": null,
-      "latency_ms": 46.363,
+      "latency_ms": 0.597,
       "breakdown": {
-        "prepare_ms": 0.07,
-        "execute_ms": 46.247,
-        "marshal_ms": 0.047
+        "prepare_ms": 0.011,
+        "execute_ms": 0.535,
+        "marshal_ms": 0.051
       },
       "row_count": 50,
-      "timestamp": 1780642049587
+      "timestamp": 1780642466552
     },
     {
       "query": "   ",
       "kind": "empty",
       "mode": "keyword",
+      "path": "like",
       "source": null,
       "tags": null,
-      "latency_ms": 51.932,
+      "latency_ms": 0.67,
       "breakdown": {
-        "prepare_ms": 0.139,
-        "execute_ms": 51.768,
-        "marshal_ms": 0.025
+        "prepare_ms": 0.061,
+        "execute_ms": 0.591,
+        "marshal_ms": 0.019
       },
       "row_count": 50,
-      "timestamp": 1780642049639
+      "timestamp": 1780642466552
     },
     {
       "query": "react",
       "kind": "filtered",
       "mode": "keyword",
+      "path": "fts5",
       "source": "claude",
       "tags": null,
-      "latency_ms": 77.705,
+      "latency_ms": 68.035,
       "breakdown": {
-        "prepare_ms": 0.067,
-        "execute_ms": 77.612,
-        "marshal_ms": 0.026
+        "prepare_ms": 0.056,
+        "execute_ms": 67.954,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642049717
+      "timestamp": 1780642466620
     },
     {
       "query": "service",
       "kind": "filtered",
       "mode": "keyword",
+      "path": "fts5",
       "source": "chatgpt",
       "tags": null,
-      "latency_ms": 53.491,
+      "latency_ms": 83.898,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 53.398,
+        "prepare_ms": 0.073,
+        "execute_ms": 83.795,
         "marshal_ms": 0.03
       },
       "row_count": 50,
-      "timestamp": 1780642049771
+      "timestamp": 1780642466704
     },
     {
       "query": "pipeline",
       "kind": "filtered",
       "mode": "keyword",
+      "path": "fts5",
       "source": "gemini",
       "tags": null,
-      "latency_ms": 61.578,
+      "latency_ms": 82.755,
       "breakdown": {
-        "prepare_ms": 0.066,
-        "execute_ms": 61.488,
-        "marshal_ms": 0.024
+        "prepare_ms": 0.074,
+        "execute_ms": 82.657,
+        "marshal_ms": 0.023
       },
       "row_count": 50,
-      "timestamp": 1780642049832
+      "timestamp": 1780642466787
     },
     {
       "query": "react",
       "kind": "tagged",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": [
         "react"
       ],
-      "latency_ms": 74.571,
+      "latency_ms": 78.839,
       "breakdown": {
-        "prepare_ms": 0.075,
-        "execute_ms": 74.473,
-        "marshal_ms": 0.022
+        "prepare_ms": 0.08,
+        "execute_ms": 78.738,
+        "marshal_ms": 0.02
       },
       "row_count": 50,
-      "timestamp": 1780642049907
+      "timestamp": 1780642466866
     },
     {
       "query": "optimizing",
       "kind": "tagged",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": [
         "optimizing"
       ],
-      "latency_ms": 70.061,
+      "latency_ms": 89.671,
       "breakdown": {
-        "prepare_ms": 0.066,
-        "execute_ms": 69.971,
-        "marshal_ms": 0.024
+        "prepare_ms": 0.124,
+        "execute_ms": 89.481,
+        "marshal_ms": 0.067
       },
       "row_count": 50,
-      "timestamp": 1780642049977
+      "timestamp": 1780642466956
     },
     {
       "query": "sqlite indexing",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 113.73,
+      "latency_ms": 70.042,
       "breakdown": {
-        "prepare_ms": 0.06,
-        "execute_ms": 113.642,
-        "marshal_ms": 0.028
+        "prepare_ms": 0.149,
+        "execute_ms": 69.869,
+        "marshal_ms": 0.024
       },
       "row_count": 50,
-      "timestamp": 1780642050091
+      "timestamp": 1780642467026
     },
     {
       "query": "tree-shaking",
       "kind": "rare-1",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 107.133,
+      "latency_ms": 71.47,
       "breakdown": {
-        "prepare_ms": 0.08,
-        "execute_ms": 107.023,
-        "marshal_ms": 0.029
+        "prepare_ms": 0.073,
+        "execute_ms": 71.373,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642050198
+      "timestamp": 1780642467097
     },
     {
       "query": "oauth pkce",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 92.935,
+      "latency_ms": 69.872,
       "breakdown": {
-        "prepare_ms": 0.08,
-        "execute_ms": 92.829,
+        "prepare_ms": 0.085,
+        "execute_ms": 69.76,
         "marshal_ms": 0.027
       },
       "row_count": 50,
-      "timestamp": 1780642050291
+      "timestamp": 1780642467167
     },
     {
       "query": "CRDT merge resolution",
       "kind": "long",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 83.126,
+      "latency_ms": 0.293,
       "breakdown": {
-        "prepare_ms": 0.063,
-        "execute_ms": 83.057,
-        "marshal_ms": 0.006
+        "prepare_ms": 0.07,
+        "execute_ms": 0.222,
+        "marshal_ms": 0.001
       },
       "row_count": 0,
-      "timestamp": 1780642050374
+      "timestamp": 1780642467167
     },
     {
       "query": "k-means clustering",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 57.521,
+      "latency_ms": 71.241,
       "breakdown": {
-        "prepare_ms": 0.068,
-        "execute_ms": 57.428,
-        "marshal_ms": 0.025
+        "prepare_ms": 0.029,
+        "execute_ms": 71.186,
+        "marshal_ms": 0.026
       },
       "row_count": 50,
-      "timestamp": 1780642050432
+      "timestamp": 1780642467239
     },
     {
       "query": "b+tree leaf split",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 73.739,
+      "latency_ms": 76.675,
       "breakdown": {
-        "prepare_ms": 0.064,
-        "execute_ms": 73.648,
-        "marshal_ms": 0.026
+        "prepare_ms": 0.101,
+        "execute_ms": 76.544,
+        "marshal_ms": 0.031
       },
       "row_count": 50,
-      "timestamp": 1780642050505
+      "timestamp": 1780642467315
     },
     {
       "query": "serialization failure",
       "kind": "phrase",
       "mode": "keyword",
+      "path": "fts5",
       "source": null,
       "tags": null,
-      "latency_ms": 76.156,
+      "latency_ms": 69.418,
       "breakdown": {
-        "prepare_ms": 0.062,
-        "execute_ms": 76.068,
-        "marshal_ms": 0.027
+        "prepare_ms": 0.091,
+        "execute_ms": 69.302,
+        "marshal_ms": 0.025
       },
       "row_count": 50,
-      "timestamp": 1780642050581
+      "timestamp": 1780642467385
     }
   ]
 }

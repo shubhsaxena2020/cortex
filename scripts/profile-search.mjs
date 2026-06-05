@@ -131,12 +131,41 @@ const QUERIES = [
 console.log(`[profile] running ${QUERIES.length} queries (warmup=${WARMUP}, semantic=${DO_SEMANTIC})`)
 
 // ── Production-mirrored SQL ─────────────────────────────────────────────────
-// Mirrors src/main/db.ts:searchMemories. Keep in sync.
+// Mirrors src/main/db.ts:searchMemories. Keep in sync. Post-v4 the primary
+// path is FTS5 MATCH against memories_fts; the LIKE path remains as fallback
+// for empty / special-char-only queries.
 function escapeLike(s) { return s.replace(/[\\%_]/g, m => '\\' + m) }
+function toFtsPhrase(q) {
+  const t = q.trim()
+  if (!t) return null
+  if (!/[\p{L}\p{N}]/u.test(t)) return null
+  return `"${t.replace(/"/g, '""')}"`
+}
 function buildSearchSql(query, source, tags) {
+  const phrase = toFtsPhrase(query)
+  if (phrase) {
+    let sql = `SELECT m.* FROM memories m JOIN memories_fts f ON f.memory_id = m.id WHERE memories_fts MATCH ?`
+    const params = [phrase]
+    if (source) { sql += ' AND m.source = ?'; params.push(source) }
+    if (tags && tags.length) {
+      for (const t of tags) {
+        sql += ` AND m.tags LIKE ? ESCAPE '\\'`
+        params.push(`%"${escapeLike(t)}"%`)
+      }
+    }
+    sql += ' ORDER BY m.updatedAt DESC LIMIT 50'
+    return { sql, params, path: 'fts5' }
+  }
+  // Fallback (empty/special-only)
   const escaped = escapeLike(query)
-  let sql = `SELECT * FROM memories WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')`
-  const params = [`%${escaped}%`, `%${escaped}%`]
+  let sql, params
+  if (!query.trim()) {
+    sql = 'SELECT * FROM memories WHERE 1=1'
+    params = []
+  } else {
+    sql = `SELECT * FROM memories WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')`
+    params = [`%${escaped}%`, `%${escaped}%`]
+  }
   if (source) { sql += ' AND source = ?'; params.push(source) }
   if (tags && tags.length) {
     for (const t of tags) {
@@ -145,7 +174,7 @@ function buildSearchSql(query, source, tags) {
     }
   }
   sql += ' ORDER BY updatedAt DESC LIMIT 50'
-  return { sql, params }
+  return { sql, params, path: 'like' }
 }
 
 // ── Timing helpers ──────────────────────────────────────────────────────────
@@ -161,8 +190,8 @@ function percentile(sorted, p) {
 console.log(`[profile] warmup: ${WARMUP} passes over query mix`)
 for (let w = 0; w < WARMUP; w++) {
   for (const Q of QUERIES) {
-    const { sql, params } = buildSearchSql(Q.q.trim(), Q.source, Q.tags)
-    if (Q.q.trim()) db.prepare(sql).all(...params)
+    const m = buildSearchSql(Q.q.trim(), Q.source, Q.tags)
+    if (Q.q.trim()) db.prepare(m.sql).all(...m.params)
   }
 }
 
@@ -172,7 +201,8 @@ for (const Q of QUERIES) {
   const trimmed = Q.q.trim()
   // Empty-query short-circuit mirrors the production behaviour (HTTP layer
   // passes q='' through; SQL would return everything — bench it honestly).
-  const { sql, params } = buildSearchSql(trimmed, Q.source, Q.tags)
+  const meta = buildSearchSql(trimmed, Q.source, Q.tags)
+  const { sql, params } = meta
   // Sub-phase breakdown
   const tParse = nowMs()
   const stmt = db.prepare(sql)  // prepare cost (cached after first call)
@@ -187,6 +217,7 @@ for (const Q of QUERIES) {
     query: Q.q,
     kind: Q.kind,
     mode: 'keyword',
+    path: meta.path,
     source: Q.source ?? null,
     tags: Q.tags ?? null,
     latency_ms: +(tMarshal - tParse).toFixed(3),

@@ -1,12 +1,12 @@
 # Cortex Search Profiling — v0.2 P0 #4
 
-Generated: 2026-06-05T06:47:30.584Z
+Generated: 2026-06-05T06:54:27.388Z
 Dataset: **10000 memories**, 0 vectors, 0 relationships
 Config: warmup=3, queries=51, semantic=false
 
 ## Verdict
 
-- Keyword p95: **107.13 ms** ✅ under 200ms target
+- Keyword p95: **86.58 ms** ✅ under 200ms target
 
 
 ## Keyword path
@@ -14,27 +14,27 @@ Config: warmup=3, queries=51, semantic=false
 | Metric | Value (ms) |
 |---|---|
 | n      | 51 |
-| min    | 46.36 |
-| p50    | 77.70 |
-| p95    | 107.13 |
-| p99    | 113.73 |
-| max    | 113.73 |
-| mean   | 79.23 |
+| min    | 0.02 |
+| p50    | 70.72 |
+| p95    | 86.58 |
+| p99    | 91.43 |
+| max    | 91.43 |
+| mean   | 54.52 |
 
-Breakdown (avg per query): prepare=0.073ms · execute=79.133ms · marshal=0.025ms
+Breakdown (avg per query): prepare=0.071ms · execute=54.423ms · marshal=0.023ms
 
 ### By query kind
 
 | Kind | n | p50 | p95 | p99 | max |
 |---|---|---|---|---|---|
-| common-1 | 10 | 81.49 | 105.11 | 105.11 | 105.11 |
-| rare-1 | 9 | 84.46 | 107.13 | 107.13 | 107.13 |
-| phrase | 15 | 78.29 | 113.73 | 113.73 | 113.73 |
-| long | 6 | 99.83 | 108.03 | 108.03 | 108.03 |
-| special | 4 | 61.12 | 61.80 | 61.80 | 61.80 |
-| empty | 2 | 51.93 | 51.93 | 51.93 | 51.93 |
-| filtered | 3 | 61.58 | 77.70 | 77.70 | 77.70 |
-| tagged | 2 | 74.57 | 74.57 | 74.57 | 74.57 |
+| common-1 | 10 | 83.79 | 91.43 | 91.43 | 91.43 |
+| rare-1 | 9 | 71.47 | 74.21 | 74.21 | 74.21 |
+| phrase | 15 | 70.72 | 76.67 | 76.67 | 76.67 |
+| long | 6 | 0.20 | 3.59 | 3.59 | 3.59 |
+| special | 4 | 0.03 | 0.04 | 0.04 | 0.04 |
+| empty | 2 | 0.67 | 0.67 | 0.67 | 0.67 |
+| filtered | 3 | 82.75 | 83.90 | 83.90 | 83.90 |
+| tagged | 2 | 89.67 | 89.67 | 89.67 | 89.67 |
 
 
 

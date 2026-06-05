@@ -9,7 +9,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 3   // bump + add migration when schema changes
+const SCHEMA_VERSION = 4   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -251,6 +251,36 @@ function runMigrations(d: Database.Database, from: number, to: number): void {
         }
         d.exec(`CREATE INDEX IF NOT EXISTS idx_vault_frontmatter_url ON vault_files(frontmatter_url) WHERE frontmatter_url IS NOT NULL`)
       }
+      if (from < 4) {
+        // v4: search performance (P0 #4 fixes #1 + #2 from profiling report).
+        //
+        // Replace the regular `fts_memories` shadow table (which was never
+        // actually queried — searchMemories did a full LIKE scan on memories)
+        // with a real FTS5 virtual table `memories_fts`. The contentless
+        // configuration would tie us to memories.rowid mapping; we use the
+        // simpler "external content" pattern with an explicit memory_id
+        // UNINDEXED column so app-level upsert is straightforward.
+        //
+        // Also add idx_memories_updated for the ORDER BY updatedAt path
+        // (used by /api/recent and the post-MATCH sort in searchMemories).
+        d.exec(`DROP TABLE IF EXISTS fts_memories`)
+        d.exec(`
+          CREATE VIRTUAL TABLE IF NOT EXISTS memories_fts USING fts5(
+            memory_id UNINDEXED,
+            title,
+            content,
+            tokenize = 'unicode61 remove_diacritics 2'
+          )
+        `)
+        // Backfill from existing memories. INSERT OR IGNORE in case the
+        // migration is re-run after a partial failure.
+        d.exec(`
+          INSERT INTO memories_fts (memory_id, title, content)
+          SELECT id, title, COALESCE(content, '') FROM memories
+          WHERE id NOT IN (SELECT memory_id FROM memories_fts)
+        `)
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_updated ON memories(updatedAt DESC)`)
+      }
 
       // Bump (or write) the stored version. UPDATE if the row exists; INSERT
       // otherwise. We can't rely on the caller to handle the fresh-install
@@ -295,8 +325,11 @@ export function createMemory(id: string, title: string, content: string, source:
     'INSERT OR REPLACE INTO memories (id, title, content, timestamp, updatedAt, source, tags, url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(id, title, content, now, now, source, tagsStr, url)
 
+  // FTS5 virtual tables don't honour INSERT OR REPLACE — emulate upsert
+  // (DELETE-then-INSERT). Same pattern as memory_vectors above.
+  d.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(id)
   d.prepare(
-    'INSERT OR REPLACE INTO fts_memories (memory_id, title, content) VALUES (?, ?, ?)'
+    'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
   ).run(id, title, content)
 
   return { id, title, content, timestamp: now, updatedAt: now, source, tags, url }
@@ -364,9 +397,10 @@ export function upsertMemoryByUrl(
   d.prepare(
     'UPDATE memories SET title = ?, content = ?, updatedAt = ?, source = ?, tags = ? WHERE id = ?'
   ).run(title, content, now, source, tagsStr, existing.id)
+  d.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(existing.id)
   d.prepare(
-    'UPDATE fts_memories SET title = ?, content = ? WHERE memory_id = ?'
-  ).run(title, content, existing.id)
+    'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
+  ).run(existing.id, title, content)
 
   return {
     memory: {
@@ -402,9 +436,10 @@ export function updateMemory(id: string, title: string, content: string, tags: s
     'UPDATE memories SET title = ?, content = ?, updatedAt = ?, tags = ? WHERE id = ?'
   ).run(title, content, now, tagsStr, id)
 
+  d.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(id)
   d.prepare(
-    'UPDATE fts_memories SET title = ?, content = ? WHERE memory_id = ?'
-  ).run(title, content, id)
+    'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
+  ).run(id, title, content)
 
   return { id, title, content, updatedAt: now, tags }
 }
@@ -413,7 +448,7 @@ export function deleteMemory(id: string) {
   const d = getDb()
   // FK is enforced now; delete dependent rows before the memory itself.
   d.prepare('DELETE FROM memory_relationships WHERE sourceId = ? OR targetId = ?').run(id, id)
-  d.prepare('DELETE FROM fts_memories WHERE memory_id = ?').run(id)
+  d.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(id)
   if (vectorSearchEnabled) {
     try { d.prepare('DELETE FROM memory_vectors WHERE memory_id = ?').run(id) } catch (_) {}
   }
@@ -427,31 +462,73 @@ export function deleteMemory(id: string) {
   return { success: true }
 }
 
-export function searchMemories(query: string, source?: string, tags?: string[]) {
-  const escaped = escapeLike(query)
-  let sql = `
-    SELECT * FROM memories
-    WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')
-  `
-  const params: unknown[] = [`%${escaped}%`, `%${escaped}%`]
+// FTS5 phrase-quote: wrap the query as a single phrase and double any
+// embedded `"`. Returns null when the query has no tokenizable content (only
+// punctuation/whitespace) so callers fall back to LIKE / latest-50.
+function toFtsPhrase(query: string): string | null {
+  const trimmed = query.trim()
+  if (!trimmed) return null
+  // FTS5 unicode61 tokenises on non-alphanumeric. If the query has zero
+  // alphanumeric chars (`50%` after stripping `%`, etc.) MATCH will throw
+  // "syntax error near '...'". Detect and bail.
+  if (!/[\p{L}\p{N}]/u.test(trimmed)) return null
+  return `"${trimmed.replace(/"/g, '""')}"`
+}
 
-  if (source) {
-    sql += ' AND source = ?'
-    params.push(source)
+export function searchMemories(query: string, source?: string, tags?: string[]) {
+  const d = getDb()
+  const phrase = toFtsPhrase(query)
+
+  // Fast path: FTS5 MATCH against memories_fts, join back for full row data
+  // and post-filters. ORDER BY updatedAt uses idx_memories_updated.
+  if (phrase) {
+    let sql = `
+      SELECT m.* FROM memories m
+      JOIN memories_fts f ON f.memory_id = m.id
+      WHERE memories_fts MATCH ?
+    `
+    const params: unknown[] = [phrase]
+    if (source) { sql += ' AND m.source = ?'; params.push(source) }
+    if (tags && tags.length) {
+      for (const t of tags) {
+        // Tags are JSON-encoded; the quote literals don't need LIKE-escaping
+        // but the tag value itself does. (Tag normalisation into a join
+        // table is the next P0 #4 follow-up — see profiling-report.md.)
+        sql += ' AND m.tags LIKE ? ESCAPE \'\\\''
+        params.push(`%"${escapeLike(t)}"%`)
+      }
+    }
+    sql += ' ORDER BY m.updatedAt DESC LIMIT 50'
+    try {
+      const rows = d.prepare(sql).all(...params) as MemoryRow[]
+      return rows.map(mapMemory)
+    } catch (err) {
+      // Defensive: any FTS5 parse error (a query shape we didn't anticipate)
+      // falls through to the LIKE path rather than 500-ing the search box.
+      log.warn('[db] FTS5 search failed, falling back to LIKE:', err)
+    }
   }
 
+  // Fallback path: empty query, special-char-only query, or FTS5 parse error.
+  // For empty queries this matches the prior behaviour (return latest 50).
+  const escaped = escapeLike(query)
+  let sql: string
+  const params: unknown[] = []
+  if (phrase === null && !query.trim()) {
+    sql = 'SELECT * FROM memories WHERE 1=1'
+  } else {
+    sql = `SELECT * FROM memories WHERE (title LIKE ? ESCAPE '\\' OR content LIKE ? ESCAPE '\\')`
+    params.push(`%${escaped}%`, `%${escaped}%`)
+  }
+  if (source) { sql += ' AND source = ?'; params.push(source) }
   if (tags && tags.length) {
     for (const t of tags) {
-      // Tags are stored as JSON string; the surrounding quotes are literal so
-      // they don't need LIKE-escaping, but the tag itself does.
       sql += ' AND tags LIKE ? ESCAPE \'\\\''
       params.push(`%"${escapeLike(t)}"%`)
     }
   }
-
   sql += ' ORDER BY updatedAt DESC LIMIT 50'
-
-  const rows = getDb().prepare(sql).all(...params) as MemoryRow[]
+  const rows = d.prepare(sql).all(...params) as MemoryRow[]
   return rows.map(mapMemory)
 }
 
