@@ -26,7 +26,7 @@ import { buildGraph, type FilterMode, type GraphNode } from '../utils/graph-buil
 import { Quadtree } from '../utils/quadtree'
 import {
   drawNode, addEdgePath, applyEdgeStyle, drawLabel,
-  labelOpacity, nodeRadius,
+  labelOpacity,
   type NodeState, type EdgeState,
 } from '../utils/graph-renderer'
 import {
@@ -72,7 +72,7 @@ export default function GraphCanvas({
   const linksRef       = useRef<D3Link[]>([])
   const adjacencyRef   = useRef<Map<string, AdjacencyEntry>>(new Map())
   const transformRef   = useRef<d3.ZoomTransform>(d3.zoomIdentity)
-  const simRef         = useRef<d3.Simulation<D3Node, D3Link> | null>(null)
+  const workerRef      = useRef<Worker | null>(null)
   const zoomRef        = useRef<d3.ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
   const hoverIdRef     = useRef<string | null>(null)
   const hoverSetRef    = useRef<Set<string> | null>(null)   // hover + 1-hop neighbours
@@ -81,7 +81,6 @@ export default function GraphCanvas({
   const nodePositions  = useRef<Map<string, { x: number; y: number }>>(new Map())
   const quadtreeRef    = useRef<Quadtree<D3Node> | null>(null)
   const quadtreeDirty  = useRef(true)
-  const pulseRafRef    = useRef<number | null>(null)
   const frameTimesRef  = useRef<number[]>([])
   const lastDebugTickRef = useRef(0)
 
@@ -146,12 +145,19 @@ export default function GraphCanvas({
       if (p) { n.x = p.x; n.y = p.y; n.vx = 0; n.vy = 0 }
     }
 
+    // Resolve each link's endpoints to the actual node objects. d3-forceLink
+    // used to do this in place during sim init, but the simulation now runs in
+    // a Worker (which mutates its OWN node copies). The renderer needs node
+    // refs so draw() can read live link.source.x / link.target.y.
     const nodeById = new Map(visNodes.map(n => [n.id, n]))
-    const visLinks = (raw.links as D3Link[]).filter(l => {
+    const visLinks: D3Link[] = []
+    for (const l of raw.links as D3Link[]) {
       const s = typeof l.source === 'string' ? l.source : (l.source as D3Node).id
       const t = typeof l.target === 'string' ? l.target : (l.target as D3Node).id
-      return nodeById.has(s) && nodeById.has(t)
-    })
+      const src = nodeById.get(s)
+      const tgt = nodeById.get(t)
+      if (src && tgt) visLinks.push({ source: src, target: tgt, edgeType: l.edgeType })
+    }
 
     nodesRef.current = visNodes
     linksRef.current = visLinks
@@ -326,34 +332,52 @@ export default function GraphCanvas({
     }
     drawRef.current = draw
 
-    // ── Pulse RAF loop (active only while a node is selected) ───────────────
-    function pulseTick() {
-      pulseRafRef.current = null
-      if (selectedIdRef.current == null) return
-      drawRef.current()
-      pulseRafRef.current = requestAnimationFrame(pulseTick)
-    }
-    function ensurePulseLoop() {
-      if (selectedIdRef.current != null && pulseRafRef.current == null) {
-        pulseRafRef.current = requestAnimationFrame(pulseTick)
-      }
-    }
-
-    // ── Force simulation ───────────────────────────────────────────────────
-    const sim = d3.forceSimulation<D3Node>(visNodes)
-      .force('link',      d3.forceLink<D3Node, D3Link>(visLinks).id(d => d.id).distance(50).strength(0.7))
-      .force('charge',    d3.forceManyBody().strength(-180))
-      .force('center',    d3.forceCenter(w / 2, h / 2))
-      .force('collision', d3.forceCollide<D3Node>(d => nodeRadius(d) + 3))
-      .force('x',         d3.forceX(w / 2).strength(0.04))
-      .force('y',         d3.forceY(h / 2).strength(0.04))
-      .velocityDecay(0.4)
-      .alphaMin(0.001)
-      .on('tick', () => {
-        quadtreeDirty.current = true
+    // ── Render loop ─────────────────────────────────────────────────────────
+    // The render is fully decoupled from physics now. A single rAF redraws only
+    // when something changed (`dirty`), plus continuously while a node is
+    // selected (so the pulse ring breathes). This is the only place that paints.
+    let dirty = true
+    let renderRaf = 0
+    const scheduleRender = (): void => { dirty = true }
+    function renderLoop(): void {
+      if (dirty || selectedIdRef.current != null) {
+        dirty = false
         draw()
-      })
-    simRef.current = sim
+      }
+      renderRaf = requestAnimationFrame(renderLoop)
+    }
+    renderRaf = requestAnimationFrame(renderLoop)
+
+    // ── Force simulation (off the main thread) ──────────────────────────────
+    // The Worker owns the physics. It streams batched node positions back; we
+    // copy them into our node objects (same index order as init) and request a
+    // render. Nothing here blocks the UI thread.
+    const worker = new Worker(
+      new URL('../workers/force-simulation.worker.ts', import.meta.url),
+      { type: 'module' },
+    )
+    workerRef.current = worker
+    worker.onmessage = (ev: MessageEvent): void => {
+      const msg = ev.data as { type: string; buffer?: ArrayBuffer; count?: number }
+      if (msg.type !== 'positions' || !msg.buffer) return
+      const pos = new Float32Array(msg.buffer)
+      const arr = nodesRef.current
+      const n = Math.min(arr.length, msg.count ?? 0)
+      for (let i = 0; i < n; i++) {
+        arr[i].x = pos[i * 2]
+        arr[i].y = pos[i * 2 + 1]
+      }
+      quadtreeDirty.current = true
+      scheduleRender()
+    }
+    worker.postMessage({
+      type: 'init',
+      width: w,
+      height: h,
+      nodes: visNodes.map(node => ({ id: node.id, connections: node.connections, x: node.x, y: node.y })),
+      // Endpoints already resolved to node objects above — send their ids.
+      links: visLinks.map(l => ({ source: (l.source as D3Node).id, target: (l.target as D3Node).id })),
+    })
 
     // ── Zoom + pan ─────────────────────────────────────────────────────────
     const zoom = d3.zoom<HTMLCanvasElement, unknown>()
@@ -367,16 +391,15 @@ export default function GraphCanvas({
       })
       .on('zoom', ev => {
         transformRef.current = ev.transform
-        // Reheat the sim slightly on big zoom changes so the layout responds
-        // to the new visible viewport — same heuristic as the previous build.
-        if (sim.alpha() < 0.05) sim.alpha(0.1).restart()
-        draw()
+        // Zoom/pan is a pure view transform — no physics involvement, just a
+        // repaint next frame.
+        scheduleRender()
         // Classify wheel as zoom, drag as pan (throttled).
         captureGraph(ev.sourceEvent instanceof WheelEvent ? 'zoom' : 'pan')
       })
     zoomRef.current = zoom
     d3.select(canvas).call(zoom).on('dblclick.zoom', null)
-    draw()
+    scheduleRender()
 
     // ── Hit detection ──────────────────────────────────────────────────────
     function toSim(cx: number, cy: number): [number, number] {
@@ -389,7 +412,7 @@ export default function GraphCanvas({
 
     // ── Mouse handlers ─────────────────────────────────────────────────────
     let mdX = 0, mdY = 0
-    let dragNode: D3Node | null = null
+    let dragId: string | null = null
 
     function setHover(node: D3Node | null) {
       const newId = node?.id ?? null
@@ -401,7 +424,7 @@ export default function GraphCanvas({
         hoverSetRef.current = highlightPath(newId, 1, adjacencyRef.current)
         captureGraph('hover')
       }
-      draw()
+      scheduleRender()
     }
 
     const onMouseDown = (e: MouseEvent) => {
@@ -409,11 +432,12 @@ export default function GraphCanvas({
       mdX = e.clientX - rect.left
       mdY = e.clientY - rect.top
       const [sx, sy] = toSim(mdX, mdY)
-      dragNode = hitTest(sx, sy)
-      if (dragNode) {
-        dragNode.fx = dragNode.x
-        dragNode.fy = dragNode.y
-        sim.alphaTarget(0.3).restart()
+      const found = hitTest(sx, sy)
+      dragId = found?.id ?? null
+      if (found) {
+        // Pin the node in the worker at its current position so the layout
+        // holds it under the cursor.
+        worker.postMessage({ type: 'drag', id: found.id, x: found.x ?? sx, y: found.y ?? sy })
       }
     }
 
@@ -423,9 +447,14 @@ export default function GraphCanvas({
       const cy = e.clientY - rect.top
       const [sx, sy] = toSim(cx, cy)
 
-      if (dragNode) {
-        dragNode.fx = sx
-        dragNode.fy = sy
+      if (dragId) {
+        // Instant local feedback: move the node now, and tell the worker to pin
+        // it there so neighbours follow on the next physics batch.
+        const node = nodeById.get(dragId)
+        if (node) { node.x = sx; node.y = sy }
+        worker.postMessage({ type: 'drag', id: dragId, x: sx, y: sy })
+        quadtreeDirty.current = true
+        scheduleRender()
         return
       }
       if (e.buttons > 0) {
@@ -451,11 +480,9 @@ export default function GraphCanvas({
     }
 
     const onMouseUp = () => {
-      if (dragNode) {
-        dragNode.fx = null
-        dragNode.fy = null
-        sim.alphaTarget(0)
-        dragNode = null
+      if (dragId) {
+        worker.postMessage({ type: 'dragEnd', id: dragId })
+        dragId = null
         captureGraph('drag')
       }
     }
@@ -469,8 +496,10 @@ export default function GraphCanvas({
       const found = hitTest(sx, sy)
       selectedIdRef.current = found?.id ?? null
       onNodeSelect(found)
-      if (found) { ensurePulseLoop(); captureGraph('click') }
-      draw()
+      if (found) captureGraph('click')
+      // Selection drives the pulse; the render loop keeps animating while a
+      // node is selected, so just request a repaint here.
+      scheduleRender()
     }
 
     const onDblClick = (e: MouseEvent) => {
@@ -496,13 +525,11 @@ export default function GraphCanvas({
     canvas.addEventListener('mouseleave', onMouseLeave)
 
     return () => {
-      sim.stop()
-      simRef.current = null
+      worker.postMessage({ type: 'stop' })
+      worker.terminate()
+      workerRef.current = null
       drawRef.current = () => {}
-      if (pulseRafRef.current != null) {
-        cancelAnimationFrame(pulseRafRef.current)
-        pulseRafRef.current = null
-      }
+      if (renderRaf) cancelAnimationFrame(renderRaf)
       canvas.removeEventListener('mousedown',  onMouseDown)
       canvas.removeEventListener('mousemove',  onMouseMove)
       canvas.removeEventListener('mouseup',    onMouseUp)
