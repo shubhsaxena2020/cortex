@@ -50,7 +50,10 @@ export function labelOpacity(zoom: number): number {
 // graph-builder is "#RRGGBB", append "AA" for the alpha byte.
 const ALPHA_HEX = {
   normal:    'cc',  // 80%
-  dim:       '22',  // 13%
+  dim:       '5e',  // ~37% — high enough to stay visible against #0c0c10 at
+                    // far zoom (Obsidian parity: dimmed ≠ invisible). The node
+                    // still reads as "not in the hovered subgraph" because the
+                    // highlight tier jumps to 100% + a white outline.
   highlight: 'ff',  // 100%
   selected:  'ff',  // 100% (plus pulse ring on top, see drawNode)
 } satisfies Record<NodeState, string>
