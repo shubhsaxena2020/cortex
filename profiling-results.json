@@ -1,0 +1,878 @@
+{
+  "generatedAt": "2026-06-05T06:47:30.582Z",
+  "dataset": {
+    "memories": 10000,
+    "vectors": 0,
+    "relationships": 0
+  },
+  "config": {
+    "warmup": 3,
+    "semantic": false,
+    "queries": 51
+  },
+  "stats": {
+    "keyword": {
+      "n": 51,
+      "min": 46.363,
+      "p50": 77.705,
+      "p95": 107.133,
+      "p99": 113.73,
+      "max": 113.73,
+      "mean": 79.232
+    },
+    "semantic": {
+      "n": 0,
+      "min": 0,
+      "p50": 0,
+      "p95": 0,
+      "p99": 0,
+      "max": 0,
+      "mean": 0
+    },
+    "byKind": {
+      "common-1": {
+        "n": 10,
+        "min": 57.476,
+        "p50": 81.493,
+        "p95": 105.11,
+        "p99": 105.11,
+        "max": 105.11,
+        "mean": 78.62
+      },
+      "rare-1": {
+        "n": 9,
+        "min": 65.773,
+        "p50": 84.461,
+        "p95": 107.133,
+        "p99": 107.133,
+        "max": 107.133,
+        "mean": 86.854
+      },
+      "phrase": {
+        "n": 15,
+        "min": 57.521,
+        "p50": 78.288,
+        "p95": 113.73,
+        "p99": 113.73,
+        "max": 113.73,
+        "mean": 81.4
+      },
+      "long": {
+        "n": 6,
+        "min": 83.126,
+        "p50": 99.825,
+        "p95": 108.035,
+        "p99": 108.035,
+        "max": 108.035,
+        "mean": 95.635
+      },
+      "special": {
+        "n": 4,
+        "min": 58.826,
+        "p50": 61.123,
+        "p95": 61.8,
+        "p99": 61.8,
+        "max": 61.8,
+        "mean": 60.605
+      },
+      "empty": {
+        "n": 2,
+        "min": 46.363,
+        "p50": 51.932,
+        "p95": 51.932,
+        "p99": 51.932,
+        "max": 51.932,
+        "mean": 49.148
+      },
+      "filtered": {
+        "n": 3,
+        "min": 53.491,
+        "p50": 61.578,
+        "p95": 77.705,
+        "p99": 77.705,
+        "max": 77.705,
+        "mean": 64.258
+      },
+      "tagged": {
+        "n": 2,
+        "min": 70.061,
+        "p50": 74.571,
+        "p95": 74.571,
+        "p99": 74.571,
+        "max": 74.571,
+        "mean": 72.316
+      }
+    }
+  },
+  "samples": [
+    {
+      "query": "react",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 93.722,
+      "breakdown": {
+        "prepare_ms": 0.069,
+        "execute_ms": 93.612,
+        "marshal_ms": 0.04
+      },
+      "row_count": 50,
+      "timestamp": 1780642046633
+    },
+    {
+      "query": "typescript",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 93.53,
+      "breakdown": {
+        "prepare_ms": 0.081,
+        "execute_ms": 93.408,
+        "marshal_ms": 0.04
+      },
+      "row_count": 50,
+      "timestamp": 1780642046727
+    },
+    {
+      "query": "sqlite",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 105.11,
+      "breakdown": {
+        "prepare_ms": 0.098,
+        "execute_ms": 104.972,
+        "marshal_ms": 0.041
+      },
+      "row_count": 50,
+      "timestamp": 1780642046832
+    },
+    {
+      "query": "embedding",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 91.923,
+      "breakdown": {
+        "prepare_ms": 0.084,
+        "execute_ms": 91.804,
+        "marshal_ms": 0.035
+      },
+      "row_count": 50,
+      "timestamp": 1780642046924
+    },
+    {
+      "query": "service",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 64.388,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 64.293,
+        "marshal_ms": 0.033
+      },
+      "row_count": 50,
+      "timestamp": 1780642046988
+    },
+    {
+      "query": "pipeline",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 71.757,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 71.653,
+        "marshal_ms": 0.041
+      },
+      "row_count": 50,
+      "timestamp": 1780642047060
+    },
+    {
+      "query": "handler",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 81.493,
+      "breakdown": {
+        "prepare_ms": 0.082,
+        "execute_ms": 81.376,
+        "marshal_ms": 0.035
+      },
+      "row_count": 50,
+      "timestamp": 1780642047141
+    },
+    {
+      "query": "debugging",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 64.661,
+      "breakdown": {
+        "prepare_ms": 0.065,
+        "execute_ms": 64.534,
+        "marshal_ms": 0.063
+      },
+      "row_count": 50,
+      "timestamp": 1780642047206
+    },
+    {
+      "query": "optimizing",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 62.141,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 62.033,
+        "marshal_ms": 0.044
+      },
+      "row_count": 50,
+      "timestamp": 1780642047268
+    },
+    {
+      "query": "profiling",
+      "kind": "common-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 57.476,
+      "breakdown": {
+        "prepare_ms": 0.086,
+        "execute_ms": 57.367,
+        "marshal_ms": 0.023
+      },
+      "row_count": 50,
+      "timestamp": 1780642047326
+    },
+    {
+      "query": "mulberry32",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 73.731,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 73.661,
+        "marshal_ms": 0.007
+      },
+      "row_count": 0,
+      "timestamp": 1780642047400
+    },
+    {
+      "query": "phantom",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 79.272,
+      "breakdown": {
+        "prepare_ms": 0.095,
+        "execute_ms": 79.151,
+        "marshal_ms": 0.026
+      },
+      "row_count": 50,
+      "timestamp": 1780642047479
+    },
+    {
+      "query": "paxos",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 93.356,
+      "breakdown": {
+        "prepare_ms": 0.066,
+        "execute_ms": 93.261,
+        "marshal_ms": 0.029
+      },
+      "row_count": 50,
+      "timestamp": 1780642047572
+    },
+    {
+      "query": "gossip",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 84.461,
+      "breakdown": {
+        "prepare_ms": 0.08,
+        "execute_ms": 84.351,
+        "marshal_ms": 0.03
+      },
+      "row_count": 50,
+      "timestamp": 1780642047657
+    },
+    {
+      "query": "crdt",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 99.247,
+      "breakdown": {
+        "prepare_ms": 0.083,
+        "execute_ms": 99.133,
+        "marshal_ms": 0.03
+      },
+      "row_count": 50,
+      "timestamp": 1780642047756
+    },
+    {
+      "query": "hinted",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 75.753,
+      "breakdown": {
+        "prepare_ms": 0.082,
+        "execute_ms": 75.645,
+        "marshal_ms": 0.026
+      },
+      "row_count": 50,
+      "timestamp": 1780642047832
+    },
+    {
+      "query": "levenshtein",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 65.773,
+      "breakdown": {
+        "prepare_ms": 0.064,
+        "execute_ms": 65.684,
+        "marshal_ms": 0.025
+      },
+      "row_count": 50,
+      "timestamp": 1780642047898
+    },
+    {
+      "query": "tokenization",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 102.962,
+      "breakdown": {
+        "prepare_ms": 0.062,
+        "execute_ms": 102.871,
+        "marshal_ms": 0.028
+      },
+      "row_count": 50,
+      "timestamp": 1780642048001
+    },
+    {
+      "query": "vector search",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 66.791,
+      "breakdown": {
+        "prepare_ms": 0.082,
+        "execute_ms": 66.684,
+        "marshal_ms": 0.024
+      },
+      "row_count": 50,
+      "timestamp": 1780642048067
+    },
+    {
+      "query": "attention mechanism",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 77.525,
+      "breakdown": {
+        "prepare_ms": 0.065,
+        "execute_ms": 77.434,
+        "marshal_ms": 0.026
+      },
+      "row_count": 50,
+      "timestamp": 1780642048145
+    },
+    {
+      "query": "red-black tree",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 71.534,
+      "breakdown": {
+        "prepare_ms": 0.064,
+        "execute_ms": 71.444,
+        "marshal_ms": 0.026
+      },
+      "row_count": 50,
+      "timestamp": 1780642048216
+    },
+    {
+      "query": "leader election",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 85.216,
+      "breakdown": {
+        "prepare_ms": 0.061,
+        "execute_ms": 85.128,
+        "marshal_ms": 0.028
+      },
+      "row_count": 50,
+      "timestamp": 1780642048302
+    },
+    {
+      "query": "gradient descent",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 88.813,
+      "breakdown": {
+        "prepare_ms": 0.083,
+        "execute_ms": 88.705,
+        "marshal_ms": 0.025
+      },
+      "row_count": 50,
+      "timestamp": 1780642048391
+    },
+    {
+      "query": "window function",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 78.288,
+      "breakdown": {
+        "prepare_ms": 0.064,
+        "execute_ms": 78.194,
+        "marshal_ms": 0.03
+      },
+      "row_count": 50,
+      "timestamp": 1780642048469
+    },
+    {
+      "query": "recursive CTE",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 89.646,
+      "breakdown": {
+        "prepare_ms": 0.089,
+        "execute_ms": 89.525,
+        "marshal_ms": 0.032
+      },
+      "row_count": 50,
+      "timestamp": 1780642048559
+    },
+    {
+      "query": "CORS preflight",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 73.935,
+      "breakdown": {
+        "prepare_ms": 0.067,
+        "execute_ms": 73.839,
+        "marshal_ms": 0.03
+      },
+      "row_count": 50,
+      "timestamp": 1780642048633
+    },
+    {
+      "query": "CSP nonces",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 86.56,
+      "breakdown": {
+        "prepare_ms": 0.083,
+        "execute_ms": 86.448,
+        "marshal_ms": 0.029
+      },
+      "row_count": 50,
+      "timestamp": 1780642048719
+    },
+    {
+      "query": "distributed lock",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 88.614,
+      "breakdown": {
+        "prepare_ms": 0.082,
+        "execute_ms": 88.503,
+        "marshal_ms": 0.028
+      },
+      "row_count": 50,
+      "timestamp": 1780642048808
+    },
+    {
+      "query": "refactoring the authentication flow inside our pipeline",
+      "kind": "long",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 107.086,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 107.015,
+        "marshal_ms": 0.007
+      },
+      "row_count": 0,
+      "timestamp": 1780642048915
+    },
+    {
+      "query": "designing a new fastify routing subsystem",
+      "kind": "long",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 108.035,
+      "breakdown": {
+        "prepare_ms": 0.087,
+        "execute_ms": 107.942,
+        "marshal_ms": 0.007
+      },
+      "row_count": 0,
+      "timestamp": 1780642049023
+    },
+    {
+      "query": "testing markdown rendering edge cases",
+      "kind": "long",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 99.825,
+      "breakdown": {
+        "prepare_ms": 0.081,
+        "execute_ms": 99.738,
+        "marshal_ms": 0.007
+      },
+      "row_count": 0,
+      "timestamp": 1780642049123
+    },
+    {
+      "query": "profiling cosine similarity over a 10k corpus",
+      "kind": "long",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 87.628,
+      "breakdown": {
+        "prepare_ms": 0.068,
+        "execute_ms": 87.553,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642049210
+    },
+    {
+      "query": "reviewing electron IPC contracts between processes",
+      "kind": "long",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 88.113,
+      "breakdown": {
+        "prepare_ms": 0.067,
+        "execute_ms": 88.04,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642049299
+    },
+    {
+      "query": "50%",
+      "kind": "special",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 60.67,
+      "breakdown": {
+        "prepare_ms": 0.068,
+        "execute_ms": 60.596,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642049359
+    },
+    {
+      "query": "foo_bar",
+      "kind": "special",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 58.826,
+      "breakdown": {
+        "prepare_ms": 0.066,
+        "execute_ms": 58.754,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642049418
+    },
+    {
+      "query": "100\\%",
+      "kind": "special",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 61.8,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 61.731,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642049480
+    },
+    {
+      "query": "what's that?",
+      "kind": "special",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 61.123,
+      "breakdown": {
+        "prepare_ms": 0.068,
+        "execute_ms": 61.049,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642049541
+    },
+    {
+      "query": "",
+      "kind": "empty",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 46.363,
+      "breakdown": {
+        "prepare_ms": 0.07,
+        "execute_ms": 46.247,
+        "marshal_ms": 0.047
+      },
+      "row_count": 50,
+      "timestamp": 1780642049587
+    },
+    {
+      "query": "   ",
+      "kind": "empty",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 51.932,
+      "breakdown": {
+        "prepare_ms": 0.139,
+        "execute_ms": 51.768,
+        "marshal_ms": 0.025
+      },
+      "row_count": 50,
+      "timestamp": 1780642049639
+    },
+    {
+      "query": "react",
+      "kind": "filtered",
+      "mode": "keyword",
+      "source": "claude",
+      "tags": null,
+      "latency_ms": 77.705,
+      "breakdown": {
+        "prepare_ms": 0.067,
+        "execute_ms": 77.612,
+        "marshal_ms": 0.026
+      },
+      "row_count": 50,
+      "timestamp": 1780642049717
+    },
+    {
+      "query": "service",
+      "kind": "filtered",
+      "mode": "keyword",
+      "source": "chatgpt",
+      "tags": null,
+      "latency_ms": 53.491,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 53.398,
+        "marshal_ms": 0.03
+      },
+      "row_count": 50,
+      "timestamp": 1780642049771
+    },
+    {
+      "query": "pipeline",
+      "kind": "filtered",
+      "mode": "keyword",
+      "source": "gemini",
+      "tags": null,
+      "latency_ms": 61.578,
+      "breakdown": {
+        "prepare_ms": 0.066,
+        "execute_ms": 61.488,
+        "marshal_ms": 0.024
+      },
+      "row_count": 50,
+      "timestamp": 1780642049832
+    },
+    {
+      "query": "react",
+      "kind": "tagged",
+      "mode": "keyword",
+      "source": null,
+      "tags": [
+        "react"
+      ],
+      "latency_ms": 74.571,
+      "breakdown": {
+        "prepare_ms": 0.075,
+        "execute_ms": 74.473,
+        "marshal_ms": 0.022
+      },
+      "row_count": 50,
+      "timestamp": 1780642049907
+    },
+    {
+      "query": "optimizing",
+      "kind": "tagged",
+      "mode": "keyword",
+      "source": null,
+      "tags": [
+        "optimizing"
+      ],
+      "latency_ms": 70.061,
+      "breakdown": {
+        "prepare_ms": 0.066,
+        "execute_ms": 69.971,
+        "marshal_ms": 0.024
+      },
+      "row_count": 50,
+      "timestamp": 1780642049977
+    },
+    {
+      "query": "sqlite indexing",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 113.73,
+      "breakdown": {
+        "prepare_ms": 0.06,
+        "execute_ms": 113.642,
+        "marshal_ms": 0.028
+      },
+      "row_count": 50,
+      "timestamp": 1780642050091
+    },
+    {
+      "query": "tree-shaking",
+      "kind": "rare-1",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 107.133,
+      "breakdown": {
+        "prepare_ms": 0.08,
+        "execute_ms": 107.023,
+        "marshal_ms": 0.029
+      },
+      "row_count": 50,
+      "timestamp": 1780642050198
+    },
+    {
+      "query": "oauth pkce",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 92.935,
+      "breakdown": {
+        "prepare_ms": 0.08,
+        "execute_ms": 92.829,
+        "marshal_ms": 0.027
+      },
+      "row_count": 50,
+      "timestamp": 1780642050291
+    },
+    {
+      "query": "CRDT merge resolution",
+      "kind": "long",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 83.126,
+      "breakdown": {
+        "prepare_ms": 0.063,
+        "execute_ms": 83.057,
+        "marshal_ms": 0.006
+      },
+      "row_count": 0,
+      "timestamp": 1780642050374
+    },
+    {
+      "query": "k-means clustering",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 57.521,
+      "breakdown": {
+        "prepare_ms": 0.068,
+        "execute_ms": 57.428,
+        "marshal_ms": 0.025
+      },
+      "row_count": 50,
+      "timestamp": 1780642050432
+    },
+    {
+      "query": "b+tree leaf split",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 73.739,
+      "breakdown": {
+        "prepare_ms": 0.064,
+        "execute_ms": 73.648,
+        "marshal_ms": 0.026
+      },
+      "row_count": 50,
+      "timestamp": 1780642050505
+    },
+    {
+      "query": "serialization failure",
+      "kind": "phrase",
+      "mode": "keyword",
+      "source": null,
+      "tags": null,
+      "latency_ms": 76.156,
+      "breakdown": {
+        "prepare_ms": 0.062,
+        "execute_ms": 76.068,
+        "marshal_ms": 0.027
+      },
+      "row_count": 50,
+      "timestamp": 1780642050581
+    }
+  ]
+}
