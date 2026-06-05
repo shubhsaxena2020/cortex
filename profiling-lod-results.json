@@ -1,0 +1,5467 @@
+{
+  "generatedAt": "2026-06-05T07:03:28.708Z",
+  "config": {
+    "nodes": 10000,
+    "frames": 200,
+    "viewport": {
+      "w": 1200,
+      "h": 800
+    }
+  },
+  "notes": "JS pipeline cost only; real browser FPS via in-app debug overlay (?debug=graph).",
+  "summary": {
+    "far": {
+      "frames": 200,
+      "visible_mean": 10000,
+      "visible_max": 10000,
+      "cull_p50_ms": 0.5829,
+      "cull_p95_ms": 1.1831,
+      "cull_p99_ms": 4.3444,
+      "query_p95_ms": 0.5793,
+      "quadtree_build_ms": 3.064,
+      "derived_fps_capacity": 1353
+    },
+    "medium": {
+      "frames": 200,
+      "visible_mean": 5371,
+      "visible_max": 5428,
+      "cull_p50_ms": 0.0841,
+      "cull_p95_ms": 0.1692,
+      "cull_p99_ms": 0.5295,
+      "query_p95_ms": 0.1689,
+      "quadtree_build_ms": 2.86,
+      "derived_fps_capacity": 9286
+    },
+    "close": {
+      "frames": 200,
+      "visible_mean": 831,
+      "visible_max": 862,
+      "cull_p50_ms": 0.0187,
+      "cull_p95_ms": 0.032,
+      "cull_p99_ms": 0.0714,
+      "query_p95_ms": 0.0312,
+      "quadtree_build_ms": 2.872,
+      "derived_fps_capacity": 41403
+    }
+  },
+  "samples": [
+    {
+      "zoom": 0.2,
+      "label": "far",
+      "samples": [
+        {
+          "frame": 0,
+          "query_ms": 2.8068,
+          "cluster_ms": 1.5376,
+          "total_ms": 4.3444,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 1,
+          "query_ms": 1.7363,
+          "cluster_ms": 1.7712,
+          "total_ms": 3.5075,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 2,
+          "query_ms": 2.0618,
+          "cluster_ms": 2.5005,
+          "total_ms": 4.5623,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 3,
+          "query_ms": 1.3915,
+          "cluster_ms": 1.8241,
+          "total_ms": 3.2156,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 4,
+          "query_ms": 1.4003,
+          "cluster_ms": 0.7224,
+          "total_ms": 2.1227,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 5,
+          "query_ms": 0.8591,
+          "cluster_ms": 0.4517,
+          "total_ms": 1.3108,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 6,
+          "query_ms": 0.7188,
+          "cluster_ms": 0.6865,
+          "total_ms": 1.4053,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 7,
+          "query_ms": 0.3325,
+          "cluster_ms": 0.4271,
+          "total_ms": 0.7596,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 8,
+          "query_ms": 0.1547,
+          "cluster_ms": 0.4301,
+          "total_ms": 0.5848,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 9,
+          "query_ms": 0.1595,
+          "cluster_ms": 0.4212,
+          "total_ms": 0.5807,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 10,
+          "query_ms": 0.1455,
+          "cluster_ms": 0.4083,
+          "total_ms": 0.5538,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 11,
+          "query_ms": 0.1443,
+          "cluster_ms": 0.405,
+          "total_ms": 0.5493,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 12,
+          "query_ms": 0.1482,
+          "cluster_ms": 0.4744,
+          "total_ms": 0.6226,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 13,
+          "query_ms": 0.3402,
+          "cluster_ms": 0.4768,
+          "total_ms": 0.817,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 14,
+          "query_ms": 0.1661,
+          "cluster_ms": 0.6865,
+          "total_ms": 0.8526,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 15,
+          "query_ms": 0.2514,
+          "cluster_ms": 0.5238,
+          "total_ms": 0.7752,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 16,
+          "query_ms": 0.1726,
+          "cluster_ms": 0.4534,
+          "total_ms": 0.626,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 17,
+          "query_ms": 0.1451,
+          "cluster_ms": 0.4133,
+          "total_ms": 0.5584,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 18,
+          "query_ms": 0.1466,
+          "cluster_ms": 0.483,
+          "total_ms": 0.6296,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 19,
+          "query_ms": 0.1913,
+          "cluster_ms": 0.5451,
+          "total_ms": 0.7364,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 20,
+          "query_ms": 0.3789,
+          "cluster_ms": 0.4409,
+          "total_ms": 0.8198,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 21,
+          "query_ms": 0.1692,
+          "cluster_ms": 0.4208,
+          "total_ms": 0.59,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 22,
+          "query_ms": 0.1439,
+          "cluster_ms": 0.4269,
+          "total_ms": 0.5708,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 23,
+          "query_ms": 0.1449,
+          "cluster_ms": 0.4299,
+          "total_ms": 0.5748,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 24,
+          "query_ms": 0.1525,
+          "cluster_ms": 0.4078,
+          "total_ms": 0.5603,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 25,
+          "query_ms": 0.1418,
+          "cluster_ms": 0.413,
+          "total_ms": 0.5548,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 26,
+          "query_ms": 0.1418,
+          "cluster_ms": 0.412,
+          "total_ms": 0.5538,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 27,
+          "query_ms": 0.262,
+          "cluster_ms": 0.4267,
+          "total_ms": 0.6887,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 28,
+          "query_ms": 0.1432,
+          "cluster_ms": 0.4241,
+          "total_ms": 0.5673,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 29,
+          "query_ms": 0.1574,
+          "cluster_ms": 0.4069,
+          "total_ms": 0.5643,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 30,
+          "query_ms": 0.1443,
+          "cluster_ms": 0.4268,
+          "total_ms": 0.5711,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 31,
+          "query_ms": 0.1423,
+          "cluster_ms": 0.4004,
+          "total_ms": 0.5427,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 32,
+          "query_ms": 0.1424,
+          "cluster_ms": 0.403,
+          "total_ms": 0.5454,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 33,
+          "query_ms": 0.1408,
+          "cluster_ms": 0.4027,
+          "total_ms": 0.5435,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 34,
+          "query_ms": 0.2446,
+          "cluster_ms": 0.4178,
+          "total_ms": 0.6624,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 35,
+          "query_ms": 0.1425,
+          "cluster_ms": 0.4061,
+          "total_ms": 0.5486,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 36,
+          "query_ms": 0.156,
+          "cluster_ms": 0.4194,
+          "total_ms": 0.5754,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 37,
+          "query_ms": 0.1472,
+          "cluster_ms": 0.4099,
+          "total_ms": 0.5571,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 38,
+          "query_ms": 0.1512,
+          "cluster_ms": 0.5009,
+          "total_ms": 0.6521,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 39,
+          "query_ms": 0.1753,
+          "cluster_ms": 0.5313,
+          "total_ms": 0.7066,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 40,
+          "query_ms": 0.1942,
+          "cluster_ms": 0.6465,
+          "total_ms": 0.8407,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 41,
+          "query_ms": 0.5793,
+          "cluster_ms": 0.6038,
+          "total_ms": 1.1831,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 42,
+          "query_ms": 0.2362,
+          "cluster_ms": 0.4525,
+          "total_ms": 0.6887,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 43,
+          "query_ms": 0.2711,
+          "cluster_ms": 0.6537,
+          "total_ms": 0.9248,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 44,
+          "query_ms": 0.188,
+          "cluster_ms": 0.635,
+          "total_ms": 0.823,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 45,
+          "query_ms": 0.1652,
+          "cluster_ms": 0.4268,
+          "total_ms": 0.592,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 46,
+          "query_ms": 0.1536,
+          "cluster_ms": 0.4285,
+          "total_ms": 0.5821,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 47,
+          "query_ms": 0.1497,
+          "cluster_ms": 0.4367,
+          "total_ms": 0.5864,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 48,
+          "query_ms": 0.3239,
+          "cluster_ms": 0.4303,
+          "total_ms": 0.7542,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 49,
+          "query_ms": 0.1456,
+          "cluster_ms": 0.4116,
+          "total_ms": 0.5572,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 50,
+          "query_ms": 0.1448,
+          "cluster_ms": 0.4202,
+          "total_ms": 0.565,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 51,
+          "query_ms": 0.1437,
+          "cluster_ms": 0.4127,
+          "total_ms": 0.5564,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 52,
+          "query_ms": 0.1417,
+          "cluster_ms": 0.4085,
+          "total_ms": 0.5502,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 53,
+          "query_ms": 0.1414,
+          "cluster_ms": 0.4122,
+          "total_ms": 0.5536,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 54,
+          "query_ms": 0.1474,
+          "cluster_ms": 0.4128,
+          "total_ms": 0.5602,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 55,
+          "query_ms": 0.2522,
+          "cluster_ms": 0.4217,
+          "total_ms": 0.6739,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 56,
+          "query_ms": 0.1407,
+          "cluster_ms": 0.4038,
+          "total_ms": 0.5445,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 57,
+          "query_ms": 0.1394,
+          "cluster_ms": 0.4793,
+          "total_ms": 0.6187,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 58,
+          "query_ms": 0.1476,
+          "cluster_ms": 0.4047,
+          "total_ms": 0.5523,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 59,
+          "query_ms": 0.1441,
+          "cluster_ms": 0.4062,
+          "total_ms": 0.5503,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 60,
+          "query_ms": 0.1445,
+          "cluster_ms": 0.4051,
+          "total_ms": 0.5496,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 61,
+          "query_ms": 0.1472,
+          "cluster_ms": 0.4214,
+          "total_ms": 0.5686,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 62,
+          "query_ms": 0.2545,
+          "cluster_ms": 0.4726,
+          "total_ms": 0.7271,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 63,
+          "query_ms": 0.1729,
+          "cluster_ms": 0.5188,
+          "total_ms": 0.6917,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 64,
+          "query_ms": 0.2652,
+          "cluster_ms": 0.8673,
+          "total_ms": 1.1325,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 65,
+          "query_ms": 0.3079,
+          "cluster_ms": 0.6864,
+          "total_ms": 0.9943,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 66,
+          "query_ms": 0.1781,
+          "cluster_ms": 0.4444,
+          "total_ms": 0.6225,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 67,
+          "query_ms": 0.1633,
+          "cluster_ms": 0.4304,
+          "total_ms": 0.5937,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 68,
+          "query_ms": 0.1458,
+          "cluster_ms": 0.4318,
+          "total_ms": 0.5776,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 69,
+          "query_ms": 0.6121,
+          "cluster_ms": 0.5013,
+          "total_ms": 1.1134,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 70,
+          "query_ms": 0.1619,
+          "cluster_ms": 0.4505,
+          "total_ms": 0.6124,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 71,
+          "query_ms": 0.1538,
+          "cluster_ms": 0.4212,
+          "total_ms": 0.575,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 72,
+          "query_ms": 0.1533,
+          "cluster_ms": 0.4143,
+          "total_ms": 0.5676,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 73,
+          "query_ms": 0.154,
+          "cluster_ms": 0.4226,
+          "total_ms": 0.5766,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 74,
+          "query_ms": 0.1449,
+          "cluster_ms": 0.4347,
+          "total_ms": 0.5796,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 75,
+          "query_ms": 0.1452,
+          "cluster_ms": 0.4323,
+          "total_ms": 0.5775,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 76,
+          "query_ms": 0.2902,
+          "cluster_ms": 0.4373,
+          "total_ms": 0.7275,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 77,
+          "query_ms": 0.1461,
+          "cluster_ms": 0.4182,
+          "total_ms": 0.5643,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 78,
+          "query_ms": 0.1464,
+          "cluster_ms": 0.4178,
+          "total_ms": 0.5642,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 79,
+          "query_ms": 0.1485,
+          "cluster_ms": 0.4166,
+          "total_ms": 0.5651,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 80,
+          "query_ms": 0.1453,
+          "cluster_ms": 0.4091,
+          "total_ms": 0.5544,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 81,
+          "query_ms": 0.1456,
+          "cluster_ms": 0.4113,
+          "total_ms": 0.5569,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 82,
+          "query_ms": 0.1468,
+          "cluster_ms": 0.4086,
+          "total_ms": 0.5554,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 83,
+          "query_ms": 0.2574,
+          "cluster_ms": 0.4213,
+          "total_ms": 0.6787,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 84,
+          "query_ms": 0.1426,
+          "cluster_ms": 0.4043,
+          "total_ms": 0.5469,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 85,
+          "query_ms": 0.1427,
+          "cluster_ms": 0.4075,
+          "total_ms": 0.5502,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 86,
+          "query_ms": 0.1483,
+          "cluster_ms": 0.4203,
+          "total_ms": 0.5686,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 87,
+          "query_ms": 0.1564,
+          "cluster_ms": 0.5087,
+          "total_ms": 0.6651,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 88,
+          "query_ms": 0.1648,
+          "cluster_ms": 0.4146,
+          "total_ms": 0.5794,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 89,
+          "query_ms": 0.1444,
+          "cluster_ms": 0.4316,
+          "total_ms": 0.576,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 90,
+          "query_ms": 0.3116,
+          "cluster_ms": 0.4639,
+          "total_ms": 0.7755,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 91,
+          "query_ms": 0.3777,
+          "cluster_ms": 0.6597,
+          "total_ms": 1.0374,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 92,
+          "query_ms": 0.2646,
+          "cluster_ms": 0.4929,
+          "total_ms": 0.7575,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 93,
+          "query_ms": 0.1656,
+          "cluster_ms": 0.4307,
+          "total_ms": 0.5963,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 94,
+          "query_ms": 0.1453,
+          "cluster_ms": 0.4353,
+          "total_ms": 0.5806,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 95,
+          "query_ms": 0.1561,
+          "cluster_ms": 0.5661,
+          "total_ms": 0.7222,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 96,
+          "query_ms": 0.2386,
+          "cluster_ms": 0.4728,
+          "total_ms": 0.7114,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 97,
+          "query_ms": 0.3888,
+          "cluster_ms": 0.4811,
+          "total_ms": 0.8699,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 98,
+          "query_ms": 0.1501,
+          "cluster_ms": 0.4253,
+          "total_ms": 0.5754,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 99,
+          "query_ms": 0.1572,
+          "cluster_ms": 0.4444,
+          "total_ms": 0.6016,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 100,
+          "query_ms": 0.1632,
+          "cluster_ms": 0.4231,
+          "total_ms": 0.5863,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 101,
+          "query_ms": 0.1456,
+          "cluster_ms": 0.417,
+          "total_ms": 0.5626,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 102,
+          "query_ms": 0.1493,
+          "cluster_ms": 0.4173,
+          "total_ms": 0.5666,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 103,
+          "query_ms": 0.1526,
+          "cluster_ms": 0.4227,
+          "total_ms": 0.5753,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 104,
+          "query_ms": 0.2759,
+          "cluster_ms": 0.4344,
+          "total_ms": 0.7103,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 105,
+          "query_ms": 0.144,
+          "cluster_ms": 0.4168,
+          "total_ms": 0.5608,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 106,
+          "query_ms": 0.1485,
+          "cluster_ms": 0.4069,
+          "total_ms": 0.5554,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 107,
+          "query_ms": 0.1465,
+          "cluster_ms": 0.409,
+          "total_ms": 0.5555,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 108,
+          "query_ms": 0.1463,
+          "cluster_ms": 0.4085,
+          "total_ms": 0.5548,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 109,
+          "query_ms": 0.1484,
+          "cluster_ms": 0.416,
+          "total_ms": 0.5644,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 110,
+          "query_ms": 0.1445,
+          "cluster_ms": 0.4108,
+          "total_ms": 0.5553,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 111,
+          "query_ms": 0.246,
+          "cluster_ms": 0.5577,
+          "total_ms": 0.8037,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 112,
+          "query_ms": 0.1571,
+          "cluster_ms": 0.4154,
+          "total_ms": 0.5725,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 113,
+          "query_ms": 0.1465,
+          "cluster_ms": 0.4074,
+          "total_ms": 0.5539,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 114,
+          "query_ms": 0.1496,
+          "cluster_ms": 0.4117,
+          "total_ms": 0.5613,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 115,
+          "query_ms": 0.1467,
+          "cluster_ms": 0.4362,
+          "total_ms": 0.5829,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 116,
+          "query_ms": 0.1703,
+          "cluster_ms": 0.4696,
+          "total_ms": 0.6399,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 117,
+          "query_ms": 0.2363,
+          "cluster_ms": 0.7596,
+          "total_ms": 0.9959,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 118,
+          "query_ms": 0.5543,
+          "cluster_ms": 0.4896,
+          "total_ms": 1.0439,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 119,
+          "query_ms": 0.1761,
+          "cluster_ms": 0.427,
+          "total_ms": 0.6031,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 120,
+          "query_ms": 0.1557,
+          "cluster_ms": 0.6261,
+          "total_ms": 0.7818,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 121,
+          "query_ms": 0.1986,
+          "cluster_ms": 0.6055,
+          "total_ms": 0.8041,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 122,
+          "query_ms": 0.1757,
+          "cluster_ms": 0.4296,
+          "total_ms": 0.6053,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 123,
+          "query_ms": 0.1448,
+          "cluster_ms": 0.4207,
+          "total_ms": 0.5655,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 124,
+          "query_ms": 0.1456,
+          "cluster_ms": 0.4348,
+          "total_ms": 0.5804,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 125,
+          "query_ms": 0.2919,
+          "cluster_ms": 0.4314,
+          "total_ms": 0.7233,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 126,
+          "query_ms": 0.1448,
+          "cluster_ms": 0.4531,
+          "total_ms": 0.5979,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 127,
+          "query_ms": 0.1543,
+          "cluster_ms": 0.4123,
+          "total_ms": 0.5666,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 128,
+          "query_ms": 0.1552,
+          "cluster_ms": 0.4077,
+          "total_ms": 0.5629,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 129,
+          "query_ms": 0.1448,
+          "cluster_ms": 0.4078,
+          "total_ms": 0.5526,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 130,
+          "query_ms": 0.1484,
+          "cluster_ms": 0.4098,
+          "total_ms": 0.5582,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 131,
+          "query_ms": 0.1438,
+          "cluster_ms": 0.42,
+          "total_ms": 0.5638,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 132,
+          "query_ms": 0.26,
+          "cluster_ms": 0.4146,
+          "total_ms": 0.6746,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 133,
+          "query_ms": 0.1422,
+          "cluster_ms": 0.3997,
+          "total_ms": 0.5419,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 134,
+          "query_ms": 0.1409,
+          "cluster_ms": 0.4015,
+          "total_ms": 0.5424,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 135,
+          "query_ms": 0.5548,
+          "cluster_ms": 1.1152,
+          "total_ms": 1.67,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 136,
+          "query_ms": 0.3167,
+          "cluster_ms": 0.7422,
+          "total_ms": 1.0589,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 137,
+          "query_ms": 0.2068,
+          "cluster_ms": 0.495,
+          "total_ms": 0.7018,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 138,
+          "query_ms": 0.1425,
+          "cluster_ms": 0.4226,
+          "total_ms": 0.5651,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 139,
+          "query_ms": 0.3326,
+          "cluster_ms": 0.5954,
+          "total_ms": 0.928,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 140,
+          "query_ms": 0.2015,
+          "cluster_ms": 0.6952,
+          "total_ms": 0.8967,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 141,
+          "query_ms": 0.2257,
+          "cluster_ms": 0.5329,
+          "total_ms": 0.7586,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 142,
+          "query_ms": 0.1747,
+          "cluster_ms": 0.4671,
+          "total_ms": 0.6418,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 143,
+          "query_ms": 0.1689,
+          "cluster_ms": 0.5859,
+          "total_ms": 0.7548,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 144,
+          "query_ms": 0.2158,
+          "cluster_ms": 0.5049,
+          "total_ms": 0.7207,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 145,
+          "query_ms": 0.166,
+          "cluster_ms": 0.5164,
+          "total_ms": 0.6824,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 146,
+          "query_ms": 0.3865,
+          "cluster_ms": 0.4539,
+          "total_ms": 0.8404,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 147,
+          "query_ms": 0.1479,
+          "cluster_ms": 0.4249,
+          "total_ms": 0.5728,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 148,
+          "query_ms": 0.1527,
+          "cluster_ms": 0.4273,
+          "total_ms": 0.58,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 149,
+          "query_ms": 0.1493,
+          "cluster_ms": 0.4199,
+          "total_ms": 0.5692,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 150,
+          "query_ms": 0.1482,
+          "cluster_ms": 0.4192,
+          "total_ms": 0.5674,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 151,
+          "query_ms": 0.1478,
+          "cluster_ms": 0.4323,
+          "total_ms": 0.5801,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 152,
+          "query_ms": 0.1455,
+          "cluster_ms": 0.4227,
+          "total_ms": 0.5682,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 153,
+          "query_ms": 0.2733,
+          "cluster_ms": 0.4313,
+          "total_ms": 0.7046,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 154,
+          "query_ms": 0.1419,
+          "cluster_ms": 0.4164,
+          "total_ms": 0.5583,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 155,
+          "query_ms": 0.1423,
+          "cluster_ms": 0.4119,
+          "total_ms": 0.5542,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 156,
+          "query_ms": 0.1439,
+          "cluster_ms": 0.4638,
+          "total_ms": 0.6077,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 157,
+          "query_ms": 0.1728,
+          "cluster_ms": 0.4303,
+          "total_ms": 0.6031,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 158,
+          "query_ms": 0.1562,
+          "cluster_ms": 0.4152,
+          "total_ms": 0.5714,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 159,
+          "query_ms": 0.1407,
+          "cluster_ms": 0.4127,
+          "total_ms": 0.5534,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 160,
+          "query_ms": 0.2573,
+          "cluster_ms": 0.4272,
+          "total_ms": 0.6845,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 161,
+          "query_ms": 0.1421,
+          "cluster_ms": 0.4036,
+          "total_ms": 0.5457,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 162,
+          "query_ms": 0.1416,
+          "cluster_ms": 0.4055,
+          "total_ms": 0.5471,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 163,
+          "query_ms": 0.1405,
+          "cluster_ms": 0.405,
+          "total_ms": 0.5455,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 164,
+          "query_ms": 0.1396,
+          "cluster_ms": 0.4659,
+          "total_ms": 0.6055,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 165,
+          "query_ms": 0.1509,
+          "cluster_ms": 0.454,
+          "total_ms": 0.6049,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 166,
+          "query_ms": 0.279,
+          "cluster_ms": 0.5332,
+          "total_ms": 0.8122,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 167,
+          "query_ms": 0.7077,
+          "cluster_ms": 0.9898,
+          "total_ms": 1.6975,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 168,
+          "query_ms": 0.2173,
+          "cluster_ms": 0.6716,
+          "total_ms": 0.8889,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 169,
+          "query_ms": 0.235,
+          "cluster_ms": 0.533,
+          "total_ms": 0.768,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 170,
+          "query_ms": 0.1688,
+          "cluster_ms": 0.4951,
+          "total_ms": 0.6639,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 171,
+          "query_ms": 0.1698,
+          "cluster_ms": 0.4304,
+          "total_ms": 0.6002,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 172,
+          "query_ms": 0.1578,
+          "cluster_ms": 0.414,
+          "total_ms": 0.5718,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 173,
+          "query_ms": 0.145,
+          "cluster_ms": 0.4148,
+          "total_ms": 0.5598,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 174,
+          "query_ms": 0.2921,
+          "cluster_ms": 0.4413,
+          "total_ms": 0.7334,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 175,
+          "query_ms": 0.1459,
+          "cluster_ms": 0.415,
+          "total_ms": 0.5609,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 176,
+          "query_ms": 0.1475,
+          "cluster_ms": 0.4199,
+          "total_ms": 0.5674,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 177,
+          "query_ms": 0.1444,
+          "cluster_ms": 0.4139,
+          "total_ms": 0.5583,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 178,
+          "query_ms": 0.144,
+          "cluster_ms": 0.414,
+          "total_ms": 0.558,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 179,
+          "query_ms": 0.1445,
+          "cluster_ms": 0.4196,
+          "total_ms": 0.5641,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 180,
+          "query_ms": 0.1501,
+          "cluster_ms": 0.4272,
+          "total_ms": 0.5773,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 181,
+          "query_ms": 0.3798,
+          "cluster_ms": 0.5229,
+          "total_ms": 0.9027,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 182,
+          "query_ms": 0.1506,
+          "cluster_ms": 0.4055,
+          "total_ms": 0.5561,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 183,
+          "query_ms": 0.1488,
+          "cluster_ms": 0.4099,
+          "total_ms": 0.5587,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 184,
+          "query_ms": 0.1527,
+          "cluster_ms": 0.4126,
+          "total_ms": 0.5653,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 185,
+          "query_ms": 0.1427,
+          "cluster_ms": 0.4123,
+          "total_ms": 0.555,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 186,
+          "query_ms": 0.1448,
+          "cluster_ms": 0.4153,
+          "total_ms": 0.5601,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 187,
+          "query_ms": 0.1464,
+          "cluster_ms": 0.4213,
+          "total_ms": 0.5677,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 188,
+          "query_ms": 0.3031,
+          "cluster_ms": 0.4369,
+          "total_ms": 0.74,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 189,
+          "query_ms": 0.1578,
+          "cluster_ms": 0.5274,
+          "total_ms": 0.6852,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 190,
+          "query_ms": 0.3792,
+          "cluster_ms": 0.7075,
+          "total_ms": 1.0867,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 191,
+          "query_ms": 0.2842,
+          "cluster_ms": 0.619,
+          "total_ms": 0.9032,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 192,
+          "query_ms": 0.1779,
+          "cluster_ms": 0.4502,
+          "total_ms": 0.6281,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 193,
+          "query_ms": 0.1544,
+          "cluster_ms": 0.4426,
+          "total_ms": 0.597,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 194,
+          "query_ms": 0.1783,
+          "cluster_ms": 0.5843,
+          "total_ms": 0.7626,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 195,
+          "query_ms": 0.4967,
+          "cluster_ms": 0.5112,
+          "total_ms": 1.0079,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 196,
+          "query_ms": 0.1515,
+          "cluster_ms": 0.4253,
+          "total_ms": 0.5768,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 197,
+          "query_ms": 0.1509,
+          "cluster_ms": 0.4349,
+          "total_ms": 0.5858,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 198,
+          "query_ms": 0.1547,
+          "cluster_ms": 0.4289,
+          "total_ms": 0.5836,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        },
+        {
+          "frame": 199,
+          "query_ms": 0.1463,
+          "cluster_ms": 0.4187,
+          "total_ms": 0.565,
+          "visible_count": 10000,
+          "drawn_count": 441,
+          "cluster_count": 441
+        }
+      ]
+    },
+    {
+      "zoom": 1,
+      "label": "medium",
+      "samples": [
+        {
+          "frame": 0,
+          "query_ms": 0.1328,
+          "cluster_ms": 0.0011,
+          "total_ms": 0.1339,
+          "visible_count": 5396,
+          "drawn_count": 5396,
+          "cluster_count": 0
+        },
+        {
+          "frame": 1,
+          "query_ms": 0.0995,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0998,
+          "visible_count": 5396,
+          "drawn_count": 5396,
+          "cluster_count": 0
+        },
+        {
+          "frame": 2,
+          "query_ms": 0.0921,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0923,
+          "visible_count": 5397,
+          "drawn_count": 5397,
+          "cluster_count": 0
+        },
+        {
+          "frame": 3,
+          "query_ms": 0.0914,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0915,
+          "visible_count": 5389,
+          "drawn_count": 5389,
+          "cluster_count": 0
+        },
+        {
+          "frame": 4,
+          "query_ms": 0.0925,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0927,
+          "visible_count": 5394,
+          "drawn_count": 5394,
+          "cluster_count": 0
+        },
+        {
+          "frame": 5,
+          "query_ms": 0.0906,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.091,
+          "visible_count": 5388,
+          "drawn_count": 5388,
+          "cluster_count": 0
+        },
+        {
+          "frame": 6,
+          "query_ms": 0.09,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0901,
+          "visible_count": 5396,
+          "drawn_count": 5396,
+          "cluster_count": 0
+        },
+        {
+          "frame": 7,
+          "query_ms": 0.0895,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0898,
+          "visible_count": 5391,
+          "drawn_count": 5391,
+          "cluster_count": 0
+        },
+        {
+          "frame": 8,
+          "query_ms": 0.0885,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0887,
+          "visible_count": 5390,
+          "drawn_count": 5390,
+          "cluster_count": 0
+        },
+        {
+          "frame": 9,
+          "query_ms": 0.0992,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0994,
+          "visible_count": 5379,
+          "drawn_count": 5379,
+          "cluster_count": 0
+        },
+        {
+          "frame": 10,
+          "query_ms": 0.0898,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.09,
+          "visible_count": 5393,
+          "drawn_count": 5393,
+          "cluster_count": 0
+        },
+        {
+          "frame": 11,
+          "query_ms": 0.0884,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0886,
+          "visible_count": 5382,
+          "drawn_count": 5382,
+          "cluster_count": 0
+        },
+        {
+          "frame": 12,
+          "query_ms": 0.0899,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0903,
+          "visible_count": 5387,
+          "drawn_count": 5387,
+          "cluster_count": 0
+        },
+        {
+          "frame": 13,
+          "query_ms": 0.0881,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0885,
+          "visible_count": 5386,
+          "drawn_count": 5386,
+          "cluster_count": 0
+        },
+        {
+          "frame": 14,
+          "query_ms": 0.0858,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0861,
+          "visible_count": 5355,
+          "drawn_count": 5355,
+          "cluster_count": 0
+        },
+        {
+          "frame": 15,
+          "query_ms": 0.0813,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0814,
+          "visible_count": 5348,
+          "drawn_count": 5348,
+          "cluster_count": 0
+        },
+        {
+          "frame": 16,
+          "query_ms": 0.0855,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0857,
+          "visible_count": 5355,
+          "drawn_count": 5355,
+          "cluster_count": 0
+        },
+        {
+          "frame": 17,
+          "query_ms": 0.0838,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.084,
+          "visible_count": 5343,
+          "drawn_count": 5343,
+          "cluster_count": 0
+        },
+        {
+          "frame": 18,
+          "query_ms": 0.0839,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0841,
+          "visible_count": 5348,
+          "drawn_count": 5348,
+          "cluster_count": 0
+        },
+        {
+          "frame": 19,
+          "query_ms": 0.1149,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1153,
+          "visible_count": 5337,
+          "drawn_count": 5337,
+          "cluster_count": 0
+        },
+        {
+          "frame": 20,
+          "query_ms": 0.0891,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0893,
+          "visible_count": 5332,
+          "drawn_count": 5332,
+          "cluster_count": 0
+        },
+        {
+          "frame": 21,
+          "query_ms": 0.0858,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.086,
+          "visible_count": 5321,
+          "drawn_count": 5321,
+          "cluster_count": 0
+        },
+        {
+          "frame": 22,
+          "query_ms": 0.0845,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0848,
+          "visible_count": 5303,
+          "drawn_count": 5303,
+          "cluster_count": 0
+        },
+        {
+          "frame": 23,
+          "query_ms": 0.0865,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0868,
+          "visible_count": 5309,
+          "drawn_count": 5309,
+          "cluster_count": 0
+        },
+        {
+          "frame": 24,
+          "query_ms": 0.0847,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0849,
+          "visible_count": 5301,
+          "drawn_count": 5301,
+          "cluster_count": 0
+        },
+        {
+          "frame": 25,
+          "query_ms": 0.0966,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0969,
+          "visible_count": 5325,
+          "drawn_count": 5325,
+          "cluster_count": 0
+        },
+        {
+          "frame": 26,
+          "query_ms": 0.0912,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0916,
+          "visible_count": 5323,
+          "drawn_count": 5323,
+          "cluster_count": 0
+        },
+        {
+          "frame": 27,
+          "query_ms": 0.1689,
+          "cluster_ms": 0.0013,
+          "total_ms": 0.1702,
+          "visible_count": 5316,
+          "drawn_count": 5316,
+          "cluster_count": 0
+        },
+        {
+          "frame": 28,
+          "query_ms": 0.1432,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1435,
+          "visible_count": 5317,
+          "drawn_count": 5317,
+          "cluster_count": 0
+        },
+        {
+          "frame": 29,
+          "query_ms": 0.0987,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.0992,
+          "visible_count": 5325,
+          "drawn_count": 5325,
+          "cluster_count": 0
+        },
+        {
+          "frame": 30,
+          "query_ms": 0.0897,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0899,
+          "visible_count": 5334,
+          "drawn_count": 5334,
+          "cluster_count": 0
+        },
+        {
+          "frame": 31,
+          "query_ms": 0.0898,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0901,
+          "visible_count": 5322,
+          "drawn_count": 5322,
+          "cluster_count": 0
+        },
+        {
+          "frame": 32,
+          "query_ms": 0.1037,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.1042,
+          "visible_count": 5326,
+          "drawn_count": 5326,
+          "cluster_count": 0
+        },
+        {
+          "frame": 33,
+          "query_ms": 0.0928,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0931,
+          "visible_count": 5339,
+          "drawn_count": 5339,
+          "cluster_count": 0
+        },
+        {
+          "frame": 34,
+          "query_ms": 0.0872,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0874,
+          "visible_count": 5340,
+          "drawn_count": 5340,
+          "cluster_count": 0
+        },
+        {
+          "frame": 35,
+          "query_ms": 0.0764,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0767,
+          "visible_count": 5333,
+          "drawn_count": 5333,
+          "cluster_count": 0
+        },
+        {
+          "frame": 36,
+          "query_ms": 0.081,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0813,
+          "visible_count": 5321,
+          "drawn_count": 5321,
+          "cluster_count": 0
+        },
+        {
+          "frame": 37,
+          "query_ms": 0.0898,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.09,
+          "visible_count": 5341,
+          "drawn_count": 5341,
+          "cluster_count": 0
+        },
+        {
+          "frame": 38,
+          "query_ms": 1.2454,
+          "cluster_ms": 0.0024,
+          "total_ms": 1.2478,
+          "visible_count": 5344,
+          "drawn_count": 5344,
+          "cluster_count": 0
+        },
+        {
+          "frame": 39,
+          "query_ms": 0.1577,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1581,
+          "visible_count": 5334,
+          "drawn_count": 5334,
+          "cluster_count": 0
+        },
+        {
+          "frame": 40,
+          "query_ms": 0.078,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0782,
+          "visible_count": 5350,
+          "drawn_count": 5350,
+          "cluster_count": 0
+        },
+        {
+          "frame": 41,
+          "query_ms": 0.0739,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0741,
+          "visible_count": 5352,
+          "drawn_count": 5352,
+          "cluster_count": 0
+        },
+        {
+          "frame": 42,
+          "query_ms": 0.0784,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0785,
+          "visible_count": 5364,
+          "drawn_count": 5364,
+          "cluster_count": 0
+        },
+        {
+          "frame": 43,
+          "query_ms": 0.1533,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1536,
+          "visible_count": 5365,
+          "drawn_count": 5365,
+          "cluster_count": 0
+        },
+        {
+          "frame": 44,
+          "query_ms": 0.0856,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0858,
+          "visible_count": 5372,
+          "drawn_count": 5372,
+          "cluster_count": 0
+        },
+        {
+          "frame": 45,
+          "query_ms": 0.2687,
+          "cluster_ms": 0.0024,
+          "total_ms": 0.2711,
+          "visible_count": 5370,
+          "drawn_count": 5370,
+          "cluster_count": 0
+        },
+        {
+          "frame": 46,
+          "query_ms": 0.128,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1283,
+          "visible_count": 5383,
+          "drawn_count": 5383,
+          "cluster_count": 0
+        },
+        {
+          "frame": 47,
+          "query_ms": 0.3126,
+          "cluster_ms": 0.0013,
+          "total_ms": 0.3139,
+          "visible_count": 5383,
+          "drawn_count": 5383,
+          "cluster_count": 0
+        },
+        {
+          "frame": 48,
+          "query_ms": 0.231,
+          "cluster_ms": 0.0036,
+          "total_ms": 0.2346,
+          "visible_count": 5382,
+          "drawn_count": 5382,
+          "cluster_count": 0
+        },
+        {
+          "frame": 49,
+          "query_ms": 0.1421,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.1426,
+          "visible_count": 5386,
+          "drawn_count": 5386,
+          "cluster_count": 0
+        },
+        {
+          "frame": 50,
+          "query_ms": 0.1154,
+          "cluster_ms": 0.0009,
+          "total_ms": 0.1163,
+          "visible_count": 5384,
+          "drawn_count": 5384,
+          "cluster_count": 0
+        },
+        {
+          "frame": 51,
+          "query_ms": 0.0931,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0934,
+          "visible_count": 5390,
+          "drawn_count": 5390,
+          "cluster_count": 0
+        },
+        {
+          "frame": 52,
+          "query_ms": 0.0913,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0915,
+          "visible_count": 5395,
+          "drawn_count": 5395,
+          "cluster_count": 0
+        },
+        {
+          "frame": 53,
+          "query_ms": 0.1066,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1068,
+          "visible_count": 5398,
+          "drawn_count": 5398,
+          "cluster_count": 0
+        },
+        {
+          "frame": 54,
+          "query_ms": 0.1096,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1099,
+          "visible_count": 5371,
+          "drawn_count": 5371,
+          "cluster_count": 0
+        },
+        {
+          "frame": 55,
+          "query_ms": 0.3066,
+          "cluster_ms": 0.0029,
+          "total_ms": 0.3095,
+          "visible_count": 5385,
+          "drawn_count": 5385,
+          "cluster_count": 0
+        },
+        {
+          "frame": 56,
+          "query_ms": 0.1095,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1099,
+          "visible_count": 5381,
+          "drawn_count": 5381,
+          "cluster_count": 0
+        },
+        {
+          "frame": 57,
+          "query_ms": 0.0875,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0877,
+          "visible_count": 5400,
+          "drawn_count": 5400,
+          "cluster_count": 0
+        },
+        {
+          "frame": 58,
+          "query_ms": 0.083,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0833,
+          "visible_count": 5398,
+          "drawn_count": 5398,
+          "cluster_count": 0
+        },
+        {
+          "frame": 59,
+          "query_ms": 0.0839,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0841,
+          "visible_count": 5397,
+          "drawn_count": 5397,
+          "cluster_count": 0
+        },
+        {
+          "frame": 60,
+          "query_ms": 0.0832,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0835,
+          "visible_count": 5395,
+          "drawn_count": 5395,
+          "cluster_count": 0
+        },
+        {
+          "frame": 61,
+          "query_ms": 0.0817,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0818,
+          "visible_count": 5392,
+          "drawn_count": 5392,
+          "cluster_count": 0
+        },
+        {
+          "frame": 62,
+          "query_ms": 0.083,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0832,
+          "visible_count": 5393,
+          "drawn_count": 5393,
+          "cluster_count": 0
+        },
+        {
+          "frame": 63,
+          "query_ms": 0.0812,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0814,
+          "visible_count": 5394,
+          "drawn_count": 5394,
+          "cluster_count": 0
+        },
+        {
+          "frame": 64,
+          "query_ms": 0.0839,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0841,
+          "visible_count": 5388,
+          "drawn_count": 5388,
+          "cluster_count": 0
+        },
+        {
+          "frame": 65,
+          "query_ms": 0.0837,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0838,
+          "visible_count": 5385,
+          "drawn_count": 5385,
+          "cluster_count": 0
+        },
+        {
+          "frame": 66,
+          "query_ms": 0.0811,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0813,
+          "visible_count": 5376,
+          "drawn_count": 5376,
+          "cluster_count": 0
+        },
+        {
+          "frame": 67,
+          "query_ms": 0.0831,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0833,
+          "visible_count": 5384,
+          "drawn_count": 5384,
+          "cluster_count": 0
+        },
+        {
+          "frame": 68,
+          "query_ms": 0.0884,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0887,
+          "visible_count": 5369,
+          "drawn_count": 5369,
+          "cluster_count": 0
+        },
+        {
+          "frame": 69,
+          "query_ms": 0.0932,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0935,
+          "visible_count": 5365,
+          "drawn_count": 5365,
+          "cluster_count": 0
+        },
+        {
+          "frame": 70,
+          "query_ms": 0.0838,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.084,
+          "visible_count": 5380,
+          "drawn_count": 5380,
+          "cluster_count": 0
+        },
+        {
+          "frame": 71,
+          "query_ms": 0.0927,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0929,
+          "visible_count": 5368,
+          "drawn_count": 5368,
+          "cluster_count": 0
+        },
+        {
+          "frame": 72,
+          "query_ms": 0.0945,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0948,
+          "visible_count": 5363,
+          "drawn_count": 5363,
+          "cluster_count": 0
+        },
+        {
+          "frame": 73,
+          "query_ms": 0.1152,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1155,
+          "visible_count": 5364,
+          "drawn_count": 5364,
+          "cluster_count": 0
+        },
+        {
+          "frame": 74,
+          "query_ms": 0.102,
+          "cluster_ms": 0.0006,
+          "total_ms": 0.1026,
+          "visible_count": 5377,
+          "drawn_count": 5377,
+          "cluster_count": 0
+        },
+        {
+          "frame": 75,
+          "query_ms": 0.105,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1054,
+          "visible_count": 5375,
+          "drawn_count": 5375,
+          "cluster_count": 0
+        },
+        {
+          "frame": 76,
+          "query_ms": 0.103,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1034,
+          "visible_count": 5351,
+          "drawn_count": 5351,
+          "cluster_count": 0
+        },
+        {
+          "frame": 77,
+          "query_ms": 0.101,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1014,
+          "visible_count": 5348,
+          "drawn_count": 5348,
+          "cluster_count": 0
+        },
+        {
+          "frame": 78,
+          "query_ms": 0.1193,
+          "cluster_ms": 0.0007,
+          "total_ms": 0.12,
+          "visible_count": 5351,
+          "drawn_count": 5351,
+          "cluster_count": 0
+        },
+        {
+          "frame": 79,
+          "query_ms": 0.0905,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0908,
+          "visible_count": 5369,
+          "drawn_count": 5369,
+          "cluster_count": 0
+        },
+        {
+          "frame": 80,
+          "query_ms": 0.0828,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0831,
+          "visible_count": 5368,
+          "drawn_count": 5368,
+          "cluster_count": 0
+        },
+        {
+          "frame": 81,
+          "query_ms": 0.0779,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0782,
+          "visible_count": 5356,
+          "drawn_count": 5356,
+          "cluster_count": 0
+        },
+        {
+          "frame": 82,
+          "query_ms": 0.0985,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0989,
+          "visible_count": 5374,
+          "drawn_count": 5374,
+          "cluster_count": 0
+        },
+        {
+          "frame": 83,
+          "query_ms": 0.5286,
+          "cluster_ms": 0.0009,
+          "total_ms": 0.5295,
+          "visible_count": 5377,
+          "drawn_count": 5377,
+          "cluster_count": 0
+        },
+        {
+          "frame": 84,
+          "query_ms": 0.1322,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1325,
+          "visible_count": 5381,
+          "drawn_count": 5381,
+          "cluster_count": 0
+        },
+        {
+          "frame": 85,
+          "query_ms": 0.0752,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0754,
+          "visible_count": 5388,
+          "drawn_count": 5388,
+          "cluster_count": 0
+        },
+        {
+          "frame": 86,
+          "query_ms": 0.075,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0752,
+          "visible_count": 5411,
+          "drawn_count": 5411,
+          "cluster_count": 0
+        },
+        {
+          "frame": 87,
+          "query_ms": 0.0757,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0759,
+          "visible_count": 5417,
+          "drawn_count": 5417,
+          "cluster_count": 0
+        },
+        {
+          "frame": 88,
+          "query_ms": 0.0803,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0806,
+          "visible_count": 5418,
+          "drawn_count": 5418,
+          "cluster_count": 0
+        },
+        {
+          "frame": 89,
+          "query_ms": 0.0781,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0783,
+          "visible_count": 5419,
+          "drawn_count": 5419,
+          "cluster_count": 0
+        },
+        {
+          "frame": 90,
+          "query_ms": 0.0811,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0813,
+          "visible_count": 5428,
+          "drawn_count": 5428,
+          "cluster_count": 0
+        },
+        {
+          "frame": 91,
+          "query_ms": 0.0897,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0899,
+          "visible_count": 5417,
+          "drawn_count": 5417,
+          "cluster_count": 0
+        },
+        {
+          "frame": 92,
+          "query_ms": 0.0843,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0846,
+          "visible_count": 5414,
+          "drawn_count": 5414,
+          "cluster_count": 0
+        },
+        {
+          "frame": 93,
+          "query_ms": 0.0838,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.084,
+          "visible_count": 5413,
+          "drawn_count": 5413,
+          "cluster_count": 0
+        },
+        {
+          "frame": 94,
+          "query_ms": 0.084,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0842,
+          "visible_count": 5397,
+          "drawn_count": 5397,
+          "cluster_count": 0
+        },
+        {
+          "frame": 95,
+          "query_ms": 0.0817,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.082,
+          "visible_count": 5390,
+          "drawn_count": 5390,
+          "cluster_count": 0
+        },
+        {
+          "frame": 96,
+          "query_ms": 0.0814,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0816,
+          "visible_count": 5382,
+          "drawn_count": 5382,
+          "cluster_count": 0
+        },
+        {
+          "frame": 97,
+          "query_ms": 0.0835,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0837,
+          "visible_count": 5405,
+          "drawn_count": 5405,
+          "cluster_count": 0
+        },
+        {
+          "frame": 98,
+          "query_ms": 0.0803,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0805,
+          "visible_count": 5405,
+          "drawn_count": 5405,
+          "cluster_count": 0
+        },
+        {
+          "frame": 99,
+          "query_ms": 0.0803,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0804,
+          "visible_count": 5398,
+          "drawn_count": 5398,
+          "cluster_count": 0
+        },
+        {
+          "frame": 100,
+          "query_ms": 0.0792,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0795,
+          "visible_count": 5396,
+          "drawn_count": 5396,
+          "cluster_count": 0
+        },
+        {
+          "frame": 101,
+          "query_ms": 0.0815,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0817,
+          "visible_count": 5396,
+          "drawn_count": 5396,
+          "cluster_count": 0
+        },
+        {
+          "frame": 102,
+          "query_ms": 0.0804,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0806,
+          "visible_count": 5397,
+          "drawn_count": 5397,
+          "cluster_count": 0
+        },
+        {
+          "frame": 103,
+          "query_ms": 0.087,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0872,
+          "visible_count": 5389,
+          "drawn_count": 5389,
+          "cluster_count": 0
+        },
+        {
+          "frame": 104,
+          "query_ms": 0.0769,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0771,
+          "visible_count": 5394,
+          "drawn_count": 5394,
+          "cluster_count": 0
+        },
+        {
+          "frame": 105,
+          "query_ms": 0.075,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0753,
+          "visible_count": 5388,
+          "drawn_count": 5388,
+          "cluster_count": 0
+        },
+        {
+          "frame": 106,
+          "query_ms": 0.076,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0762,
+          "visible_count": 5396,
+          "drawn_count": 5396,
+          "cluster_count": 0
+        },
+        {
+          "frame": 107,
+          "query_ms": 0.0777,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0779,
+          "visible_count": 5391,
+          "drawn_count": 5391,
+          "cluster_count": 0
+        },
+        {
+          "frame": 108,
+          "query_ms": 0.0784,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0786,
+          "visible_count": 5390,
+          "drawn_count": 5390,
+          "cluster_count": 0
+        },
+        {
+          "frame": 109,
+          "query_ms": 0.078,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0782,
+          "visible_count": 5379,
+          "drawn_count": 5379,
+          "cluster_count": 0
+        },
+        {
+          "frame": 110,
+          "query_ms": 0.0769,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0771,
+          "visible_count": 5393,
+          "drawn_count": 5393,
+          "cluster_count": 0
+        },
+        {
+          "frame": 111,
+          "query_ms": 0.0772,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0774,
+          "visible_count": 5382,
+          "drawn_count": 5382,
+          "cluster_count": 0
+        },
+        {
+          "frame": 112,
+          "query_ms": 0.0791,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0793,
+          "visible_count": 5387,
+          "drawn_count": 5387,
+          "cluster_count": 0
+        },
+        {
+          "frame": 113,
+          "query_ms": 0.0764,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0766,
+          "visible_count": 5386,
+          "drawn_count": 5386,
+          "cluster_count": 0
+        },
+        {
+          "frame": 114,
+          "query_ms": 0.0764,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0767,
+          "visible_count": 5355,
+          "drawn_count": 5355,
+          "cluster_count": 0
+        },
+        {
+          "frame": 115,
+          "query_ms": 0.0759,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0761,
+          "visible_count": 5348,
+          "drawn_count": 5348,
+          "cluster_count": 0
+        },
+        {
+          "frame": 116,
+          "query_ms": 0.0815,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0817,
+          "visible_count": 5355,
+          "drawn_count": 5355,
+          "cluster_count": 0
+        },
+        {
+          "frame": 117,
+          "query_ms": 0.077,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0774,
+          "visible_count": 5343,
+          "drawn_count": 5343,
+          "cluster_count": 0
+        },
+        {
+          "frame": 118,
+          "query_ms": 0.0779,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.078,
+          "visible_count": 5348,
+          "drawn_count": 5348,
+          "cluster_count": 0
+        },
+        {
+          "frame": 119,
+          "query_ms": 0.0771,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0773,
+          "visible_count": 5337,
+          "drawn_count": 5337,
+          "cluster_count": 0
+        },
+        {
+          "frame": 120,
+          "query_ms": 0.079,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0792,
+          "visible_count": 5332,
+          "drawn_count": 5332,
+          "cluster_count": 0
+        },
+        {
+          "frame": 121,
+          "query_ms": 0.0792,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0794,
+          "visible_count": 5321,
+          "drawn_count": 5321,
+          "cluster_count": 0
+        },
+        {
+          "frame": 122,
+          "query_ms": 0.0803,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0805,
+          "visible_count": 5303,
+          "drawn_count": 5303,
+          "cluster_count": 0
+        },
+        {
+          "frame": 123,
+          "query_ms": 0.0795,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0797,
+          "visible_count": 5309,
+          "drawn_count": 5309,
+          "cluster_count": 0
+        },
+        {
+          "frame": 124,
+          "query_ms": 0.0778,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.078,
+          "visible_count": 5301,
+          "drawn_count": 5301,
+          "cluster_count": 0
+        },
+        {
+          "frame": 125,
+          "query_ms": 0.0787,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0788,
+          "visible_count": 5325,
+          "drawn_count": 5325,
+          "cluster_count": 0
+        },
+        {
+          "frame": 126,
+          "query_ms": 0.0777,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0779,
+          "visible_count": 5323,
+          "drawn_count": 5323,
+          "cluster_count": 0
+        },
+        {
+          "frame": 127,
+          "query_ms": 0.0763,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0765,
+          "visible_count": 5316,
+          "drawn_count": 5316,
+          "cluster_count": 0
+        },
+        {
+          "frame": 128,
+          "query_ms": 0.0841,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0843,
+          "visible_count": 5317,
+          "drawn_count": 5317,
+          "cluster_count": 0
+        },
+        {
+          "frame": 129,
+          "query_ms": 0.0775,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0777,
+          "visible_count": 5325,
+          "drawn_count": 5325,
+          "cluster_count": 0
+        },
+        {
+          "frame": 130,
+          "query_ms": 0.5189,
+          "cluster_ms": 0.0007,
+          "total_ms": 0.5196,
+          "visible_count": 5334,
+          "drawn_count": 5334,
+          "cluster_count": 0
+        },
+        {
+          "frame": 131,
+          "query_ms": 0.1063,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1066,
+          "visible_count": 5322,
+          "drawn_count": 5322,
+          "cluster_count": 0
+        },
+        {
+          "frame": 132,
+          "query_ms": 0.0865,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0867,
+          "visible_count": 5326,
+          "drawn_count": 5326,
+          "cluster_count": 0
+        },
+        {
+          "frame": 133,
+          "query_ms": 0.0749,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0751,
+          "visible_count": 5339,
+          "drawn_count": 5339,
+          "cluster_count": 0
+        },
+        {
+          "frame": 134,
+          "query_ms": 0.0782,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0783,
+          "visible_count": 5340,
+          "drawn_count": 5340,
+          "cluster_count": 0
+        },
+        {
+          "frame": 135,
+          "query_ms": 0.0761,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0763,
+          "visible_count": 5333,
+          "drawn_count": 5333,
+          "cluster_count": 0
+        },
+        {
+          "frame": 136,
+          "query_ms": 0.0758,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0759,
+          "visible_count": 5321,
+          "drawn_count": 5321,
+          "cluster_count": 0
+        },
+        {
+          "frame": 137,
+          "query_ms": 0.0771,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0773,
+          "visible_count": 5341,
+          "drawn_count": 5341,
+          "cluster_count": 0
+        },
+        {
+          "frame": 138,
+          "query_ms": 0.0778,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.078,
+          "visible_count": 5344,
+          "drawn_count": 5344,
+          "cluster_count": 0
+        },
+        {
+          "frame": 139,
+          "query_ms": 0.1315,
+          "cluster_ms": 0.0021,
+          "total_ms": 0.1336,
+          "visible_count": 5334,
+          "drawn_count": 5334,
+          "cluster_count": 0
+        },
+        {
+          "frame": 140,
+          "query_ms": 0.1108,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.111,
+          "visible_count": 5350,
+          "drawn_count": 5350,
+          "cluster_count": 0
+        },
+        {
+          "frame": 141,
+          "query_ms": 0.082,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0822,
+          "visible_count": 5352,
+          "drawn_count": 5352,
+          "cluster_count": 0
+        },
+        {
+          "frame": 142,
+          "query_ms": 0.0845,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0849,
+          "visible_count": 5364,
+          "drawn_count": 5364,
+          "cluster_count": 0
+        },
+        {
+          "frame": 143,
+          "query_ms": 0.0818,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.082,
+          "visible_count": 5365,
+          "drawn_count": 5365,
+          "cluster_count": 0
+        },
+        {
+          "frame": 144,
+          "query_ms": 0.0813,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0815,
+          "visible_count": 5372,
+          "drawn_count": 5372,
+          "cluster_count": 0
+        },
+        {
+          "frame": 145,
+          "query_ms": 0.0823,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0825,
+          "visible_count": 5370,
+          "drawn_count": 5370,
+          "cluster_count": 0
+        },
+        {
+          "frame": 146,
+          "query_ms": 0.0809,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0811,
+          "visible_count": 5383,
+          "drawn_count": 5383,
+          "cluster_count": 0
+        },
+        {
+          "frame": 147,
+          "query_ms": 0.0789,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0791,
+          "visible_count": 5383,
+          "drawn_count": 5383,
+          "cluster_count": 0
+        },
+        {
+          "frame": 148,
+          "query_ms": 0.0802,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0805,
+          "visible_count": 5382,
+          "drawn_count": 5382,
+          "cluster_count": 0
+        },
+        {
+          "frame": 149,
+          "query_ms": 0.0789,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0791,
+          "visible_count": 5386,
+          "drawn_count": 5386,
+          "cluster_count": 0
+        },
+        {
+          "frame": 150,
+          "query_ms": 0.0798,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0799,
+          "visible_count": 5384,
+          "drawn_count": 5384,
+          "cluster_count": 0
+        },
+        {
+          "frame": 151,
+          "query_ms": 0.0801,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0803,
+          "visible_count": 5390,
+          "drawn_count": 5390,
+          "cluster_count": 0
+        },
+        {
+          "frame": 152,
+          "query_ms": 0.0818,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0821,
+          "visible_count": 5395,
+          "drawn_count": 5395,
+          "cluster_count": 0
+        },
+        {
+          "frame": 153,
+          "query_ms": 0.0861,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0863,
+          "visible_count": 5398,
+          "drawn_count": 5398,
+          "cluster_count": 0
+        },
+        {
+          "frame": 154,
+          "query_ms": 0.0836,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0837,
+          "visible_count": 5371,
+          "drawn_count": 5371,
+          "cluster_count": 0
+        },
+        {
+          "frame": 155,
+          "query_ms": 0.0816,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0818,
+          "visible_count": 5385,
+          "drawn_count": 5385,
+          "cluster_count": 0
+        },
+        {
+          "frame": 156,
+          "query_ms": 0.0826,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0827,
+          "visible_count": 5381,
+          "drawn_count": 5381,
+          "cluster_count": 0
+        },
+        {
+          "frame": 157,
+          "query_ms": 0.082,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0821,
+          "visible_count": 5400,
+          "drawn_count": 5400,
+          "cluster_count": 0
+        },
+        {
+          "frame": 158,
+          "query_ms": 0.0824,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0826,
+          "visible_count": 5398,
+          "drawn_count": 5398,
+          "cluster_count": 0
+        },
+        {
+          "frame": 159,
+          "query_ms": 0.0789,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0791,
+          "visible_count": 5397,
+          "drawn_count": 5397,
+          "cluster_count": 0
+        },
+        {
+          "frame": 160,
+          "query_ms": 0.0784,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0786,
+          "visible_count": 5395,
+          "drawn_count": 5395,
+          "cluster_count": 0
+        },
+        {
+          "frame": 161,
+          "query_ms": 0.0793,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0796,
+          "visible_count": 5392,
+          "drawn_count": 5392,
+          "cluster_count": 0
+        },
+        {
+          "frame": 162,
+          "query_ms": 0.0849,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0852,
+          "visible_count": 5393,
+          "drawn_count": 5393,
+          "cluster_count": 0
+        },
+        {
+          "frame": 163,
+          "query_ms": 0.0773,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0775,
+          "visible_count": 5394,
+          "drawn_count": 5394,
+          "cluster_count": 0
+        },
+        {
+          "frame": 164,
+          "query_ms": 0.0788,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.079,
+          "visible_count": 5388,
+          "drawn_count": 5388,
+          "cluster_count": 0
+        },
+        {
+          "frame": 165,
+          "query_ms": 0.0779,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.078,
+          "visible_count": 5385,
+          "drawn_count": 5385,
+          "cluster_count": 0
+        },
+        {
+          "frame": 166,
+          "query_ms": 0.0761,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0763,
+          "visible_count": 5376,
+          "drawn_count": 5376,
+          "cluster_count": 0
+        },
+        {
+          "frame": 167,
+          "query_ms": 0.0773,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0775,
+          "visible_count": 5384,
+          "drawn_count": 5384,
+          "cluster_count": 0
+        },
+        {
+          "frame": 168,
+          "query_ms": 0.0797,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.08,
+          "visible_count": 5369,
+          "drawn_count": 5369,
+          "cluster_count": 0
+        },
+        {
+          "frame": 169,
+          "query_ms": 0.0774,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0776,
+          "visible_count": 5365,
+          "drawn_count": 5365,
+          "cluster_count": 0
+        },
+        {
+          "frame": 170,
+          "query_ms": 0.0783,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0785,
+          "visible_count": 5380,
+          "drawn_count": 5380,
+          "cluster_count": 0
+        },
+        {
+          "frame": 171,
+          "query_ms": 0.0798,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.08,
+          "visible_count": 5368,
+          "drawn_count": 5368,
+          "cluster_count": 0
+        },
+        {
+          "frame": 172,
+          "query_ms": 0.0785,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0787,
+          "visible_count": 5363,
+          "drawn_count": 5363,
+          "cluster_count": 0
+        },
+        {
+          "frame": 173,
+          "query_ms": 0.0792,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0794,
+          "visible_count": 5364,
+          "drawn_count": 5364,
+          "cluster_count": 0
+        },
+        {
+          "frame": 174,
+          "query_ms": 0.0777,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0779,
+          "visible_count": 5377,
+          "drawn_count": 5377,
+          "cluster_count": 0
+        },
+        {
+          "frame": 175,
+          "query_ms": 0.0767,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0769,
+          "visible_count": 5375,
+          "drawn_count": 5375,
+          "cluster_count": 0
+        },
+        {
+          "frame": 176,
+          "query_ms": 0.077,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0771,
+          "visible_count": 5351,
+          "drawn_count": 5351,
+          "cluster_count": 0
+        },
+        {
+          "frame": 177,
+          "query_ms": 0.0775,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0777,
+          "visible_count": 5348,
+          "drawn_count": 5348,
+          "cluster_count": 0
+        },
+        {
+          "frame": 178,
+          "query_ms": 0.123,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1233,
+          "visible_count": 5351,
+          "drawn_count": 5351,
+          "cluster_count": 0
+        },
+        {
+          "frame": 179,
+          "query_ms": 0.1321,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1323,
+          "visible_count": 5369,
+          "drawn_count": 5369,
+          "cluster_count": 0
+        },
+        {
+          "frame": 180,
+          "query_ms": 0.1205,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1208,
+          "visible_count": 5368,
+          "drawn_count": 5368,
+          "cluster_count": 0
+        },
+        {
+          "frame": 181,
+          "query_ms": 0.1227,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1229,
+          "visible_count": 5356,
+          "drawn_count": 5356,
+          "cluster_count": 0
+        },
+        {
+          "frame": 182,
+          "query_ms": 0.1343,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1346,
+          "visible_count": 5374,
+          "drawn_count": 5374,
+          "cluster_count": 0
+        },
+        {
+          "frame": 183,
+          "query_ms": 0.1256,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1258,
+          "visible_count": 5377,
+          "drawn_count": 5377,
+          "cluster_count": 0
+        },
+        {
+          "frame": 184,
+          "query_ms": 0.1309,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1312,
+          "visible_count": 5381,
+          "drawn_count": 5381,
+          "cluster_count": 0
+        },
+        {
+          "frame": 185,
+          "query_ms": 0.1269,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1272,
+          "visible_count": 5388,
+          "drawn_count": 5388,
+          "cluster_count": 0
+        },
+        {
+          "frame": 186,
+          "query_ms": 0.1188,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1191,
+          "visible_count": 5411,
+          "drawn_count": 5411,
+          "cluster_count": 0
+        },
+        {
+          "frame": 187,
+          "query_ms": 0.1479,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1482,
+          "visible_count": 5417,
+          "drawn_count": 5417,
+          "cluster_count": 0
+        },
+        {
+          "frame": 188,
+          "query_ms": 0.1574,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1577,
+          "visible_count": 5418,
+          "drawn_count": 5418,
+          "cluster_count": 0
+        },
+        {
+          "frame": 189,
+          "query_ms": 0.1216,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1219,
+          "visible_count": 5419,
+          "drawn_count": 5419,
+          "cluster_count": 0
+        },
+        {
+          "frame": 190,
+          "query_ms": 0.1232,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1234,
+          "visible_count": 5428,
+          "drawn_count": 5428,
+          "cluster_count": 0
+        },
+        {
+          "frame": 191,
+          "query_ms": 0.1388,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.1389,
+          "visible_count": 5417,
+          "drawn_count": 5417,
+          "cluster_count": 0
+        },
+        {
+          "frame": 192,
+          "query_ms": 0.1236,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1238,
+          "visible_count": 5414,
+          "drawn_count": 5414,
+          "cluster_count": 0
+        },
+        {
+          "frame": 193,
+          "query_ms": 0.169,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1692,
+          "visible_count": 5413,
+          "drawn_count": 5413,
+          "cluster_count": 0
+        },
+        {
+          "frame": 194,
+          "query_ms": 0.1318,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1321,
+          "visible_count": 5397,
+          "drawn_count": 5397,
+          "cluster_count": 0
+        },
+        {
+          "frame": 195,
+          "query_ms": 0.1319,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1322,
+          "visible_count": 5390,
+          "drawn_count": 5390,
+          "cluster_count": 0
+        },
+        {
+          "frame": 196,
+          "query_ms": 0.1866,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1869,
+          "visible_count": 5382,
+          "drawn_count": 5382,
+          "cluster_count": 0
+        },
+        {
+          "frame": 197,
+          "query_ms": 0.154,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.1544,
+          "visible_count": 5405,
+          "drawn_count": 5405,
+          "cluster_count": 0
+        },
+        {
+          "frame": 198,
+          "query_ms": 0.1423,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.1425,
+          "visible_count": 5405,
+          "drawn_count": 5405,
+          "cluster_count": 0
+        },
+        {
+          "frame": 199,
+          "query_ms": 0.156,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.1563,
+          "visible_count": 5398,
+          "drawn_count": 5398,
+          "cluster_count": 0
+        }
+      ]
+    },
+    {
+      "zoom": 3,
+      "label": "close",
+      "samples": [
+        {
+          "frame": 0,
+          "query_ms": 0.0283,
+          "cluster_ms": 0.001,
+          "total_ms": 0.0293,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 1,
+          "query_ms": 0.0312,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0314,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 2,
+          "query_ms": 0.0275,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0277,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 3,
+          "query_ms": 0.0239,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0241,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 4,
+          "query_ms": 0.026,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0262,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 5,
+          "query_ms": 0.0232,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0234,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 6,
+          "query_ms": 0.0292,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0294,
+          "visible_count": 849,
+          "drawn_count": 849,
+          "cluster_count": 0
+        },
+        {
+          "frame": 7,
+          "query_ms": 0.0368,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.037,
+          "visible_count": 862,
+          "drawn_count": 862,
+          "cluster_count": 0
+        },
+        {
+          "frame": 8,
+          "query_ms": 0.0317,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.032,
+          "visible_count": 862,
+          "drawn_count": 862,
+          "cluster_count": 0
+        },
+        {
+          "frame": 9,
+          "query_ms": 0.0221,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0223,
+          "visible_count": 848,
+          "drawn_count": 848,
+          "cluster_count": 0
+        },
+        {
+          "frame": 10,
+          "query_ms": 0.0246,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0248,
+          "visible_count": 845,
+          "drawn_count": 845,
+          "cluster_count": 0
+        },
+        {
+          "frame": 11,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0187,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 12,
+          "query_ms": 0.0227,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0229,
+          "visible_count": 830,
+          "drawn_count": 830,
+          "cluster_count": 0
+        },
+        {
+          "frame": 13,
+          "query_ms": 0.0224,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0227,
+          "visible_count": 828,
+          "drawn_count": 828,
+          "cluster_count": 0
+        },
+        {
+          "frame": 14,
+          "query_ms": 0.0262,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0265,
+          "visible_count": 830,
+          "drawn_count": 830,
+          "cluster_count": 0
+        },
+        {
+          "frame": 15,
+          "query_ms": 0.0243,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0245,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 16,
+          "query_ms": 0.0276,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0277,
+          "visible_count": 836,
+          "drawn_count": 836,
+          "cluster_count": 0
+        },
+        {
+          "frame": 17,
+          "query_ms": 0.0222,
+          "cluster_ms": 0.0031,
+          "total_ms": 0.0253,
+          "visible_count": 815,
+          "drawn_count": 815,
+          "cluster_count": 0
+        },
+        {
+          "frame": 18,
+          "query_ms": 0.026,
+          "cluster_ms": 0.0032,
+          "total_ms": 0.0292,
+          "visible_count": 810,
+          "drawn_count": 810,
+          "cluster_count": 0
+        },
+        {
+          "frame": 19,
+          "query_ms": 0.0214,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0216,
+          "visible_count": 818,
+          "drawn_count": 818,
+          "cluster_count": 0
+        },
+        {
+          "frame": 20,
+          "query_ms": 0.0186,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0188,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 21,
+          "query_ms": 0.0179,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0182,
+          "visible_count": 825,
+          "drawn_count": 825,
+          "cluster_count": 0
+        },
+        {
+          "frame": 22,
+          "query_ms": 0.0178,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0181,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 23,
+          "query_ms": 0.0188,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0191,
+          "visible_count": 828,
+          "drawn_count": 828,
+          "cluster_count": 0
+        },
+        {
+          "frame": 24,
+          "query_ms": 0.019,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0192,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 25,
+          "query_ms": 0.0227,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.023,
+          "visible_count": 822,
+          "drawn_count": 822,
+          "cluster_count": 0
+        },
+        {
+          "frame": 26,
+          "query_ms": 0.0198,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.02,
+          "visible_count": 823,
+          "drawn_count": 823,
+          "cluster_count": 0
+        },
+        {
+          "frame": 27,
+          "query_ms": 0.0174,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0175,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 28,
+          "query_ms": 0.0178,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.018,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 29,
+          "query_ms": 0.0197,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0199,
+          "visible_count": 821,
+          "drawn_count": 821,
+          "cluster_count": 0
+        },
+        {
+          "frame": 30,
+          "query_ms": 0.0191,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0193,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 31,
+          "query_ms": 0.0186,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0188,
+          "visible_count": 839,
+          "drawn_count": 839,
+          "cluster_count": 0
+        },
+        {
+          "frame": 32,
+          "query_ms": 0.0157,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.016,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 33,
+          "query_ms": 0.0159,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0161,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 34,
+          "query_ms": 0.0163,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0164,
+          "visible_count": 837,
+          "drawn_count": 837,
+          "cluster_count": 0
+        },
+        {
+          "frame": 35,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0009,
+          "total_ms": 0.0194,
+          "visible_count": 819,
+          "drawn_count": 819,
+          "cluster_count": 0
+        },
+        {
+          "frame": 36,
+          "query_ms": 0.0188,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.019,
+          "visible_count": 821,
+          "drawn_count": 821,
+          "cluster_count": 0
+        },
+        {
+          "frame": 37,
+          "query_ms": 0.0184,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0187,
+          "visible_count": 817,
+          "drawn_count": 817,
+          "cluster_count": 0
+        },
+        {
+          "frame": 38,
+          "query_ms": 0.0186,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0188,
+          "visible_count": 809,
+          "drawn_count": 809,
+          "cluster_count": 0
+        },
+        {
+          "frame": 39,
+          "query_ms": 0.016,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0162,
+          "visible_count": 822,
+          "drawn_count": 822,
+          "cluster_count": 0
+        },
+        {
+          "frame": 40,
+          "query_ms": 0.0189,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.019,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 41,
+          "query_ms": 0.0198,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.02,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 42,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0187,
+          "visible_count": 829,
+          "drawn_count": 829,
+          "cluster_count": 0
+        },
+        {
+          "frame": 43,
+          "query_ms": 0.0186,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0188,
+          "visible_count": 839,
+          "drawn_count": 839,
+          "cluster_count": 0
+        },
+        {
+          "frame": 44,
+          "query_ms": 0.0177,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0179,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 45,
+          "query_ms": 0.0199,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0202,
+          "visible_count": 823,
+          "drawn_count": 823,
+          "cluster_count": 0
+        },
+        {
+          "frame": 46,
+          "query_ms": 0.0206,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0208,
+          "visible_count": 829,
+          "drawn_count": 829,
+          "cluster_count": 0
+        },
+        {
+          "frame": 47,
+          "query_ms": 0.0184,
+          "cluster_ms": 0.0009,
+          "total_ms": 0.0193,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 48,
+          "query_ms": 0.0191,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0193,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 49,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0187,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 50,
+          "query_ms": 0.0171,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0174,
+          "visible_count": 824,
+          "drawn_count": 824,
+          "cluster_count": 0
+        },
+        {
+          "frame": 51,
+          "query_ms": 0.0158,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.016,
+          "visible_count": 813,
+          "drawn_count": 813,
+          "cluster_count": 0
+        },
+        {
+          "frame": 52,
+          "query_ms": 0.0174,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0177,
+          "visible_count": 815,
+          "drawn_count": 815,
+          "cluster_count": 0
+        },
+        {
+          "frame": 53,
+          "query_ms": 0.0169,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0171,
+          "visible_count": 818,
+          "drawn_count": 818,
+          "cluster_count": 0
+        },
+        {
+          "frame": 54,
+          "query_ms": 0.019,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0192,
+          "visible_count": 802,
+          "drawn_count": 802,
+          "cluster_count": 0
+        },
+        {
+          "frame": 55,
+          "query_ms": 0.0174,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0176,
+          "visible_count": 800,
+          "drawn_count": 800,
+          "cluster_count": 0
+        },
+        {
+          "frame": 56,
+          "query_ms": 0.0169,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.017,
+          "visible_count": 805,
+          "drawn_count": 805,
+          "cluster_count": 0
+        },
+        {
+          "frame": 57,
+          "query_ms": 0.0202,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0203,
+          "visible_count": 804,
+          "drawn_count": 804,
+          "cluster_count": 0
+        },
+        {
+          "frame": 58,
+          "query_ms": 0.0163,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0165,
+          "visible_count": 803,
+          "drawn_count": 803,
+          "cluster_count": 0
+        },
+        {
+          "frame": 59,
+          "query_ms": 0.0157,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0159,
+          "visible_count": 819,
+          "drawn_count": 819,
+          "cluster_count": 0
+        },
+        {
+          "frame": 60,
+          "query_ms": 0.0188,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.019,
+          "visible_count": 824,
+          "drawn_count": 824,
+          "cluster_count": 0
+        },
+        {
+          "frame": 61,
+          "query_ms": 0.0197,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0199,
+          "visible_count": 812,
+          "drawn_count": 812,
+          "cluster_count": 0
+        },
+        {
+          "frame": 62,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0188,
+          "visible_count": 810,
+          "drawn_count": 810,
+          "cluster_count": 0
+        },
+        {
+          "frame": 63,
+          "query_ms": 0.0187,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0189,
+          "visible_count": 817,
+          "drawn_count": 817,
+          "cluster_count": 0
+        },
+        {
+          "frame": 64,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0187,
+          "visible_count": 806,
+          "drawn_count": 806,
+          "cluster_count": 0
+        },
+        {
+          "frame": 65,
+          "query_ms": 0.0207,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0209,
+          "visible_count": 829,
+          "drawn_count": 829,
+          "cluster_count": 0
+        },
+        {
+          "frame": 66,
+          "query_ms": 0.0199,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0202,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 67,
+          "query_ms": 0.0211,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0212,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 68,
+          "query_ms": 0.0187,
+          "cluster_ms": 0.0009,
+          "total_ms": 0.0196,
+          "visible_count": 847,
+          "drawn_count": 847,
+          "cluster_count": 0
+        },
+        {
+          "frame": 69,
+          "query_ms": 0.0184,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0186,
+          "visible_count": 846,
+          "drawn_count": 846,
+          "cluster_count": 0
+        },
+        {
+          "frame": 70,
+          "query_ms": 0.0193,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0194,
+          "visible_count": 845,
+          "drawn_count": 845,
+          "cluster_count": 0
+        },
+        {
+          "frame": 71,
+          "query_ms": 0.0188,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.019,
+          "visible_count": 846,
+          "drawn_count": 846,
+          "cluster_count": 0
+        },
+        {
+          "frame": 72,
+          "query_ms": 0.0176,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0177,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 73,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0187,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 74,
+          "query_ms": 0.019,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0193,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 75,
+          "query_ms": 0.018,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0183,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 76,
+          "query_ms": 0.0196,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0197,
+          "visible_count": 841,
+          "drawn_count": 841,
+          "cluster_count": 0
+        },
+        {
+          "frame": 77,
+          "query_ms": 0.0187,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.019,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 78,
+          "query_ms": 0.0181,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0182,
+          "visible_count": 842,
+          "drawn_count": 842,
+          "cluster_count": 0
+        },
+        {
+          "frame": 79,
+          "query_ms": 0.0261,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0264,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 80,
+          "query_ms": 0.0207,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0208,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 81,
+          "query_ms": 0.0204,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0205,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 82,
+          "query_ms": 0.0195,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0197,
+          "visible_count": 822,
+          "drawn_count": 822,
+          "cluster_count": 0
+        },
+        {
+          "frame": 83,
+          "query_ms": 0.0194,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0197,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 84,
+          "query_ms": 0.0187,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.0192,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 85,
+          "query_ms": 0.0171,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0172,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 86,
+          "query_ms": 0.0263,
+          "cluster_ms": 0.0011,
+          "total_ms": 0.0274,
+          "visible_count": 836,
+          "drawn_count": 836,
+          "cluster_count": 0
+        },
+        {
+          "frame": 87,
+          "query_ms": 0.0177,
+          "cluster_ms": 0.0011,
+          "total_ms": 0.0188,
+          "visible_count": 847,
+          "drawn_count": 847,
+          "cluster_count": 0
+        },
+        {
+          "frame": 88,
+          "query_ms": 0.0188,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.019,
+          "visible_count": 847,
+          "drawn_count": 847,
+          "cluster_count": 0
+        },
+        {
+          "frame": 89,
+          "query_ms": 0.0212,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0216,
+          "visible_count": 846,
+          "drawn_count": 846,
+          "cluster_count": 0
+        },
+        {
+          "frame": 90,
+          "query_ms": 0.0174,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0175,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 91,
+          "query_ms": 0.0179,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.0184,
+          "visible_count": 841,
+          "drawn_count": 841,
+          "cluster_count": 0
+        },
+        {
+          "frame": 92,
+          "query_ms": 0.0185,
+          "cluster_ms": 0.0006,
+          "total_ms": 0.0191,
+          "visible_count": 844,
+          "drawn_count": 844,
+          "cluster_count": 0
+        },
+        {
+          "frame": 93,
+          "query_ms": 0.019,
+          "cluster_ms": 0.0011,
+          "total_ms": 0.0201,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 94,
+          "query_ms": 0.0184,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.0189,
+          "visible_count": 826,
+          "drawn_count": 826,
+          "cluster_count": 0
+        },
+        {
+          "frame": 95,
+          "query_ms": 0.022,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.0225,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 96,
+          "query_ms": 0.0188,
+          "cluster_ms": 0.0006,
+          "total_ms": 0.0194,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 97,
+          "query_ms": 0.0187,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0189,
+          "visible_count": 836,
+          "drawn_count": 836,
+          "cluster_count": 0
+        },
+        {
+          "frame": 98,
+          "query_ms": 0.0167,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0171,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 99,
+          "query_ms": 0.0161,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0163,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 100,
+          "query_ms": 0.0178,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.018,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 101,
+          "query_ms": 0.0236,
+          "cluster_ms": 0.0008,
+          "total_ms": 0.0244,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 102,
+          "query_ms": 0.018,
+          "cluster_ms": 0.0007,
+          "total_ms": 0.0187,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 103,
+          "query_ms": 0.0189,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.019,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 104,
+          "query_ms": 0.0243,
+          "cluster_ms": 0.0013,
+          "total_ms": 0.0256,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 105,
+          "query_ms": 0.021,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0212,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 106,
+          "query_ms": 0.0239,
+          "cluster_ms": 0.0007,
+          "total_ms": 0.0246,
+          "visible_count": 849,
+          "drawn_count": 849,
+          "cluster_count": 0
+        },
+        {
+          "frame": 107,
+          "query_ms": 0.0286,
+          "cluster_ms": 0.0008,
+          "total_ms": 0.0294,
+          "visible_count": 862,
+          "drawn_count": 862,
+          "cluster_count": 0
+        },
+        {
+          "frame": 108,
+          "query_ms": 0.0229,
+          "cluster_ms": 0.0114,
+          "total_ms": 0.0343,
+          "visible_count": 862,
+          "drawn_count": 862,
+          "cluster_count": 0
+        },
+        {
+          "frame": 109,
+          "query_ms": 0.02,
+          "cluster_ms": 0.0008,
+          "total_ms": 0.0208,
+          "visible_count": 848,
+          "drawn_count": 848,
+          "cluster_count": 0
+        },
+        {
+          "frame": 110,
+          "query_ms": 0.0212,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0216,
+          "visible_count": 845,
+          "drawn_count": 845,
+          "cluster_count": 0
+        },
+        {
+          "frame": 111,
+          "query_ms": 0.0196,
+          "cluster_ms": 0.001,
+          "total_ms": 0.0206,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 112,
+          "query_ms": 0.0471,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0474,
+          "visible_count": 830,
+          "drawn_count": 830,
+          "cluster_count": 0
+        },
+        {
+          "frame": 113,
+          "query_ms": 0.0251,
+          "cluster_ms": 0.0007,
+          "total_ms": 0.0258,
+          "visible_count": 828,
+          "drawn_count": 828,
+          "cluster_count": 0
+        },
+        {
+          "frame": 114,
+          "query_ms": 0.0367,
+          "cluster_ms": 0.0005,
+          "total_ms": 0.0372,
+          "visible_count": 830,
+          "drawn_count": 830,
+          "cluster_count": 0
+        },
+        {
+          "frame": 115,
+          "query_ms": 0.0334,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0337,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 116,
+          "query_ms": 0.0441,
+          "cluster_ms": 0.001,
+          "total_ms": 0.0451,
+          "visible_count": 836,
+          "drawn_count": 836,
+          "cluster_count": 0
+        },
+        {
+          "frame": 117,
+          "query_ms": 0.0292,
+          "cluster_ms": 0.0006,
+          "total_ms": 0.0298,
+          "visible_count": 815,
+          "drawn_count": 815,
+          "cluster_count": 0
+        },
+        {
+          "frame": 118,
+          "query_ms": 0.0333,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0336,
+          "visible_count": 810,
+          "drawn_count": 810,
+          "cluster_count": 0
+        },
+        {
+          "frame": 119,
+          "query_ms": 0.0248,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.025,
+          "visible_count": 818,
+          "drawn_count": 818,
+          "cluster_count": 0
+        },
+        {
+          "frame": 120,
+          "query_ms": 0.0221,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0223,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 121,
+          "query_ms": 0.0215,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0217,
+          "visible_count": 825,
+          "drawn_count": 825,
+          "cluster_count": 0
+        },
+        {
+          "frame": 122,
+          "query_ms": 0.0197,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0199,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 123,
+          "query_ms": 0.019,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0193,
+          "visible_count": 828,
+          "drawn_count": 828,
+          "cluster_count": 0
+        },
+        {
+          "frame": 124,
+          "query_ms": 0.02,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0202,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 125,
+          "query_ms": 0.0207,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0209,
+          "visible_count": 822,
+          "drawn_count": 822,
+          "cluster_count": 0
+        },
+        {
+          "frame": 126,
+          "query_ms": 0.0159,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0161,
+          "visible_count": 823,
+          "drawn_count": 823,
+          "cluster_count": 0
+        },
+        {
+          "frame": 127,
+          "query_ms": 1.041,
+          "cluster_ms": 0.0066,
+          "total_ms": 1.0476,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 128,
+          "query_ms": 0.0708,
+          "cluster_ms": 0.0006,
+          "total_ms": 0.0714,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 129,
+          "query_ms": 0.0168,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.017,
+          "visible_count": 821,
+          "drawn_count": 821,
+          "cluster_count": 0
+        },
+        {
+          "frame": 130,
+          "query_ms": 0.0135,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0136,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 131,
+          "query_ms": 0.0147,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0149,
+          "visible_count": 839,
+          "drawn_count": 839,
+          "cluster_count": 0
+        },
+        {
+          "frame": 132,
+          "query_ms": 0.013,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0132,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 133,
+          "query_ms": 0.013,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0131,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 134,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0135,
+          "visible_count": 837,
+          "drawn_count": 837,
+          "cluster_count": 0
+        },
+        {
+          "frame": 135,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.013,
+          "visible_count": 819,
+          "drawn_count": 819,
+          "cluster_count": 0
+        },
+        {
+          "frame": 136,
+          "query_ms": 0.0146,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0148,
+          "visible_count": 821,
+          "drawn_count": 821,
+          "cluster_count": 0
+        },
+        {
+          "frame": 137,
+          "query_ms": 0.0144,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0145,
+          "visible_count": 817,
+          "drawn_count": 817,
+          "cluster_count": 0
+        },
+        {
+          "frame": 138,
+          "query_ms": 0.0141,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0143,
+          "visible_count": 809,
+          "drawn_count": 809,
+          "cluster_count": 0
+        },
+        {
+          "frame": 139,
+          "query_ms": 0.0131,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0132,
+          "visible_count": 822,
+          "drawn_count": 822,
+          "cluster_count": 0
+        },
+        {
+          "frame": 140,
+          "query_ms": 0.0176,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0178,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 141,
+          "query_ms": 0.0138,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.014,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 142,
+          "query_ms": 0.0148,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0151,
+          "visible_count": 829,
+          "drawn_count": 829,
+          "cluster_count": 0
+        },
+        {
+          "frame": 143,
+          "query_ms": 0.016,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0162,
+          "visible_count": 839,
+          "drawn_count": 839,
+          "cluster_count": 0
+        },
+        {
+          "frame": 144,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0134,
+          "visible_count": 835,
+          "drawn_count": 835,
+          "cluster_count": 0
+        },
+        {
+          "frame": 145,
+          "query_ms": 0.0128,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.013,
+          "visible_count": 823,
+          "drawn_count": 823,
+          "cluster_count": 0
+        },
+        {
+          "frame": 146,
+          "query_ms": 0.0144,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0146,
+          "visible_count": 829,
+          "drawn_count": 829,
+          "cluster_count": 0
+        },
+        {
+          "frame": 147,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.013,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 148,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0129,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 149,
+          "query_ms": 0.0136,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0138,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 150,
+          "query_ms": 0.0123,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0125,
+          "visible_count": 824,
+          "drawn_count": 824,
+          "cluster_count": 0
+        },
+        {
+          "frame": 151,
+          "query_ms": 0.0119,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0121,
+          "visible_count": 813,
+          "drawn_count": 813,
+          "cluster_count": 0
+        },
+        {
+          "frame": 152,
+          "query_ms": 0.0144,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0145,
+          "visible_count": 815,
+          "drawn_count": 815,
+          "cluster_count": 0
+        },
+        {
+          "frame": 153,
+          "query_ms": 0.0126,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0128,
+          "visible_count": 818,
+          "drawn_count": 818,
+          "cluster_count": 0
+        },
+        {
+          "frame": 154,
+          "query_ms": 0.0124,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0126,
+          "visible_count": 802,
+          "drawn_count": 802,
+          "cluster_count": 0
+        },
+        {
+          "frame": 155,
+          "query_ms": 0.0131,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0134,
+          "visible_count": 800,
+          "drawn_count": 800,
+          "cluster_count": 0
+        },
+        {
+          "frame": 156,
+          "query_ms": 0.0121,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0122,
+          "visible_count": 805,
+          "drawn_count": 805,
+          "cluster_count": 0
+        },
+        {
+          "frame": 157,
+          "query_ms": 0.0137,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0139,
+          "visible_count": 804,
+          "drawn_count": 804,
+          "cluster_count": 0
+        },
+        {
+          "frame": 158,
+          "query_ms": 0.0129,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0131,
+          "visible_count": 803,
+          "drawn_count": 803,
+          "cluster_count": 0
+        },
+        {
+          "frame": 159,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0129,
+          "visible_count": 819,
+          "drawn_count": 819,
+          "cluster_count": 0
+        },
+        {
+          "frame": 160,
+          "query_ms": 0.0136,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0137,
+          "visible_count": 824,
+          "drawn_count": 824,
+          "cluster_count": 0
+        },
+        {
+          "frame": 161,
+          "query_ms": 0.014,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0142,
+          "visible_count": 812,
+          "drawn_count": 812,
+          "cluster_count": 0
+        },
+        {
+          "frame": 162,
+          "query_ms": 0.0125,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0126,
+          "visible_count": 810,
+          "drawn_count": 810,
+          "cluster_count": 0
+        },
+        {
+          "frame": 163,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0128,
+          "visible_count": 817,
+          "drawn_count": 817,
+          "cluster_count": 0
+        },
+        {
+          "frame": 164,
+          "query_ms": 0.0126,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0129,
+          "visible_count": 806,
+          "drawn_count": 806,
+          "cluster_count": 0
+        },
+        {
+          "frame": 165,
+          "query_ms": 0.0156,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0157,
+          "visible_count": 829,
+          "drawn_count": 829,
+          "cluster_count": 0
+        },
+        {
+          "frame": 166,
+          "query_ms": 0.0134,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0136,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 167,
+          "query_ms": 0.0141,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0143,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 168,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0134,
+          "visible_count": 847,
+          "drawn_count": 847,
+          "cluster_count": 0
+        },
+        {
+          "frame": 169,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0133,
+          "visible_count": 846,
+          "drawn_count": 846,
+          "cluster_count": 0
+        },
+        {
+          "frame": 170,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0133,
+          "visible_count": 845,
+          "drawn_count": 845,
+          "cluster_count": 0
+        },
+        {
+          "frame": 171,
+          "query_ms": 0.0139,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0141,
+          "visible_count": 846,
+          "drawn_count": 846,
+          "cluster_count": 0
+        },
+        {
+          "frame": 172,
+          "query_ms": 0.0136,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0138,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 173,
+          "query_ms": 0.0126,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0128,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 174,
+          "query_ms": 0.0135,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0138,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 175,
+          "query_ms": 0.0135,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0139,
+          "visible_count": 834,
+          "drawn_count": 834,
+          "cluster_count": 0
+        },
+        {
+          "frame": 176,
+          "query_ms": 0.0134,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0136,
+          "visible_count": 841,
+          "drawn_count": 841,
+          "cluster_count": 0
+        },
+        {
+          "frame": 177,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0134,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 178,
+          "query_ms": 0.0133,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0135,
+          "visible_count": 842,
+          "drawn_count": 842,
+          "cluster_count": 0
+        },
+        {
+          "frame": 179,
+          "query_ms": 0.0141,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0143,
+          "visible_count": 838,
+          "drawn_count": 838,
+          "cluster_count": 0
+        },
+        {
+          "frame": 180,
+          "query_ms": 0.0136,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0137,
+          "visible_count": 832,
+          "drawn_count": 832,
+          "cluster_count": 0
+        },
+        {
+          "frame": 181,
+          "query_ms": 0.0132,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0134,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 182,
+          "query_ms": 0.013,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0132,
+          "visible_count": 822,
+          "drawn_count": 822,
+          "cluster_count": 0
+        },
+        {
+          "frame": 183,
+          "query_ms": 0.0129,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0132,
+          "visible_count": 827,
+          "drawn_count": 827,
+          "cluster_count": 0
+        },
+        {
+          "frame": 184,
+          "query_ms": 0.0138,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.014,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 185,
+          "query_ms": 0.0126,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0128,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 186,
+          "query_ms": 0.0131,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0132,
+          "visible_count": 836,
+          "drawn_count": 836,
+          "cluster_count": 0
+        },
+        {
+          "frame": 187,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0129,
+          "visible_count": 847,
+          "drawn_count": 847,
+          "cluster_count": 0
+        },
+        {
+          "frame": 188,
+          "query_ms": 0.0123,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0125,
+          "visible_count": 847,
+          "drawn_count": 847,
+          "cluster_count": 0
+        },
+        {
+          "frame": 189,
+          "query_ms": 0.0134,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0136,
+          "visible_count": 846,
+          "drawn_count": 846,
+          "cluster_count": 0
+        },
+        {
+          "frame": 190,
+          "query_ms": 0.0126,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0127,
+          "visible_count": 843,
+          "drawn_count": 843,
+          "cluster_count": 0
+        },
+        {
+          "frame": 191,
+          "query_ms": 0.0133,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0135,
+          "visible_count": 841,
+          "drawn_count": 841,
+          "cluster_count": 0
+        },
+        {
+          "frame": 192,
+          "query_ms": 0.0136,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0138,
+          "visible_count": 844,
+          "drawn_count": 844,
+          "cluster_count": 0
+        },
+        {
+          "frame": 193,
+          "query_ms": 0.013,
+          "cluster_ms": 0.0003,
+          "total_ms": 0.0133,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 194,
+          "query_ms": 0.0122,
+          "cluster_ms": 0.0001,
+          "total_ms": 0.0123,
+          "visible_count": 826,
+          "drawn_count": 826,
+          "cluster_count": 0
+        },
+        {
+          "frame": 195,
+          "query_ms": 0.0151,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0153,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        },
+        {
+          "frame": 196,
+          "query_ms": 0.0127,
+          "cluster_ms": 0.0004,
+          "total_ms": 0.0131,
+          "visible_count": 833,
+          "drawn_count": 833,
+          "cluster_count": 0
+        },
+        {
+          "frame": 197,
+          "query_ms": 0.0131,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0133,
+          "visible_count": 836,
+          "drawn_count": 836,
+          "cluster_count": 0
+        },
+        {
+          "frame": 198,
+          "query_ms": 0.0133,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.0135,
+          "visible_count": 840,
+          "drawn_count": 840,
+          "cluster_count": 0
+        },
+        {
+          "frame": 199,
+          "query_ms": 0.0118,
+          "cluster_ms": 0.0002,
+          "total_ms": 0.012,
+          "visible_count": 831,
+          "drawn_count": 831,
+          "cluster_count": 0
+        }
+      ]
+    }
+  ]
+}

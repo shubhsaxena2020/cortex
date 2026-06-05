@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useCallback, useState } from 'react'
 import * as d3 from 'd3'
 import { useStore } from '../store'
 import { buildGraph, type FilterMode, type GraphNode } from '../utils/graph-builder'
+import { Quadtree } from '../utils/quadtree'
+import { getDetailLevel, clusterNodes, type Cluster } from '../utils/lod'
 
 type D3Node = GraphNode & d3.SimulationNodeDatum
 interface D3Link extends d3.SimulationLinkDatum<D3Node> {
@@ -27,6 +29,13 @@ export default function GraphCanvas({
 
   const [tooltip, setTooltip] = useState<{ x: number; y: number; title: string } | null>(null)
   const [graphInfo, setGraphInfo] = useState<{ shown: number; total: number } | null>(null)
+  const [debug, setDebug] = useState<{ fps: number; visNodes: number; visEdges: number; lod: string } | null>(null)
+  // Debug overlay opt-in via ?debug=graph in URL or localStorage flag.
+  // Production users never see it; profilers + devs toggle without rebuilding.
+  const debugEnabled = useRef(
+    typeof window !== 'undefined' &&
+    (window.location?.search?.includes('debug=graph') || window.localStorage?.getItem('cortex.debug.graph') === '1')
+  ).current
 
   // Refs for imperative access inside event handlers and draw callbacks
   const drawRef        = useRef<() => void>(() => {})
@@ -38,6 +47,11 @@ export default function GraphCanvas({
   const selectedIdRef  = useRef<string | null>(null)   // node clicked in graph → InfoPanel
   const openIdRef      = useRef<string | null>(null)   // node open in editor (from store)
   const nodePositions  = useRef<Map<string, { x: number; y: number }>>(new Map())
+  const quadtreeRef    = useRef<Quadtree<D3Node> | null>(null)
+  const quadtreeDirty  = useRef(true)
+  // FPS sampling: ring buffer of frame timestamps; FPS = N / (lastTs - firstTs).
+  const frameTimesRef  = useRef<number[]>([])
+  const lastFrameLogRef = useRef(0)
 
   // Effect 1 — sync editor-open highlight without rebuilding simulation
   useEffect(() => {
@@ -105,99 +119,160 @@ export default function GraphCanvas({
 
     nodesRef.current = visNodes
     linksRef.current = visLinks
+    quadtreeDirty.current = true
 
     // ── Draw ────────────────────────────────────────────────────────────────────
     function draw() {
       const t = transformRef.current
+      const drawStart = performance.now()
 
       ctx.clearRect(0, 0, w, h)
       ctx.save()
       ctx.translate(t.x, t.y)
       ctx.scale(t.k, t.k)
 
-      // Viewport bounds in simulation space (+200px screen-pixel buffer)
+      // Viewport bounds in simulation space (+200px screen-pixel buffer to
+      // hide pop-in on pan). Same buffer used for both quadtree query and
+      // edge endpoint test.
       const buf = 200 / t.k
       const vL = (-t.x) / t.k - buf
       const vR = (w - t.x) / t.k + buf
       const vT = (-t.y) / t.k - buf
       const vB = (h - t.y) / t.k + buf
-      const inView = (n: D3Node) => {
-        const x = n.x ?? 0, y = n.y ?? 0
-        return x >= vL && x <= vR && y >= vT && y <= vB
-      }
 
-      // ── Edges ──────────────────────────────────────────────────────────────
-      ctx.lineWidth = 1 / t.k
-      for (const link of linksRef.current) {
-        const src = link.source as D3Node
-        const tgt = link.target as D3Node
-        if (!inView(src) && !inView(tgt)) continue
-        if (link.edgeType === 'mention') {
-          ctx.setLineDash([3 / t.k, 3 / t.k])
-          ctx.strokeStyle = 'rgba(80,80,80,0.25)'
-        } else {
-          ctx.setLineDash([])
-          ctx.strokeStyle = 'rgba(80,80,80,0.35)'
-        }
-        ctx.beginPath()
-        ctx.moveTo(src.x ?? 0, src.y ?? 0)
-        ctx.lineTo(tgt.x ?? 0, tgt.y ?? 0)
-        ctx.stroke()
+      // Refresh the spatial index when the simulation marked it dirty. On
+      // settled graphs (alpha < threshold) the same tree gets reused across
+      // many pan/zoom frames — that's the win.
+      if (quadtreeDirty.current || quadtreeRef.current == null) {
+        quadtreeRef.current = Quadtree.build(nodesRef.current, 100)
+        quadtreeDirty.current = false
       }
-      ctx.setLineDash([])
+      const visibleNodes = quadtreeRef.current.query({ minX: vL, minY: vT, maxX: vR, maxY: vB })
+      const visibleSet = new Set<string>()
+      for (const n of visibleNodes) visibleSet.add(n.id)
 
-      // ── Nodes ──────────────────────────────────────────────────────────────
+      const lod = getDetailLevel(t.k)
       const selId  = selectedIdRef.current
       const openId = openIdRef.current
 
-      for (const node of nodesRef.current) {
-        if (!inView(node)) continue
-        const nx = node.x ?? 0
-        const ny = node.y ?? 0
-        const r  = NODE_R(node)
-        const highlight = node.id === selId || node.id === openId
-
-        // Glow ring
-        if (highlight) {
-          ctx.beginPath()
-          ctx.arc(nx, ny, r + 6, 0, Math.PI * 2)
-          ctx.fillStyle = node.color + '40'
-          ctx.fill()
-        }
-
-        // Fill
+      // ── Edges ──────────────────────────────────────────────────────────────
+      // FAR drops `mention` edges (the noisier set) and uses a single style
+      // pass. MEDIUM/CLOSE keep both styles. Endpoint check uses the visible
+      // set — both quadtree-cheap and a tighter cull than the previous
+      // per-link bounds test.
+      let edgesDrawn = 0
+      ctx.lineWidth = 1 / t.k
+      ctx.beginPath()
+      ctx.strokeStyle = 'rgba(80,80,80,0.35)'
+      for (const link of linksRef.current) {
+        if (lod === 'far' && link.edgeType === 'mention') continue
+        if (link.edgeType !== 'relationship') continue
+        const src = link.source as D3Node
+        const tgt = link.target as D3Node
+        if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
+        ctx.moveTo(src.x ?? 0, src.y ?? 0)
+        ctx.lineTo(tgt.x ?? 0, tgt.y ?? 0)
+        edgesDrawn++
+      }
+      ctx.stroke()
+      if (lod !== 'far') {
         ctx.beginPath()
-        ctx.arc(nx, ny, r, 0, Math.PI * 2)
-        ctx.fillStyle = node.fromWatch
-          ? (highlight ? node.color + 'cc' : node.color + '59')
-          : (highlight ? node.color       : node.color + 'cc')
-        ctx.fill()
-
-        // Stroke
-        ctx.strokeStyle  = highlight ? '#ffffff' : (node.nodeType === 'file' ? node.color : '#1a1a1a')
-        ctx.lineWidth    = (highlight ? 2.5 : 1.5) / t.k
-        ctx.globalAlpha  = node.nodeType === 'file' ? 0.7 : 1
-        if (node.nodeType === 'file') ctx.setLineDash([3 / t.k, 2 / t.k])
+        ctx.setLineDash([3 / t.k, 3 / t.k])
+        ctx.strokeStyle = 'rgba(80,80,80,0.25)'
+        for (const link of linksRef.current) {
+          if (link.edgeType !== 'mention') continue
+          const src = link.source as D3Node
+          const tgt = link.target as D3Node
+          if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
+          ctx.moveTo(src.x ?? 0, src.y ?? 0)
+          ctx.lineTo(tgt.x ?? 0, tgt.y ?? 0)
+          edgesDrawn++
+        }
         ctx.stroke()
         ctx.setLineDash([])
-        ctx.globalAlpha = 1
+      }
 
-        // Label (always on at zoom > 1.5, or when highlighted)
-        if (t.k > 1.5 || highlight) {
-          const fontSize = 9 / t.k   // renders as ~9px on screen at any zoom
-          ctx.font        = `${fontSize}px system-ui, sans-serif`
-          ctx.textAlign   = 'center'
-          ctx.fillStyle   = highlight ? '#e8e8e8' : '#666666'
-          const label = node.title.length > 22 ? node.title.slice(0, 22) + '…' : node.title
-          ctx.fillText(label, nx, ny - r - 5 / t.k)
+      // ── Nodes ──────────────────────────────────────────────────────────────
+      let nodesDrawn = 0
+      if (lod === 'far') {
+        const clusters: Cluster<D3Node>[] = clusterNodes(visibleNodes, t.k)
+        for (const c of clusters) {
+          const r = Math.min(3 + Math.log2(c.size + 1) * 2, 12)
+          ctx.beginPath()
+          ctx.arc(c.x, c.y, r, 0, Math.PI * 2)
+          ctx.fillStyle = c.size > 1 ? 'rgba(180,180,200,0.85)' : (c.members[0].color + 'cc')
+          ctx.fill()
+          if (c.size > 1) {
+            ctx.font = `${10 / t.k}px system-ui, sans-serif`
+            ctx.textAlign = 'center'
+            ctx.fillStyle = '#111'
+            ctx.fillText(String(c.size), c.x, c.y + 3 / t.k)
+          }
+        }
+        nodesDrawn = clusters.length
+      } else {
+        for (const node of visibleNodes) {
+          const nx = node.x ?? 0
+          const ny = node.y ?? 0
+          const r  = NODE_R(node)
+          const highlight = node.id === selId || node.id === openId
+
+          if (highlight) {
+            ctx.beginPath()
+            ctx.arc(nx, ny, r + 6, 0, Math.PI * 2)
+            ctx.fillStyle = node.color + '40'
+            ctx.fill()
+          }
+
+          ctx.beginPath()
+          ctx.arc(nx, ny, r, 0, Math.PI * 2)
+          ctx.fillStyle = node.fromWatch
+            ? (highlight ? node.color + 'cc' : node.color + '59')
+            : (highlight ? node.color       : node.color + 'cc')
+          ctx.fill()
+
+          ctx.strokeStyle  = highlight ? '#ffffff' : (node.nodeType === 'file' ? node.color : '#1a1a1a')
+          ctx.lineWidth    = (highlight ? 2.5 : 1.5) / t.k
+          ctx.globalAlpha  = node.nodeType === 'file' ? 0.7 : 1
+          if (node.nodeType === 'file') ctx.setLineDash([3 / t.k, 2 / t.k])
+          ctx.stroke()
+          ctx.setLineDash([])
+          ctx.globalAlpha = 1
+
+          // Labels: CLOSE only, or any LOD when highlighted.
+          if (lod === 'close' || highlight) {
+            const fontSize = 9 / t.k
+            ctx.font        = `${fontSize}px system-ui, sans-serif`
+            ctx.textAlign   = 'center'
+            ctx.fillStyle   = highlight ? '#e8e8e8' : '#666666'
+            const label = node.title.length > 22 ? node.title.slice(0, 22) + '…' : node.title
+            ctx.fillText(label, nx, ny - r - 5 / t.k)
+          }
+          nodesDrawn++
         }
       }
 
       ctx.restore()
 
-      // Cache positions for layout continuity
+      // Cache positions for layout continuity (only for nodes we re-touched
+      // through the sim — visible or not — so dragged off-screen nodes stay
+      // remembered). Full pass is O(n) but cheap and once per frame.
       for (const n of nodesRef.current) {
         if (n.x != null && n.y != null) nodePositions.current.set(n.id, { x: n.x, y: n.y })
+      }
+
+      // FPS sampling — keep a rolling 60-sample window. Update overlay no
+      // more than 5×/s so the displayed number doesn't flicker.
+      if (debugEnabled) {
+        const ft = frameTimesRef.current
+        ft.push(drawStart)
+        if (ft.length > 60) ft.shift()
+        const span = ft.length > 1 ? ft[ft.length - 1] - ft[0] : 0
+        const fps = span > 0 ? Math.round(((ft.length - 1) / span) * 1000) : 0
+        if (drawStart - lastFrameLogRef.current > 200) {
+          lastFrameLogRef.current = drawStart
+          setDebug({ fps, visNodes: nodesDrawn, visEdges: edgesDrawn, lod })
+        }
       }
     }
 
@@ -213,7 +288,13 @@ export default function GraphCanvas({
       .force('y',         d3.forceY(h / 2).strength(0.05))
       .velocityDecay(0.4)
       .alphaMin(0.001)
-      .on('tick', draw)
+      .on('tick', () => {
+        // While the sim is moving, positions are stale every tick. Mark the
+        // quadtree dirty so draw() rebuilds it; once alpha drops below the
+        // settle threshold, the tree is reused across pan/zoom frames.
+        quadtreeDirty.current = true
+        draw()
+      })
 
     simRef.current = sim
 
@@ -245,8 +326,15 @@ export default function GraphCanvas({
     }
 
     function hitTest(sx: number, sy: number): D3Node | null {
+      // Largest visual radius cap from NODE_R formula: baseR + 8 + 4px tolerance.
+      // Use 30 sim-units as a safe envelope so we catch the biggest discs.
+      const HIT_RADIUS = 30
+      const tree = quadtreeRef.current
+      const candidates = tree
+        ? tree.query({ minX: sx - HIT_RADIUS, minY: sy - HIT_RADIUS, maxX: sx + HIT_RADIUS, maxY: sy + HIT_RADIUS })
+        : nodesRef.current
       let best: D3Node | null = null, minD = Infinity
-      for (const n of nodesRef.current) {
+      for (const n of candidates) {
         const d = Math.hypot((n.x ?? 0) - sx, (n.y ?? 0) - sy)
         if (d <= NODE_R(n) + 4 && d < minD) { minD = d; best = n }
       }
@@ -372,6 +460,15 @@ export default function GraphCanvas({
           style={{ left: tooltip.x + 12, top: tooltip.y - 24 }}
         >
           {tooltip.title}
+        </div>
+      )}
+
+      {debug && (
+        <div className="absolute top-2 left-2 bg-[#1a1a1a]/90 text-[#ccc] text-xs px-3 py-2 rounded font-mono pointer-events-none select-none">
+          <div>fps: <span className={debug.fps >= 55 ? 'text-green-400' : debug.fps >= 30 ? 'text-yellow-400' : 'text-red-400'}>{debug.fps}</span></div>
+          <div>lod: {debug.lod}</div>
+          <div>nodes: {debug.visNodes} / {nodesRef.current.length}</div>
+          <div>edges: {debug.visEdges} / {linksRef.current.length}</div>
         </div>
       )}
 

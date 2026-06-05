@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "backfill-source-urls": "node scripts/backfill-source-urls.mjs",
     "seed-10k": "node scripts/run-as-node.cjs scripts/seed-10k-vault.mjs",
-    "profile-search": "node scripts/run-as-node.cjs scripts/profile-search.mjs"
+    "profile-search": "node scripts/run-as-node.cjs scripts/profile-search.mjs",
+    "profile-lod": "node scripts/profile-lod.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.0",
