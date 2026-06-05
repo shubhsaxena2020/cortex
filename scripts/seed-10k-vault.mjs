@@ -35,10 +35,18 @@ import { join } from 'path'
 
 const args = parseArgs(process.argv.slice(2))
 const DRY_RUN = args.has('dry-run')
-const DO_EMBED = args.has('embed')
+// --skip-embed is an explicit no-op (embeddings are off by default anyway) so
+// scripts/CI can be unambiguous about intent.
+const DO_EMBED = args.has('embed') && !args.has('skip-embed')
 const DO_CLEAR = args.has('clear')
 const COUNT = parseInt(args.get('count') ?? '10000', 10)
-const CONCURRENCY = parseInt(args.get('concurrency') ?? '8', 10)
+// Parallel in-flight /api/embed requests. `--concurrent` is an alias.
+// Default 16 — fastest reliable point on the sweep (Ollama serialises per
+// model, so beyond this throughput plateaus). `--concurrent` is an alias.
+const CONCURRENCY = parseInt(args.get('concurrent') ?? args.get('concurrency') ?? '16', 10)
+// Texts per /api/embed request. Ollama embeds the whole array in one call,
+// which is the big win over one-text-per-request. `--batch` is an alias.
+const EMBED_BATCH = parseInt(args.get('embed-batch') ?? args.get('batch') ?? '32', 10)
 
 const APPDATA = process.env.APPDATA || join(process.env.USERPROFILE || '', 'AppData', 'Roaming')
 const DB_PATH = process.env.CORTEX_DB || join(APPDATA, 'Cortex', 'memories.db')
@@ -193,16 +201,23 @@ const after = db.prepare('SELECT COUNT(*) AS n FROM memories').get().n
 const tSeed = ((Date.now() - t0) / 1000).toFixed(2)
 console.log(`[seed] before=${before} after=${after} inserted=${inserted} skipped=${skipped} in ${tSeed}s`)
 
+let embedMs = 0
 if (DO_EMBED) {
   if (!vecEnabled) {
     console.warn('[seed] --embed requested but sqlite-vec unavailable; skipping')
   } else {
-    await embedAllMissing()
+    embedMs = await embedAllMissing()
   }
 }
 
 db.close()
-console.log(`[seed] Seeded ${inserted} memories, skipped ${skipped} (dups), completed in ${((Date.now() - t0) / 1000).toFixed(2)} seconds`)
+// Separate timing so the DB-insert cost and embedding cost are legible at a glance.
+console.log(
+  `[seed] Seeded ${inserted} memories, skipped ${skipped} (dups). ` +
+  `DB inserts: ${(parseFloat(tSeed) * 1000).toFixed(0)}ms` +
+  (DO_EMBED ? `, Embeddings: ${embedMs.toFixed(0)}ms` : '') +
+  `. Total ${((Date.now() - t0) / 1000).toFixed(2)}s`
+)
 
 async function embedAllMissing() {
   const targets = db.prepare(`
@@ -212,9 +227,8 @@ async function embedAllMissing() {
   `).all()
   if (targets.length === 0) {
     console.log('[seed] embeddings: all seed rows already embedded')
-    return
+    return 0
   }
-  console.log(`[seed] embeddings: ${targets.length} pending; concurrency=${CONCURRENCY}`)
 
   // Quick Ollama health check.
   try {
@@ -222,50 +236,81 @@ async function embedAllMissing() {
     if (!r.ok) throw new Error(`status ${r.status}`)
   } catch (err) {
     console.warn(`[seed] Ollama unreachable (${err.message}); skipping embeddings`)
-    return
+    return 0
   }
+
+  // Chunk targets into batches; each batch is ONE /api/embed request carrying
+  // many inputs. Several batch-requests run concurrently. This combines
+  // request-batching (fewer round trips, server-side batched inference) with
+  // concurrency — the previous code sent one text per request.
+  const batches = []
+  for (let i = 0; i < targets.length; i += EMBED_BATCH) {
+    batches.push(targets.slice(i, i + EMBED_BATCH))
+  }
+  console.log(`[seed] embeddings: ${targets.length} pending; ${batches.length} batches of ≤${EMBED_BATCH}, concurrency=${CONCURRENCY}`)
 
   const tE = Date.now()
   let done = 0
   let failed = 0
+  let batchesDone = 0
 
-  const upsertVec = db.transaction((id, buf) => {
-    db.prepare('DELETE FROM memory_vectors WHERE memory_id = ?').run(id)
-    db.prepare('INSERT INTO memory_vectors (memory_id, embedding) VALUES (?, ?)').run(id, buf)
+  // Hoist prepared statements out of the hot loop.
+  const delVec = db.prepare('DELETE FROM memory_vectors WHERE memory_id = ?')
+  const insVec = db.prepare('INSERT INTO memory_vectors (memory_id, embedding) VALUES (?, ?)')
+  const writeBatch = db.transaction((rows, embs) => {
+    for (let i = 0; i < rows.length; i++) {
+      const vec = embs[i]
+      if (!Array.isArray(vec) || vec.length !== EMBED_DIM) { failed++; continue }
+      const buf = Buffer.from(new Float32Array(vec).buffer)
+      delVec.run(rows[i].id)
+      insVec.run(rows[i].id, buf)
+      done++
+    }
   })
 
-  // Cap input size like the production code (embeddings.ts MAX_INPUT_CHARS=4000).
-  async function embedOne(row) {
-    const input = `${row.title}\n\n${row.content}`.slice(0, 4000)
-    try {
-      const r = await fetch(`${OLLAMA_URL}/api/embed`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: EMBED_MODEL, input }),
-        signal: AbortSignal.timeout(30_000),
-      })
-      if (!r.ok) { failed++; return }
-      const body = await r.json()
-      const vec = body.embeddings?.[0]
-      if (!Array.isArray(vec) || vec.length !== EMBED_DIM) { failed++; return }
-      const buf = Buffer.from(new Float32Array(vec).buffer)
-      upsertVec(row.id, buf)
-      done++
-    } catch {
-      failed++
+  // POST a set of inputs; returns the embeddings array iff the count matches,
+  // else null. Ollama can silently return fewer embeddings than inputs for an
+  // oversized batch — treating that as a hard miss (null) lets the caller fall
+  // back rather than write mismatched vectors.
+  async function embedInputs(inputs) {
+    const r = await fetch(`${OLLAMA_URL}/api/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: EMBED_MODEL, input: inputs }),
+      signal: AbortSignal.timeout(120_000), // a batch does more work than one embed
+    })
+    if (!r.ok) return null
+    const body = await r.json()
+    const embs = body.embeddings
+    return Array.isArray(embs) && embs.length === inputs.length ? embs : null
+  }
+
+  // Cap each input like production (embeddings.ts MAX_INPUT_CHARS=4000).
+  // On batch failure, degrade to per-row requests so a single bad batch never
+  // loses data — this is what makes aggressive --embed-batch / --concurrent
+  // values safe to try.
+  async function embedBatch(rows) {
+    const inputs = rows.map(r => `${r.title}\n\n${r.content}`.slice(0, 4000))
+    let embs = null
+    try { embs = await embedInputs(inputs) } catch { embs = null }
+    if (embs) {
+      writeBatch(rows, embs)
+    } else if (rows.length > 1) {
+      for (const row of rows) await embedBatch([row]) // split + retry
+    } else {
+      failed++ // a lone row that still failed
     }
   }
 
-  // Bounded concurrency: a sliding window of in-flight requests, refilled on
-  // settle. Prevents N=10k from creating 10k simultaneous fetches.
+  // Bounded concurrency over batches: sliding window refilled on settle.
   let idx = 0
   const inFlight = new Set()
   const next = () => {
-    while (inFlight.size < CONCURRENCY && idx < targets.length) {
-      const row = targets[idx++]
-      const p = embedOne(row).finally(() => {
+    while (inFlight.size < CONCURRENCY && idx < batches.length) {
+      const p = embedBatch(batches[idx++]).finally(() => {
         inFlight.delete(p)
-        if (done % 100 === 0) process.stdout.write(`  embedded ${done}/${targets.length}\r`)
+        batchesDone++
+        process.stdout.write(`  embedding ${done}/${targets.length} (batch ${batchesDone}/${batches.length})\r`)
       })
       inFlight.add(p)
     }
@@ -275,8 +320,10 @@ async function embedAllMissing() {
     await Promise.race(inFlight)
     next()
   }
+  const elapsed = Date.now() - tE
   console.log()
-  console.log(`[seed] embeddings: done=${done} failed=${failed} in ${((Date.now() - tE) / 1000).toFixed(2)}s`)
+  console.log(`[seed] embeddings: done=${done} failed=${failed} in ${(elapsed / 1000).toFixed(2)}s`)
+  return elapsed
 }
 
 function parseArgs(argv) {
