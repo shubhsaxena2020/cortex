@@ -18,31 +18,39 @@ export type NodeState = 'normal' | 'dim' | 'highlight' | 'selected'
 export type EdgeKind = 'relationship' | 'mention'
 export type EdgeState = 'normal' | 'dim' | 'highlight'
 
-// Zoom thresholds for the label fade ramp. Smoothstep between these — no
-// discrete cutover. LABEL_FADE_HI is just above 1.0 so most working zooms
-// already show labels.
-export const LABEL_FADE_LO = 0.6
-export const LABEL_FADE_HI = 1.4
+// Zoom thresholds for the label fade ramp. Matches Obsidian: labels are gone
+// at/below zoom 0.5 and fully shown at/above 1.0, fading linearly in log2(zoom)
+// space between. (Obsidian: textAlpha = clamp(log2(zoom)+1-textFade, 0, 1);
+// see docs/OBSIDIAN-GRAPH-PATTERNS.md.) These are the zoom values where the
+// ramp hits 0 and 1.
+export const LABEL_FADE_LO = 0.5
+export const LABEL_FADE_HI = 1.0
 
 // Node radius envelope. Keep MIN small enough that a dense cluster reads as
 // "many small dots" rather than "one fat blob", but big enough to be hit-
 // testable. MAX is capped so a 200-degree super-node doesn't dominate.
-export const NODE_R_MIN = 3
-export const NODE_R_MAX = 14
+export const NODE_R_MIN = 8
+export const NODE_R_MAX = 30
 
-/** Visual radius in simulation units for a node, derived from its degree. */
+/**
+ * Visual radius in simulation units for a node, derived from its degree.
+ * Obsidian's exact formula: clamp(3·√(degree+1), 8, 30) (times nodeSizeMultiplier,
+ * which Cortex pins at 1). √ scaling — a hub grows fast then flattens at the cap.
+ * See docs/OBSIDIAN-GRAPH-PATTERNS.md (@2215514).
+ */
 export function nodeRadius(node: GraphNode): number {
-  const r = NODE_R_MIN + Math.log2(1 + node.connections) * 1.6
-  return Math.min(r, NODE_R_MAX)
+  const r = 3 * Math.sqrt(node.connections + 1)
+  return Math.max(NODE_R_MIN, Math.min(r, NODE_R_MAX))
 }
 
-/** Smooth 0→1 ramp for label opacity. Pure function of zoom. */
+/**
+ * Label opacity as a pure function of zoom. Obsidian's exact ramp:
+ * clamp(log2(zoom) + 1 - textFadeMultiplier, 0, 1) with textFadeMultiplier = 0.
+ * Linear in log2(zoom): 0 at zoom 0.5, 1 at zoom 1.0.
+ */
 export function labelOpacity(zoom: number): number {
-  if (zoom <= LABEL_FADE_LO) return 0
-  if (zoom >= LABEL_FADE_HI) return 1
-  const t = (zoom - LABEL_FADE_LO) / (LABEL_FADE_HI - LABEL_FADE_LO)
-  // Smoothstep for soft start/finish.
-  return t * t * (3 - 2 * t)
+  if (zoom <= 0) return 0
+  return Math.max(0, Math.min(1, Math.log2(zoom) + 1))
 }
 
 // Cheap 8-hex alpha suffix — avoids string allocations inside the hot loop
@@ -50,10 +58,9 @@ export function labelOpacity(zoom: number): number {
 // graph-builder is "#RRGGBB", append "AA" for the alpha byte.
 const ALPHA_HEX = {
   normal:    'cc',  // 80%
-  dim:       '5e',  // ~37% — high enough to stay visible against #0c0c10 at
-                    // far zoom (Obsidian parity: dimmed ≠ invisible). The node
-                    // still reads as "not in the hovered subgraph" because the
-                    // highlight tier jumps to 100% + a white outline.
+  dim:       '33',  // 0.2 — Obsidian's exact dim alpha (fQ = 0.2) for nodes
+                    // outside the hovered subgraph. The larger 8–30px node radii
+                    // keep them readable against #0c0c10 even at 20% alpha.
   highlight: 'ff',  // 100%
   selected:  'ff',  // 100% (plus pulse ring on top, see drawNode)
 } satisfies Record<NodeState, string>

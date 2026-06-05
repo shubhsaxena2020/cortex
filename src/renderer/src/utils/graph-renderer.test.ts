@@ -43,7 +43,7 @@ describe('nodeRadius', () => {
 describe('nodeFill', () => {
   it('appends an 8-hex alpha pair to the colour', () => {
     expect(nodeFill(baseNode(1), 'normal')).toBe('#abcdefcc')
-    expect(nodeFill(baseNode(1), 'dim')).toBe('#abcdef5e')
+    expect(nodeFill(baseNode(1), 'dim')).toBe('#abcdef33')
     expect(nodeFill(baseNode(1), 'highlight')).toBe('#abcdefff')
     expect(nodeFill(baseNode(1), 'selected')).toBe('#abcdefff')
   })

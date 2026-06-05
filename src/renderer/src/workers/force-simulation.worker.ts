@@ -106,8 +106,12 @@ ctx.onmessage = (e: MessageEvent<InMsg>): void => {
       byId = new Map(nodes.map(n => [n.id, n]))
       const links: WLink[] = msg.links.map(l => ({ source: l.source, target: l.target }))
       sim = forceSimulation<WNode, WLink>(nodes)
-        .force('link', forceLink<WNode, WLink>(links).id(d => d.id).distance(50).strength(0.7))
-        .force('charge', forceManyBody<WNode>().strength(-180))
+        // Obsidian-matched force values (docs/OBSIDIAN-GRAPH-PATTERNS.md):
+        // linkDistance 250 (open, airy layout — Obsidian's default), linkStrength 1.
+        // Charge is d3's n-body (different units from Obsidian's repelStrength 10);
+        // scaled up to -400 so the wider link rest-length doesn't collapse.
+        .force('link', forceLink<WNode, WLink>(links).id(d => d.id).distance(250).strength(1))
+        .force('charge', forceManyBody<WNode>().strength(-400))
         .force('center', forceCenter(msg.width / 2, msg.height / 2))
         .force('collision', forceCollide<WNode>(collideRadius))
         .force('x', forceX<WNode>(msg.width / 2).strength(0.04))
