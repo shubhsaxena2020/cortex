@@ -25,8 +25,7 @@ import { useStore } from '../store'
 import { buildGraph, type FilterMode, type GraphNode } from '../utils/graph-builder'
 import { Quadtree } from '../utils/quadtree'
 import {
-  drawNode, addEdgePath, applyEdgeStyle, drawLabel,
-  labelOpacity,
+  drawNode, addEdgePath, applyEdgeStyle,
   type NodeState, type EdgeState,
 } from '../utils/graph-renderer'
 import {
@@ -58,7 +57,7 @@ export default function GraphCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { memories, relationships, vaultFiles, selectedMemoryId, selectedFileId } = useStore()
 
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; title: string } | null>(null)
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; title: string; sub?: string } | null>(null)
   const [edgeTooltip, setEdgeTooltip] = useState<{ x: number; y: number; label: string; signalType: string; strength: number } | null>(null)
   const [graphInfo, setGraphInfo] = useState<{ shown: number; total: number } | null>(null)
   const [debug, setDebug] = useState<{ fps: number; visNodes: number; visEdges: number } | null>(null)
@@ -308,22 +307,6 @@ export default function GraphCanvas({
         nodesDrawn++
       }
 
-      // ── Labels ───────────────────────────────────────────────────────────
-      // Skip the whole pass when fully faded out (the common low-zoom case).
-      // Always render labels for emphasised nodes regardless of zoom — they
-      // matter to the user even when the rest are hidden.
-      if (labelAlpha > 0.02) {
-        for (const node of visibleNodes) {
-          const state = nodeStateOf(node.id)
-          if (state === 'dim') continue
-          drawLabel(ctx, node, t.k, labelAlpha, false)
-        }
-      }
-      for (const node of emphasised) {
-        // Emphasised label always at full strength, even at zoom 0.05.
-        drawLabel(ctx, node, t.k, 1, true)
-      }
-
       ctx.restore()
 
       // Cache positions for layout continuity across filter changes.
@@ -510,10 +493,14 @@ export default function GraphCanvas({
       if (found) {
         canvas.style.cursor = 'pointer'
         const t = transformRef.current
+        const nodeData = found as D3Node
+        const sourceLabel = nodeData.source ?? ''
+        const degree = (nodeData as any).connections ?? 0
         setTooltip({
           x: (found.x ?? 0) * t.k + t.x,
           y: (found.y ?? 0) * t.k + t.y,
           title: found.title,
+          sub: degree > 0 ? `${sourceLabel} · ${degree} connections` : sourceLabel,
         })
         setEdgeTooltip(null)
       } else {
@@ -622,10 +609,15 @@ export default function GraphCanvas({
 
       {tooltip && (
         <div
-          className="absolute pointer-events-none select-none bg-[#111]/90 text-[#ccc] text-xs px-2 py-1 rounded shadow-lg z-20"
-          style={{ left: tooltip.x + 12, top: tooltip.y - 24 }}
+          className="absolute pointer-events-none select-none bg-[#0F1428]/90 text-xs px-3 py-2 rounded shadow-lg z-20"
+          style={{
+            left: tooltip.x + 12,
+            top: tooltip.y - 24,
+            border: '1px solid rgba(148, 163, 184, 0.2)',
+          }}
         >
-          {tooltip.title}
+          <div className="text-[#E2E8F0] font-medium">{tooltip.title}</div>
+          {tooltip.sub && <div className="text-[#94A3B8] text-[9px] mt-0.5">{tooltip.sub}</div>}
         </div>
       )}
 

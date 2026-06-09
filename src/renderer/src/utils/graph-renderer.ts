@@ -60,9 +60,9 @@ export function labelOpacity(zoom: number): number {
 // graph-builder is "#RRGGBB", append "AA" for the alpha byte.
 const ALPHA_HEX = {
   normal:    'cc',  // 80%
-  dim:       '33',  // 0.2 — Obsidian's exact dim alpha (fQ = 0.2) for nodes
-                    // outside the hovered subgraph. The larger 8–30px node radii
-                    // keep them readable against #0c0c10 even at 20% alpha.
+  dim:       '14',  // 0.08 — subtle dim for focus mode (was 0.2)
+                    // outside the hovered subgraph. Nodes recede to 8% so
+                    // the connected subgraph clearly stands out.
   highlight: 'ff',  // 100%
   selected:  'ff',  // 100% (plus pulse ring on top, see drawNode)
 } satisfies Record<NodeState, string>
@@ -75,6 +75,7 @@ export function nodeFill(node: GraphNode, state: NodeState): string {
 /**
  * Draw one node. ctx is already translated+scaled to simulation space.
  * Pass `pulsePhase` in [0,1) for the selected state to drive the glow ring.
+ * High-degree nodes (connections >= 8) get a subtle glow effect.
  */
 export function drawNode(
   ctx: CanvasRenderingContext2D,
@@ -103,20 +104,61 @@ export function drawNode(
     ctx.fill()
   }
 
-  // Body.
+  // Body with radial gradient.
   ctx.beginPath()
   ctx.arc(x, y, r, 0, Math.PI * 2)
-  ctx.fillStyle = nodeFill(node, state)
+
+  // Radial gradient: lighter center for 3D depth, source color at edge
+  const grad = ctx.createRadialGradient(
+    x - r * 0.15, y - r * 0.15, r * 0.1,  // offset center, small inner
+    x, y, r,                                   // full radius at edge
+  )
+  const baseColor = node.color
+  if (state !== 'dim') {
+    // Brighter center (mix white into the source color)
+    grad.addColorStop(0, lightenHex(baseColor, 0.45))
+    grad.addColorStop(0.6, baseColor + 'dd')
+    grad.addColorStop(1, baseColor + 'aa')
+  } else {
+    // Dim state: simpler flat-ish gradient
+    grad.addColorStop(0, baseColor + '22')
+    grad.addColorStop(1, baseColor + '14')
+  }
+  ctx.fillStyle = grad
+
+  // Hub glow: shadow blur for high-degree nodes (normal/highlight state only)
+  const isHub = node.connections >= 8 && (state === 'normal' || state === 'highlight')
+  if (isHub) {
+    ctx.save()
+    ctx.shadowBlur = 12 / zoom
+    ctx.shadowColor = node.color + '66'
+  }
+
   ctx.fill()
+
+  if (isHub) {
+    ctx.restore()
+  }
 
   // Hairline outline — screen-pixel constant, only above a few zooms where
   // it actually reads (below that it's just aliasing). Dimmed nodes skip it
   // so they recede further.
   if (state !== 'dim' && zoom > 0.4) {
     ctx.lineWidth = (state === 'selected' || state === 'highlight' ? 1.5 : 0.8) / zoom
-    ctx.strokeStyle = state === 'selected' || state === 'highlight' ? '#ffffff' : '#0e0e10'
+    ctx.strokeStyle = state === 'selected' || state === 'highlight' ? '#ffffff' : 'rgba(255,255,255,0.15)'
     ctx.stroke()
   }
+}
+
+/** Lighten a hex color by mixing it with white. ratio 0=no change, 1=white. */
+function lightenHex(hex: string, ratio: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const nr = Math.round(r + (255 - r) * ratio)
+  const ng = Math.round(g + (255 - g) * ratio)
+  const nb = Math.round(b + (255 - b) * ratio)
+  return `rgb(${nr},${ng},${nb})`
 }
 
 /**
@@ -153,7 +195,7 @@ export function applyEdgeStyle(
     return
   }
   if (state === 'dim') {
-    ctx.strokeStyle = signalColor ?? 'rgba(150,150,170,0.04)'
+    ctx.strokeStyle = signalColor ?? 'rgba(150,150,170,0.015)'
     ctx.setLineDash([])
     return
   }
