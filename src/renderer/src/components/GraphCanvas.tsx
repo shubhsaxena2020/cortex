@@ -224,7 +224,6 @@ export default function GraphCanvas({
       const hoverActive = hoverSet !== null && hoverSet.size > 0
       const selectedId = selectedIdRef.current
       const openId = openIdRef.current
-      const labelAlpha = labelOpacity(t.k)
 
       // State classifier — kept inline + branchless so the hot loops don't
       // call back into helpers per node/edge.
