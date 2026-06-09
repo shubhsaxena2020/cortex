@@ -61,7 +61,9 @@ function subdivide<T extends Point2D>(n: QNode<T>): void {
 }
 
 function insertInto<T extends Point2D>(n: QNode<T>, item: T): boolean {
-  if (!within(n.bounds, item.x, item.y)) return false
+  const ix = item.x ?? 0
+  const iy = item.y ?? 0
+  if (!within(n.bounds, ix, iy)) return false
   if (n.children) {
     for (const c of n.children) if (insertInto(c, item)) return true
     // Should be unreachable — children fully tile parent. Fall through to
@@ -79,10 +81,16 @@ function queryInto<T extends Point2D>(n: QNode<T>, b: Bounds, out: T[]): void {
   if (n.children) {
     for (const c of n.children) queryInto(c, b, out)
     // Items may still live on this internal node (the safety-net branch).
-    for (const it of n.items) if (it.x >= b.minX && it.x < b.maxX && it.y >= b.minY && it.y < b.maxY) out.push(it)
+    for (const it of n.items) {
+      const ix = it.x ?? 0, iy = it.y ?? 0
+      if (ix >= b.minX && ix < b.maxX && iy >= b.minY && iy < b.maxY) out.push(it)
+    }
     return
   }
-  for (const it of n.items) if (it.x >= b.minX && it.x < b.maxX && it.y >= b.minY && it.y < b.maxY) out.push(it)
+  for (const it of n.items) {
+    const ix = it.x ?? 0, iy = it.y ?? 0
+    if (ix >= b.minX && ix < b.maxX && iy >= b.minY && iy < b.maxY) out.push(it)
+  }
 }
 
 export class Quadtree<T extends Point2D> {
@@ -116,10 +124,12 @@ export class Quadtree<T extends Point2D> {
     }
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
     for (const p of points) {
-      if (p.x < minX) minX = p.x
-      if (p.y < minY) minY = p.y
-      if (p.x > maxX) maxX = p.x
-      if (p.y > maxY) maxY = p.y
+      const px = p.x ?? 0
+      const py = p.y ?? 0
+      if (px < minX) minX = px
+      if (py < minY) minY = py
+      if (px > maxX) maxX = px
+      if (py > maxY) maxY = py
     }
     // Inflate to give the < maxX/maxY half-open interval room.
     const t = new Quadtree<T>({

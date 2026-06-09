@@ -183,10 +183,17 @@ export default function GraphCanvas({
     }
 
     // ── Draw ────────────────────────────────────────────────────────────────
+    const drawCountRef = { current: 0 }
     function draw() {
       try {
         const t = transformRef.current
         const frameStart = performance.now()
+        drawCountRef.current++
+        const dc = drawCountRef.current
+        if (dc <= 5 || dc % 30 === 0) {
+          const arr5 = nodesRef.current.slice(0, 5).map(n => ({ id: n.id.slice(0,8), x: n.x, y: n.y }))
+          console.log(`[graph] draw #${dc} | nodesRef=${nodesRef.current.length} | qdirty=${quadtreeDirty.current} | qref=${quadtreeRef.current ? 'set' : 'null'} | first5=`, JSON.stringify(arr5), `| selectedIdRef=${selectedIdRef.current?.slice(0,8) ?? 'null'}`)
+        }
 
       // Background — dark near-black (#0D0D0D) with a subtle radial gradient
       // from center to give depth. The center glow uses a low-opacity purple
@@ -219,6 +226,10 @@ export default function GraphCanvas({
       const visibleNodes = quadtreeRef.current.query({ minX: vL, minY: vT, maxX: vR, maxY: vB })
       const visibleSet = new Set<string>()
       for (const n of visibleNodes) visibleSet.add(n.id)
+
+      if (dc === 1 || dc === 2) {
+        console.log(`[graph] draw #${dc} | quadBounds=${JSON.stringify(quadtreeRef.current['_bounds'] ?? Object.getOwnPropertyDescriptor(quadtreeRef.current as any, 'root')?.value?.bounds)} | visNodes=${visibleNodes.length} | viewport=${JSON.stringify({vL,vR,vT,vB})}`)
+      }
 
       const hoverSet = hoverSetRef.current
       const hoverActive = hoverSet !== null && hoverSet.size > 0
@@ -373,8 +384,13 @@ export default function GraphCanvas({
         arr[i].x = pos[i * 2]
         arr[i].y = pos[i * 2 + 1]
       }
+      const first5 = arr.slice(0, 5).map(a => ({ id: a.id.slice(0,8), x: a.x, y: a.y }))
+      console.log(`[graph] worker positions | count=${n} | first5=${JSON.stringify(first5)}`)
       quadtreeDirty.current = true
       scheduleRender()
+    }
+    worker.onerror = (err) => {
+      console.error('[graph] Worker error:', err.message || err)
     }
     worker.postMessage({
       type: 'init',
