@@ -9,7 +9,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 4   // bump + add migration when schema changes
+const SCHEMA_VERSION = 5   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -280,6 +280,25 @@ function runMigrations(d: Database.Database, from: number, to: number): void {
           WHERE id NOT IN (SELECT memory_id FROM memories_fts)
         `)
         d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_updated ON memories(updatedAt DESC)`)
+      }
+      if (from < 5) {
+        // v5: add strength + signal_type to memory_relationships for P1 #4
+        // auto-edge cascade. Existing manual relationships get default values.
+        const rCols = d.prepare(`PRAGMA table_info(memory_relationships)`).all() as Array<{ name: string }>
+        if (!rCols.some(c => c.name === 'strength')) {
+          d.exec(`ALTER TABLE memory_relationships ADD COLUMN strength REAL DEFAULT 0.0`)
+        }
+        if (!rCols.some(c => c.name === 'signal_type')) {
+          d.exec(`ALTER TABLE memory_relationships ADD COLUMN signal_type TEXT DEFAULT 'manual'`)
+        }
+        // Mark existing rows that have null/empty signal_type as 'manual'
+        d.exec(`UPDATE memory_relationships SET signal_type = 'manual' WHERE signal_type IS NULL OR signal_type = ''`)
+        // Indexes for fast edge lookup
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memrel_source ON memory_relationships(sourceId)`)
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memrel_target ON memory_relationships(targetId)`)
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memrel_signal ON memory_relationships(signal_type)`)
+        // Index on tags column for tag-based candidate queries
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_tags ON memories(tags)`)
       }
 
       // Bump (or write) the stored version. UPDATE if the row exists; INSERT
