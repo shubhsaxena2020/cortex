@@ -86,13 +86,13 @@ export function drawNode(
 ): void {
   const x = node.x ?? 0
   const y = node.y ?? 0
-  const r = nodeRadius(node)
 
-  // Safety: guard against NaN from uninitialized positions or bad data.
-  // On the first frame before the worker posts positions, x/y are 0 and r is 3 —
-  // that's fine, nodes render at origin briefly. But if r is NaN (e.g. undefined
-  // connections), bail out before createRadialGradient throws a DOMException.
-  if (!isFinite(r) || r <= 0) return
+  // Position guard: can't draw a node without valid coordinates
+  if (!isFinite(x) || !isFinite(y)) return
+
+  // Safe radius computation — guard against NaN by defaulting to minimum
+  const connections = (node.connections ?? 0)
+  const r = Math.max(NODE_R_MIN, Math.min(Math.sqrt(connections) * 2.5 + 3, NODE_R_MAX))
 
   // Glow / pulse ring for selected + highlight. Sized to scale with the node
   // so a 4px dot doesn't get a 20px ring.
@@ -110,30 +110,33 @@ export function drawNode(
     ctx.fill()
   }
 
-  // Body with radial gradient.
+  // Body with radial gradient, falling back to flat fill if gradient fails.
   ctx.beginPath()
   ctx.arc(x, y, r, 0, Math.PI * 2)
 
-  // Radial gradient: lighter center for 3D depth, source color at edge
-  const grad = ctx.createRadialGradient(
-    x - r * 0.15, y - r * 0.15, r * 0.1,  // offset center, small inner
-    x, y, r,                                   // full radius at edge
-  )
-  const baseColor = node.color
-  if (state !== 'dim') {
-    // Brighter center (mix white into the source color)
-    grad.addColorStop(0, lightenHex(baseColor, 0.45))
-    grad.addColorStop(0.6, baseColor + 'dd')
-    grad.addColorStop(1, baseColor + 'aa')
-  } else {
-    // Dim state: simpler flat-ish gradient
-    grad.addColorStop(0, baseColor + '22')
-    grad.addColorStop(1, baseColor + '14')
+  try {
+    // Radial gradient: lighter center for 3D depth, source color at edge
+    const grad = ctx.createRadialGradient(
+      x - r * 0.15, y - r * 0.15, r * 0.1,
+      x, y, r,
+    )
+    const baseColor = node.color
+    if (state !== 'dim') {
+      grad.addColorStop(0, lightenHex(baseColor, 0.45))
+      grad.addColorStop(0.6, baseColor + 'dd')
+      grad.addColorStop(1, baseColor + 'aa')
+    } else {
+      grad.addColorStop(0, baseColor + '22')
+      grad.addColorStop(1, baseColor + '14')
+    }
+    ctx.fillStyle = grad
+  } catch {
+    // Fallback: flat fill — node stays visible even without gradient
+    ctx.fillStyle = nodeFill(node, state)
   }
-  ctx.fillStyle = grad
 
   // Hub glow: shadow blur for high-degree nodes (normal/highlight state only)
-  const isHub = node.connections >= 8 && (state === 'normal' || state === 'highlight')
+  const isHub = connections >= 8 && (state === 'normal' || state === 'highlight')
   if (isHub) {
     ctx.save()
     ctx.shadowBlur = 12 / zoom
