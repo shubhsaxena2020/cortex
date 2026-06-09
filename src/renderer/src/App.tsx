@@ -63,6 +63,7 @@ export default function App(): React.ReactElement {
     })
     const unsubProgress = window.electron.events.onIndexProgress(data => {
       useStore.setState({ indexProgress: data.current >= data.total ? null : data })
+    })
     return () => { unsubMemories(); unsubVault(); unsubProgress(); clearInterval(statusTimer) }
   }, [])
 
