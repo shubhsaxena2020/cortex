@@ -59,6 +59,10 @@ export interface Relationship {
   memory_a_id: string
   memory_b_id: string
   relationship_type: RelationshipType
+  /** Combined signal score 0.0–1.0 (P1 #4 auto-edges) */
+  strength: number
+  /** Signal provenance: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual' */
+  signal_type: string
 }
 
 export interface SearchResult extends Memory {

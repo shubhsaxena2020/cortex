@@ -60,6 +60,8 @@ function getDb(): Database.Database {
   return db
 }
 
+export { getDb }
+
 // User input flows into LIKE patterns; without escaping, a query containing
 // %  _ or \ would match wildcards. ESCAPE clause must be paired on the SQL side.
 function escapeLike(s: string): string {

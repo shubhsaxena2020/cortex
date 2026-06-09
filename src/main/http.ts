@@ -6,6 +6,7 @@ import * as db from './db'
 import { toMemory, makeHighlight } from './transformers'
 import { getEmbedding } from './embeddings'
 import { canonicalUrl } from './url-canon'
+import { extractKeywords as extractKeywordsFromText, jaccardSimilarity } from './utils/text'
 
 const APP_NAME = 'cortex'
 const API_VERSION = 1
@@ -14,14 +15,6 @@ const HOST = '127.0.0.1'
 
 const VALID_SOURCES = ['claude', 'chatgpt', 'gemini', 'manual'] as const
 type Source = typeof VALID_SOURCES[number]
-
-const STOP_WORDS = new Set([
-  'the','this','that','with','from','have','been','were','they','their',
-  'will','would','should','could','about','into','than','then','when',
-  'what','which','where','while','your','just','because','these','those',
-  'them','also','more','most','some','such','only','very','here','there',
-  'them','also','make','made','like','want','need','take','says','said',
-])
 
 let server: FastifyInstance | null = null
 
@@ -363,10 +356,7 @@ export async function stopHttpServer(): Promise<void> {
 }
 
 function extractKeywords(text: string, max: number): string[] {
-  const words = text
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter(w => w.length >= 4 && !STOP_WORDS.has(w))
+  const words = Array.from(extractKeywordsFromText(text))
   const freq = new Map<string, number>()
   for (const w of words) freq.set(w, (freq.get(w) ?? 0) + 1)
   return [...freq.entries()]

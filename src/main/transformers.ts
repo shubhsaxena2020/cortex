@@ -16,6 +16,8 @@ export type DbRelationship = {
   sourceId: string
   targetId: string
   relationship: string
+  strength?: number | null
+  signal_type?: string | null
 }
 
 export function toMemory(row: DbMemory) {
@@ -36,7 +38,9 @@ export function toRelationship(row: DbRelationship) {
     id: row.id,
     memory_a_id: row.sourceId,
     memory_b_id: row.targetId,
-    relationship_type: row.relationship || 'related'
+    relationship_type: row.relationship || 'related',
+    strength: (row.strength as number) ?? 0,
+    signal_type: (row.signal_type as string) ?? 'manual',
   }
 }
 

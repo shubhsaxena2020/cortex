@@ -12,6 +12,7 @@ import { seedEmbeddingsIfNeeded, embedAndStore, memoryToText } from './seed-embe
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
 import * as telemetry from './telemetry'
+import { buildEdgesForMemory, backfillAllEdges } from './edge-builder'
 import { version as appVersion } from '../../package.json'
 import type { TelemetryEventType, FeedbackSubmission } from '../types'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -130,6 +131,14 @@ async function startServerWithRetry(): Promise<void> {
       broadcastMemoriesChanged({ memory })
       void embedAndStore(memory.id, memoryToText(memory))
       void saveConversationToVault(memory, url)
+      // Fire-and-forget: auto-edges for the new memory (P1 #4)
+      setImmediate(async () => {
+        try {
+          await buildEdgesForMemory(db.getDb(), memory.id)
+        } catch (err) {
+          log.error('[edge-builder] Failed to build edges for new memory:', err)
+        }
+      })
       telemetry.capture('memory_created', {
         source: memory.source,
         size_bytes: Buffer.byteLength(memory.content ?? '', 'utf8'),
@@ -228,6 +237,25 @@ app.whenReady().then(async () => {
       else log.info(`[cortex] embedding seed: ${r.embedded} new of ${r.total}`)
     })
     .catch(err => log.error('[cortex] seed failed:', err))
+
+  // Backfill auto-edges in the background (P1 #4); runs after schema migration.
+  // Only processes memories without existing auto-edges, so subsequent startups
+  // are a no-op.
+  setImmediate(async () => {
+    try {
+      log.info('[cortex] Starting auto-edge backfill...')
+      let lastLog = 0
+      await backfillAllEdges(db.getDb(), (done, total) => {
+        if (done - lastLog >= 500 || done === total) {
+          log.info(`[cortex] Backfill progress: ${done}/${total}`)
+          lastLog = done
+        }
+      })
+      log.info('[cortex] Auto-edge backfill complete.')
+    } catch (err) {
+      log.error('[cortex] Backfill error:', err)
+    }
+  })
 
   createWindow()
 
