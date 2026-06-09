@@ -184,8 +184,9 @@ export default function GraphCanvas({
 
     // ── Draw ────────────────────────────────────────────────────────────────
     function draw() {
-      const t = transformRef.current
-      const frameStart = performance.now()
+      try {
+        const t = transformRef.current
+        const frameStart = performance.now()
 
       // Background — solid near-black gives edges room to breathe. Use
       // a fillRect rather than clearRect so the canvas isn't transparent
@@ -325,6 +326,10 @@ export default function GraphCanvas({
           lastDebugTickRef.current = frameStart
           setDebug({ fps, visNodes: nodesDrawn, visEdges: edgesDrawn })
         }
+      }
+      } catch (err) {
+        console.error('[graph] Draw loop error:', err)
+        // Keep the loop alive — one bad frame must not kill the RAF loop
       }
     }
     drawRef.current = draw

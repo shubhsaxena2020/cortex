@@ -88,6 +88,12 @@ export function drawNode(
   const y = node.y ?? 0
   const r = nodeRadius(node)
 
+  // Safety: guard against NaN from uninitialized positions or bad data.
+  // On the first frame before the worker posts positions, x/y are 0 and r is 3 —
+  // that's fine, nodes render at origin briefly. But if r is NaN (e.g. undefined
+  // connections), bail out before createRadialGradient throws a DOMException.
+  if (!isFinite(r) || r <= 0) return
+
   // Glow / pulse ring for selected + highlight. Sized to scale with the node
   // so a 4px dot doesn't get a 20px ring.
   if (state === 'selected') {
