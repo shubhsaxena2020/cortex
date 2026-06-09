@@ -106,32 +106,16 @@ ctx.onmessage = (e: MessageEvent<InMsg>): void => {
       byId = new Map(nodes.map(n => [n.id, n]))
       const links: WLink[] = msg.links.map(l => ({ source: l.source, target: l.target }))
       sim = forceSimulation<WNode, WLink>(nodes)
-        // Redesigned force parameters (P1 #4 visual overhaul):
-        // - linkDistance varies by edge type: 60-100px for relationships (based on strength),
-        //   80px for mention edges. Much tighter than the old 250px which spread too thin.
-        // - linkStrength: 0.4 for relationships (moderate pull), 0.2 for mentions (weak).
-        // - charge: degree-based repulsion so high-degree hubs push clusters apart.
-        // - collide: keep nodes from overlapping using degree-based radius.
-        // - alphaDecay 0.02: slower cooling lets nodes settle into better positions.
-        .force('link', forceLink<WNode, WLink>(links).id(d => d.id)
-          .distance(l => {
-            const wl = l as WLink & { edgeType?: string; strength?: number }
-            if (wl.edgeType === 'relationship') return 60 + (1 - (wl.strength ?? 0.5)) * 40
-            return 80
-          })
-          .strength(l => {
-            const wl = l as WLink & { edgeType?: string }
-            if (wl.edgeType === 'relationship') return 0.4
-            return 0.2
-          })
-        )
-        .force('charge', forceManyBody<WNode>()
-          .strength(d => -200 - (d.connections ?? 1) * 15)
-          .distanceMax(400)
-        )
-        .force('center', forceCenter(msg.width / 2, msg.height / 2).strength(0.08))
-        .force('collision', forceCollide<WNode>(collideRadius).strength(0.8))
-        .alphaDecay(0.02)
+        // Obsidian-matched force values:
+        // linkDistance 60 (tight clusters), linkStrength 0.5.
+        // Charge: -120 (strong repulsion prevents piles).
+        // Collide: degree-based radius + 4px buffer prevents overlap.
+        // alphaDecay 0.028: slower settle = better final layout.
+        .force('link', forceLink<WNode, WLink>(links).id(d => d.id).distance(60).strength(0.5))
+        .force('charge', forceManyBody<WNode>().strength(-120))
+        .force('center', forceCenter(msg.width / 2, msg.height / 2).strength(0.1))
+        .force('collision', forceCollide<WNode>(n => nodeRadius(n as unknown as GraphNode) + 4).strength(0.8))
+        .alphaDecay(0.028)
         .velocityDecay(0.4)
         .alphaMin(0.001)
         .stop() // we drive ticks manually — no internal d3-timer in the worker

@@ -40,10 +40,10 @@ export interface GraphLink {
 }
 
 const SOURCE_COLORS: Record<string, string> = {
-  claude: '#E53E3E',
-  chatgpt: '#F0F0F0',
-  gemini: '#9B59B6',
-  manual: '#6B9FD4',
+  claude: '#7C3AED',
+  chatgpt: '#10B981',
+  gemini: '#F59E0B',
+  manual: '#3B82F6',
 }
 
 export const EDGE_COLORS: Record<string, string> = {

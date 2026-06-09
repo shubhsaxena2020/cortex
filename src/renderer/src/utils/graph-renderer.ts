@@ -29,19 +29,18 @@ export type SignalType = 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manua
 export const LABEL_FADE_LO = 0.5
 export const LABEL_FADE_HI = 1.0
 
-// Node radius envelope. Leaf nodes (degree=0) are 3px dots; high-degree hubs
-// grow via sqrt scaling so they don't dominate the canvas.
-export const NODE_R_MIN = 3
-export const NODE_R_MAX = 24
+// Node radius envelope. Minimum 4px for 0-connection leaf nodes.
+// Formula: 4 + sqrt(connections) * 3 — grows smoothly, no hard cap.
+export const NODE_R_MIN = 4
+export const NODE_R_MAX = 50
 
 /**
- * Visual radius in simulation units for a node, derived from its degree.
- * Obsidian-inspired formula: sqrt(degree) * 2.5 + 3. Leaf nodes start at
- * 3px, hubs at degree 50 reach ~21px. Much gentler scaling than the old
- * clamp(3·√(degree+1), 8, 30) which made every node a chunky 8px blob.
+ * Visual radius for a node. Formula: 4 + sqrt(degree) * 3.
+ * Leaf nodes are 4px, a node with 100 connections reaches ~34px.
+ * No hard cap — the sqrt keeps growth natural.
  */
 export function nodeRadius(node: GraphNode): number {
-  const r = Math.sqrt(node.connections) * 2.5 + 3
+  const r = 4 + Math.sqrt(node.connections) * 3
   return Math.max(NODE_R_MIN, Math.min(r, NODE_R_MAX))
 }
 
@@ -92,7 +91,7 @@ export function drawNode(
 
   // Safe radius computation — guard against NaN by defaulting to minimum
   const connections = (node.connections ?? 0)
-  const r = Math.max(NODE_R_MIN, Math.min(Math.sqrt(connections) * 2.5 + 3, NODE_R_MAX))
+  const r = 4 + Math.sqrt(connections) * 3
 
   // Glow / pulse ring for selected + highlight. Sized to scale with the node
   // so a 4px dot doesn't get a 20px ring.
@@ -135,18 +134,23 @@ export function drawNode(
     ctx.fillStyle = nodeFill(node, state)
   }
 
-  // Hub glow: shadow blur for high-degree nodes (normal/highlight state only)
-  const isHub = connections >= 8 && (state === 'normal' || state === 'highlight')
-  if (isHub) {
-    ctx.save()
-    ctx.shadowBlur = 12 / zoom
-    ctx.shadowColor = node.color + '66'
-  }
+  // Soft shadow glow for all nodes (hub nodes get stronger glow)
+  const glowIntensity = connections >= 8 ? 10 : 4
+  ctx.save()
+  ctx.shadowBlur = glowIntensity / zoom
+  ctx.shadowColor = node.color + (connections >= 8 ? '88' : '44')
 
   ctx.fill()
 
-  if (isHub) {
-    ctx.restore()
+  ctx.restore()
+
+  // White outer ring for high-connection nodes (top ~5%)
+  if (connections >= 8 && state !== 'dim') {
+    ctx.beginPath()
+    ctx.arc(x, y, r + 2, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'
+    ctx.lineWidth = 1.5 / zoom
+    ctx.stroke()
   }
 
   // Hairline outline — screen-pixel constant, only above a few zooms where

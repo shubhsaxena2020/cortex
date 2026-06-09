@@ -188,11 +188,14 @@ export default function GraphCanvas({
         const t = transformRef.current
         const frameStart = performance.now()
 
-      // Background — solid near-black gives edges room to breathe. Use
-      // a fillRect rather than clearRect so the canvas isn't transparent
-      // (lets any glow underdraw blend correctly against it).
+      // Background — dark near-black (#0D0D0D) with a subtle radial gradient
+      // from center to give depth. The center glow uses a low-opacity purple
+      // tone that matches the Claude source color theme.
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.fillStyle = '#0A0E1A'
+      const bgGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.6)
+      bgGrad.addColorStop(0, 'rgba(124, 58, 237, 0.04)')
+      bgGrad.addColorStop(1, '#0D0D0D')
+      ctx.fillStyle = bgGrad
       ctx.fillRect(0, 0, w, h)
 
       ctx.save()
@@ -257,6 +260,8 @@ export default function GraphCanvas({
         const tgt = link.target as D3Node
         // Cull edges with neither endpoint visible.
         if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
+        // Skip very weak auto-edges — they create visual noise without meaning
+        if (link.edgeType === 'relationship' && (link.strength ?? 1) < 0.2) continue
         const state = edgeStateOf(src.id, tgt.id)
         // Use signalType for auto-edges, kind for mentions
         const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined
@@ -609,7 +614,7 @@ export default function GraphCanvas({
       <canvas
         ref={canvasRef}
         className="w-full h-full"
-        style={{ display: 'block', background: '#0A0E1A' }}
+        style={{ display: 'block', background: '#0D0D0D' }}
       />
 
       {tooltip && (
