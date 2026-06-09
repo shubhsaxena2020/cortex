@@ -16,7 +16,7 @@
 // one per tick.
 
 import {
-  forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, forceX, forceY,
+  forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide,
   type Simulation, type SimulationNodeDatum, type SimulationLinkDatum,
 } from 'd3-force'
 import { nodeRadius } from '../utils/graph-renderer'
@@ -26,12 +26,12 @@ interface WNode extends SimulationNodeDatum {
   id: string
   connections: number
 }
-type WLink = SimulationLinkDatum<WNode>
+type WLink = SimulationLinkDatum<WNode> & { edgeType?: string; strength?: number }
 
 type InitMsg = {
   type: 'init'
   nodes: { id: string; connections: number; x?: number; y?: number }[]
-  links: { source: string; target: string }[]
+  links: { source: string; target: string; edgeType?: string; strength?: number }[]
   width: number
   height: number
 }
@@ -106,16 +106,32 @@ ctx.onmessage = (e: MessageEvent<InMsg>): void => {
       byId = new Map(nodes.map(n => [n.id, n]))
       const links: WLink[] = msg.links.map(l => ({ source: l.source, target: l.target }))
       sim = forceSimulation<WNode, WLink>(nodes)
-        // Obsidian-matched force values (docs/OBSIDIAN-GRAPH-PATTERNS.md):
-        // linkDistance 250 (open, airy layout — Obsidian's default), linkStrength 1.
-        // Charge is d3's n-body (different units from Obsidian's repelStrength 10);
-        // scaled up to -400 so the wider link rest-length doesn't collapse.
-        .force('link', forceLink<WNode, WLink>(links).id(d => d.id).distance(250).strength(1))
-        .force('charge', forceManyBody<WNode>().strength(-400))
-        .force('center', forceCenter(msg.width / 2, msg.height / 2))
-        .force('collision', forceCollide<WNode>(collideRadius))
-        .force('x', forceX<WNode>(msg.width / 2).strength(0.04))
-        .force('y', forceY<WNode>(msg.height / 2).strength(0.04))
+        // Redesigned force parameters (P1 #4 visual overhaul):
+        // - linkDistance varies by edge type: 60-100px for relationships (based on strength),
+        //   80px for mention edges. Much tighter than the old 250px which spread too thin.
+        // - linkStrength: 0.4 for relationships (moderate pull), 0.2 for mentions (weak).
+        // - charge: degree-based repulsion so high-degree hubs push clusters apart.
+        // - collide: keep nodes from overlapping using degree-based radius.
+        // - alphaDecay 0.02: slower cooling lets nodes settle into better positions.
+        .force('link', forceLink<WNode, WLink>(links).id(d => d.id)
+          .distance(l => {
+            const wl = l as WLink & { edgeType?: string; strength?: number }
+            if (wl.edgeType === 'relationship') return 60 + (1 - (wl.strength ?? 0.5)) * 40
+            return 80
+          })
+          .strength(l => {
+            const wl = l as WLink & { edgeType?: string }
+            if (wl.edgeType === 'relationship') return 0.4
+            return 0.2
+          })
+        )
+        .force('charge', forceManyBody<WNode>()
+          .strength(d => -200 - (d.connections ?? 1) * 15)
+          .distanceMax(400)
+        )
+        .force('center', forceCenter(msg.width / 2, msg.height / 2).strength(0.08))
+        .force('collision', forceCollide<WNode>(collideRadius).strength(0.8))
+        .alphaDecay(0.02)
         .velocityDecay(0.4)
         .alphaMin(0.001)
         .stop() // we drive ticks manually — no internal d3-timer in the worker

@@ -192,7 +192,7 @@ export default function GraphCanvas({
       // a fillRect rather than clearRect so the canvas isn't transparent
       // (lets any glow underdraw blend correctly against it).
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.fillStyle = '#0c0c10'
+      ctx.fillStyle = '#0A0E1A'
       ctx.fillRect(0, 0, w, h)
 
       ctx.save()
@@ -390,7 +390,12 @@ export default function GraphCanvas({
       height: h,
       nodes: visNodes.map(node => ({ id: node.id, connections: node.connections, x: node.x, y: node.y })),
       // Endpoints already resolved to node objects above — send their ids.
-      links: visLinks.map(l => ({ source: (l.source as D3Node).id, target: (l.target as D3Node).id })),
+      links: visLinks.map(l => ({
+        source: (l.source as D3Node).id,
+        target: (l.target as D3Node).id,
+        edgeType: l.edgeType,
+        strength: l.strength,
+      })),
     })
 
     // ── Zoom + pan ─────────────────────────────────────────────────────────
@@ -612,7 +617,7 @@ export default function GraphCanvas({
       <canvas
         ref={canvasRef}
         className="w-full h-full"
-        style={{ display: 'block', background: '#0c0c10' }}
+        style={{ display: 'block', background: '#0A0E1A' }}
       />
 
       {tooltip && (

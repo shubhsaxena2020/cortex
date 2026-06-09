@@ -29,20 +29,19 @@ export type SignalType = 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manua
 export const LABEL_FADE_LO = 0.5
 export const LABEL_FADE_HI = 1.0
 
-// Node radius envelope. Keep MIN small enough that a dense cluster reads as
-// "many small dots" rather than "one fat blob", but big enough to be hit-
-// testable. MAX is capped so a 200-degree super-node doesn't dominate.
-export const NODE_R_MIN = 8
-export const NODE_R_MAX = 30
+// Node radius envelope. Leaf nodes (degree=0) are 3px dots; high-degree hubs
+// grow via sqrt scaling so they don't dominate the canvas.
+export const NODE_R_MIN = 3
+export const NODE_R_MAX = 24
 
 /**
  * Visual radius in simulation units for a node, derived from its degree.
- * Obsidian's exact formula: clamp(3·√(degree+1), 8, 30) (times nodeSizeMultiplier,
- * which Cortex pins at 1). √ scaling — a hub grows fast then flattens at the cap.
- * See docs/OBSIDIAN-GRAPH-PATTERNS.md (@2215514).
+ * Obsidian-inspired formula: sqrt(degree) * 2.5 + 3. Leaf nodes start at
+ * 3px, hubs at degree 50 reach ~21px. Much gentler scaling than the old
+ * clamp(3·√(degree+1), 8, 30) which made every node a chunky 8px blob.
  */
 export function nodeRadius(node: GraphNode): number {
-  const r = 3 * Math.sqrt(node.connections + 1)
+  const r = Math.sqrt(node.connections) * 2.5 + 3
   return Math.max(NODE_R_MIN, Math.min(r, NODE_R_MAX))
 }
 
@@ -160,10 +159,10 @@ export function applyEdgeStyle(
   }
   // normal
   if (kind === 'mention') {
-    ctx.strokeStyle = signalColor ?? 'rgba(180,180,210,0.08)'
+    ctx.strokeStyle = signalColor ?? 'rgba(148, 163, 184, 0.10)'   // slate-400 at 10%
     ctx.setLineDash([3 / zoom, 3 / zoom])
   } else {
-    ctx.strokeStyle = signalColor ?? 'rgba(190,190,210,0.18)'
+    ctx.strokeStyle = signalColor ?? 'rgba(148, 163, 184, 0.18)'   // slate-400 at 18%
     ctx.setLineDash([])
   }
 }

@@ -47,15 +47,15 @@ const SOURCE_COLORS: Record<string, string> = {
 }
 
 export const EDGE_COLORS: Record<string, string> = {
-  'auto:tag':       '#3B82F6',   // blue-500
-  'auto:keyword':   '#EAB308',   // yellow-500
-  'auto:embedding': '#A855F7',   // purple-500
-  'manual':         '#6B7280',   // gray-500
+  'auto:tag':       'rgba(59, 130, 246, 0.30)',   // blue-500 at 30%
+  'auto:keyword':   'rgba(234, 179, 8, 0.28)',    // yellow-500 at 28%
+  'auto:embedding': 'rgba(168, 85, 247, 0.32)',   // purple-500 at 32%
+  'manual':         'rgba(148, 163, 184, 0.45)',   // slate-400 at 45%
 }
 
 export function edgeColor(link: GraphLink): string {
   if (link.edgeType === 'mention') {
-    return link.color ?? '#4ADE80'  // green-400 for mentions
+    return 'rgba(148, 163, 184, 0.12)'  // slate-400 at 12% — nearly invisible
   }
   return EDGE_COLORS[link.signalType ?? 'manual'] ?? EDGE_COLORS['manual']
 }
