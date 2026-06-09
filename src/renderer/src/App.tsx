@@ -6,6 +6,7 @@ import GraphView from './pages/GraphView'
 import Search from './pages/Search'
 import Settings from './pages/Settings'
 import Sidebar from './components/Sidebar'
+import ErrorBoundary from './components/ErrorBoundary'
 import type { ViewType, SystemStatus } from '../../types'
 
 const NAV_ITEMS: { view: ViewType; icon: React.ReactNode; label: string; shortcut: string }[] = [
@@ -42,7 +43,7 @@ export default function App(): React.ReactElement {
         setNeedsVault(true)
         setView('settings')
       }
-    })
+    }).catch(() => {})
 
     const refreshStatus = (): void => {
       void window.electron.system.getStatus().then(setStatus).catch(() => {})
@@ -56,15 +57,12 @@ export default function App(): React.ReactElement {
     })
     const unsubVault = window.electron.events.onVaultChanged(() => {
       void fetchVaultFiles()
-      // Vault was just configured — clear the banner. Re-checks config in case
-      // the change was something else (watch path, etc.).
       void window.electron.vault.getConfig().then(cfg => {
         if (cfg?.vaultPath) setNeedsVault(false)
-      })
+      }).catch(() => {})
     })
     const unsubProgress = window.electron.events.onIndexProgress(data => {
       useStore.setState({ indexProgress: data.current >= data.total ? null : data })
-    })
     return () => { unsubMemories(); unsubVault(); unsubProgress(); clearInterval(statusTimer) }
   }, [])
 
@@ -89,7 +87,8 @@ export default function App(): React.ReactElement {
   }, [createMemory, selectMemory, currentView, setView])
 
   return (
-    <div className="flex flex-col h-screen bg-[#0F0F0F] text-[#E8E8E8] overflow-hidden select-none">
+    <ErrorBoundary>
+      <div className="flex flex-col h-screen bg-[#0F0F0F] text-[#E8E8E8] overflow-hidden select-none">
       {/* First-launch banner: shown until a vault is configured. */}
       {needsVault && (
         <div className="flex items-center gap-3 px-4 py-2.5 bg-[#6366f1]/15 border-b border-[#6366f1]/40 flex-shrink-0">
@@ -190,6 +189,7 @@ export default function App(): React.ReactElement {
       {/* Status bar */}
       <StatusBar status={status} onOpenSettings={() => setView('settings')} />
     </div>
+    </ErrorBoundary>
   )
 }
 

@@ -91,6 +91,16 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => mainWindow.show())
 
+  // Log renderer crashes instead of showing a blank white window
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    log.error(`[cortex] Renderer process gone: ${details.reason} (exit=${details.exitCode})`)
+    // Don't quit — user can see the crash info in the main process log
+  })
+
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    log.error(`[cortex] Renderer failed to load: ${errorDescription} (code=${errorCode})`)
+  })
+
   mainWindow.webContents.setWindowOpenHandler(details => {
     shell.openExternal(details.url)
     return { action: 'deny' }
