@@ -33,10 +33,13 @@ import {
   buildAdjacency, getNodeAtPoint, highlightPath, pulsePhase,
   type AdjacencyEntry,
 } from '../utils/graph-interaction'
+import { edgeColor } from '../utils/graph-builder'
 
 type D3Node = GraphNode & d3.SimulationNodeDatum
 interface D3Link extends d3.SimulationLinkDatum<D3Node> {
   edgeType: 'relationship' | 'mention'
+  signalType?: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual'
+  strength?: number
 }
 
 interface GraphCanvasProps {
@@ -56,6 +59,7 @@ export default function GraphCanvas({
   const { memories, relationships, vaultFiles, selectedMemoryId, selectedFileId } = useStore()
 
   const [tooltip, setTooltip] = useState<{ x: number; y: number; title: string } | null>(null)
+  const [edgeTooltip, setEdgeTooltip] = useState<{ x: number; y: number; label: string; signalType: string; strength: number } | null>(null)
   const [graphInfo, setGraphInfo] = useState<{ shown: number; total: number } | null>(null)
   const [debug, setDebug] = useState<{ fps: number; visNodes: number; visEdges: number } | null>(null)
 
@@ -232,14 +236,20 @@ export default function GraphCanvas({
       }
 
       // ── Edges ────────────────────────────────────────────────────────────
-      // Bucket pass: collect per (state × kind) line segments, then issue
-      // one beginPath/stroke per bucket. 4 buckets max (dim/normal/highlight ×
-      // mention/relationship). Highlight bucket renders last so it sits on top.
+      // Bucket pass: collect per (state × kind × signalType) line segments, then issue
+      // one beginPath/stroke per bucket. This allows color-coding edges by signal type.
       type Bucket = Array<[number, number, number, number]>
-      const buckets: Record<EdgeState, Record<'relationship' | 'mention', Bucket>> = {
-        normal:    { relationship: [], mention: [] },
-        dim:       { relationship: [], mention: [] },
-        highlight: { relationship: [], mention: [] },
+      type BucketKey = string // "${state}:${kind}:${signalType}"
+      const buckets = new Map<BucketKey, { segs: Bucket; signalColor: string }>()
+      function getBucket(state: EdgeState, kind: 'relationship' | 'mention', signalType?: string): { segs: Bucket; signalColor: string } {
+        const key = `${state}:${kind}:${signalType ?? 'manual'}`
+        let b = buckets.get(key)
+        if (!b) {
+          const baseColor = edgeColor({ source: '', target: '', edgeType: kind as any, signalType: signalType as any })
+          b = { segs: [], signalColor: baseColor }
+          buckets.set(key, b)
+        }
+        return b
       }
       let edgesDrawn = 0
       for (const link of linksRef.current) {
@@ -248,16 +258,20 @@ export default function GraphCanvas({
         // Cull edges with neither endpoint visible.
         if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
         const state = edgeStateOf(src.id, tgt.id)
-        buckets[state][link.edgeType].push([src.x ?? 0, src.y ?? 0, tgt.x ?? 0, tgt.y ?? 0])
+        // Use signalType for auto-edges, kind for mentions
+        const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined
+        const b = getBucket(state, link.edgeType, sigType)
+        b.segs.push([src.x ?? 0, src.y ?? 0, tgt.x ?? 0, tgt.y ?? 0])
         edgesDrawn++
       }
       // Order matters: dim first (sinks behind), normal next, highlight on top.
       const order: EdgeState[] = ['dim', 'normal', 'highlight']
       for (const state of order) {
-        for (const kind of ['relationship', 'mention'] as const) {
-          const segs = buckets[state][kind]
+        for (const [key, { segs, signalColor }] of buckets) {
+          if (!key.startsWith(state + ':')) continue
           if (segs.length === 0) continue
-          applyEdgeStyle(ctx, state, kind, t.k)
+          const kind = key.includes(':mention') ? 'mention' : 'relationship'
+          applyEdgeStyle(ctx, state, kind, t.k, signalColor)
           ctx.beginPath()
           for (let i = 0; i < segs.length; i++) {
             const s = segs[i]
@@ -410,6 +424,30 @@ export default function GraphCanvas({
       return getNodeAtPoint(sx, sy, quadtreeRef.current, nodesRef.current, 4, transformRef.current.k)
     }
 
+    /** Find an edge near the given simulation-space point. Returns the link + distance squared. */
+    function hitTestEdge(sx: number, sy: number): { link: D3Link; distSq: number } | null {
+      let best: { link: D3Link; distSq: number } | null = null
+      const threshold = 16 / (transformRef.current.k * transformRef.current.k) // ~4px in sim space
+      for (const link of linksRef.current) {
+        const src = link.source as D3Node
+        const tgt = link.target as D3Node
+        if (src.x == null || tgt.x == null) continue
+        // Point-to-line-segment distance squared
+        const dx = (tgt.x - src.x)
+        const dy = (tgt.y - src.y)
+        const lenSq = dx * dx + dy * dy
+        let t = ((sx - src.x) * dx + (sy - src.y) * dy) / (lenSq || 1)
+        t = Math.max(0, Math.min(1, t))
+        const px = src.x + t * dx
+        const py = src.y + t * dy
+        const distSq = (sx - px) * (sx - px) + (sy - py) * (sy - py)
+        if (distSq < threshold && (!best || distSq < best.distSq)) {
+          best = { link, distSq }
+        }
+      }
+      return best
+    }
+
     // ── Mouse handlers ─────────────────────────────────────────────────────
     let mdX = 0, mdY = 0
     let dragId: string | null = null
@@ -472,9 +510,35 @@ export default function GraphCanvas({
           y: (found.y ?? 0) * t.k + t.y,
           title: found.title,
         })
+        setEdgeTooltip(null)
       } else {
-        canvas.style.cursor = ''
-        setTooltip(null)
+        // Check for edge hover
+        const edgeHit = hitTestEdge(sx, sy)
+        if (edgeHit && edgeHit.link.edgeType === 'relationship' && edgeHit.link.signalType && edgeHit.link.signalType !== 'manual') {
+          canvas.style.cursor = 'pointer'
+          const src = edgeHit.link.source as D3Node
+          const tgt = edgeHit.link.target as D3Node
+          const midX = ((src.x ?? 0) + (tgt.x ?? 0)) / 2
+          const midY = ((src.y ?? 0) + (tgt.y ?? 0)) / 2
+          const t = transformRef.current
+          const label = {
+            'auto:tag':       'Shared tags',
+            'auto:keyword':   'Shared keywords',
+            'auto:embedding': 'Semantic similarity',
+          }[edgeHit.link.signalType] ?? 'Connected'
+          setEdgeTooltip({
+            x: midX * t.k + t.x,
+            y: midY * t.k + t.y,
+            label,
+            signalType: edgeHit.link.signalType,
+            strength: edgeHit.link.strength ?? 0,
+          })
+          setTooltip(null)
+        } else {
+          canvas.style.cursor = ''
+          setTooltip(null)
+          setEdgeTooltip(null)
+        }
       }
       setHover(found)
     }
@@ -513,6 +577,7 @@ export default function GraphCanvas({
 
     const onMouseLeave = () => {
       setTooltip(null)
+      setEdgeTooltip(null)
       canvas.style.cursor = ''
       if (hoverIdRef.current) setHover(null)
     }
@@ -556,6 +621,27 @@ export default function GraphCanvas({
           style={{ left: tooltip.x + 12, top: tooltip.y - 24 }}
         >
           {tooltip.title}
+        </div>
+      )}
+
+      {edgeTooltip && (
+        <div
+          className="absolute pointer-events-none select-none bg-[#111]/90 text-xs px-3 py-2 rounded shadow-lg z-20"
+          style={{ left: edgeTooltip.x + 12, top: edgeTooltip.y - 24 }}
+        >
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{
+                backgroundColor: edgeColor({
+                  source: '', target: '', edgeType: 'relationship',
+                  signalType: edgeTooltip.signalType as any,
+                }),
+              }}
+            />
+            <span className="text-[#ccc]">{edgeTooltip.label}</span>
+          </div>
+          <div className="text-[#888] mt-0.5">{Math.round(edgeTooltip.strength * 100)}% similarity</div>
         </div>
       )}
 

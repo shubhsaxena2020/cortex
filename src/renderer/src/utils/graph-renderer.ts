@@ -18,6 +18,9 @@ export type NodeState = 'normal' | 'dim' | 'highlight' | 'selected'
 export type EdgeKind = 'relationship' | 'mention'
 export type EdgeState = 'normal' | 'dim' | 'highlight'
 
+/** Signal type for auto-edges — used to color-code relationship links. */
+export type SignalType = 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual'
+
 // Zoom thresholds for the label fade ramp. Matches Obsidian: labels are gone
 // at/below zoom 0.5 and fully shown at/above 1.0, fading linearly in log2(zoom)
 // space between. (Obsidian: textAlpha = clamp(log2(zoom)+1-textFade, 0, 1);
@@ -137,6 +140,7 @@ export function applyEdgeStyle(
   state: EdgeState,
   kind: EdgeKind,
   zoom: number,
+  signalColor?: string,
 ): void {
   // Width scales as 1/zoom so edges read as ~1 screen pixel at any zoom.
   // Highlighted edges go thicker (~1.6 px) for legibility against the dim
@@ -145,21 +149,21 @@ export function applyEdgeStyle(
   ctx.lineWidth = widthPx / zoom
 
   if (state === 'highlight') {
-    ctx.strokeStyle = kind === 'mention' ? 'rgba(190, 190, 255, 0.55)' : 'rgba(255, 255, 255, 0.55)'
+    ctx.strokeStyle = signalColor ?? (kind === 'mention' ? 'rgba(190, 190, 255, 0.55)' : 'rgba(255, 255, 255, 0.55)')
     ctx.setLineDash(kind === 'mention' ? [4 / zoom, 3 / zoom] : [])
     return
   }
   if (state === 'dim') {
-    ctx.strokeStyle = 'rgba(150,150,170,0.04)'
+    ctx.strokeStyle = signalColor ?? 'rgba(150,150,170,0.04)'
     ctx.setLineDash([])
     return
   }
   // normal
   if (kind === 'mention') {
-    ctx.strokeStyle = 'rgba(180,180,210,0.08)'
+    ctx.strokeStyle = signalColor ?? 'rgba(180,180,210,0.08)'
     ctx.setLineDash([3 / zoom, 3 / zoom])
   } else {
-    ctx.strokeStyle = 'rgba(190,190,210,0.18)'
+    ctx.strokeStyle = signalColor ?? 'rgba(190,190,210,0.18)'
     ctx.setLineDash([])
   }
 }

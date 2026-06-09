@@ -14,6 +14,8 @@ export interface GraphRelationship {
   memory_a_id: string
   memory_b_id: string
   relationship_type: string
+  signal_type?: string
+  strength?: number
 }
 
 export interface GraphNode {
@@ -32,6 +34,9 @@ export interface GraphLink {
   source: string
   target: string
   edgeType: 'relationship' | 'mention'
+  signalType?: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual'
+  strength?: number
+  color?: string
 }
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -39,6 +44,20 @@ const SOURCE_COLORS: Record<string, string> = {
   chatgpt: '#F0F0F0',
   gemini: '#9B59B6',
   manual: '#6B9FD4',
+}
+
+export const EDGE_COLORS: Record<string, string> = {
+  'auto:tag':       '#3B82F6',   // blue-500
+  'auto:keyword':   '#EAB308',   // yellow-500
+  'auto:embedding': '#A855F7',   // purple-500
+  'manual':         '#6B7280',   // gray-500
+}
+
+export function edgeColor(link: GraphLink): string {
+  if (link.edgeType === 'mention') {
+    return link.color ?? '#4ADE80'  // green-400 for mentions
+  }
+  return EDGE_COLORS[link.signalType ?? 'manual'] ?? EDGE_COLORS['manual']
 }
 
 const CODE_EXTS = new Set(['.py', '.js', '.ts', '.jsx', '.tsx', '.go', '.rs', '.java', '.c', '.cpp', '.h', '.rb', '.php', '.sh'])
@@ -108,7 +127,13 @@ export function buildGraph(
 
   for (const r of relationships) {
     if (memoryIdSet.has(r.memory_a_id) && memoryIdSet.has(r.memory_b_id)) {
-      links.push({ source: r.memory_a_id, target: r.memory_b_id, edgeType: 'relationship' })
+      links.push({
+        source: r.memory_a_id,
+        target: r.memory_b_id,
+        edgeType: 'relationship',
+        signalType: (r.signal_type as GraphLink['signalType']) ?? 'manual',
+        strength: (r.strength as number) ?? 0,
+      })
     }
   }
 
