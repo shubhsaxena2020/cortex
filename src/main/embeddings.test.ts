@@ -148,3 +148,51 @@ describe('embeddings — getEmbedding', () => {
     expect(fetchSpy).toHaveBeenCalledTimes(2)
   })
 })
+
+describe('embeddings — getEmbeddings (batch)', () => {
+  it('returns vectors in input order from a single request', async () => {
+    fetchSpy.mockResolvedValueOnce(jsonResp({ embeddings: [makeVec(1), makeVec(2)] }))
+    const { getEmbeddings } = await import('./embeddings')
+    const out = await getEmbeddings(['first', 'second'])
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(out[0]).toEqual(makeVec(1))
+    expect(out[1]).toEqual(makeVec(2))
+  })
+
+  it('serves cached texts locally and only fetches misses', async () => {
+    const { getEmbeddings } = await import('./embeddings')
+    fetchSpy.mockResolvedValueOnce(jsonResp({ embeddings: [makeVec(5)] }))
+    await getEmbeddings(['warm'])
+    fetchSpy.mockResolvedValueOnce(jsonResp({ embeddings: [makeVec(6)] }))
+    const out = await getEmbeddings(['warm', 'cold'])
+    // Second call only requested the miss
+    const body = JSON.parse((fetchSpy.mock.calls[1][1] as RequestInit).body as string)
+    expect(body.input).toEqual(['cold'])
+    expect(out[0]).toEqual(makeVec(5))
+    expect(out[1]).toEqual(makeVec(6))
+  })
+
+  it('yields null for blank inputs without fetching them', async () => {
+    const { getEmbeddings } = await import('./embeddings')
+    fetchSpy.mockResolvedValueOnce(jsonResp({ embeddings: [makeVec(3)] }))
+    const out = await getEmbeddings(['', '  ', 'real'])
+    expect(out[0]).toBeNull()
+    expect(out[1]).toBeNull()
+    expect(out[2]).toEqual(makeVec(3))
+  })
+
+  it('returns all nulls when Ollama errors, without throwing', async () => {
+    const { getEmbeddings } = await import('./embeddings')
+    fetchSpy.mockRejectedValueOnce(new Error('ECONNREFUSED'))
+    const out = await getEmbeddings(['a', 'b'])
+    expect(out).toEqual([null, null])
+  })
+
+  it('nulls positions whose vector has the wrong dimension', async () => {
+    const { getEmbeddings } = await import('./embeddings')
+    fetchSpy.mockResolvedValueOnce(jsonResp({ embeddings: [[1, 2, 3], makeVec(4)] }))
+    const out = await getEmbeddings(['bad', 'good'])
+    expect(out[0]).toBeNull()
+    expect(out[1]).toEqual(makeVec(4))
+  })
+})

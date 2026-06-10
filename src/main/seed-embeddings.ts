@@ -1,6 +1,6 @@
 import * as db from './db'
 import log from 'electron-log'
-import { getEmbedding, isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
+import { getEmbedding, getEmbeddings, isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 
 const BATCH_SIZE = 10
 
@@ -44,11 +44,13 @@ export async function seedEmbeddingsIfNeeded(): Promise<{ skipped?: string; embe
   let done = 0
   for (let i = 0; i < needed.length; i += BATCH_SIZE) {
     const batch = needed.slice(i, i + BATCH_SIZE)
-    await Promise.all(batch.map(async (m) => {
-      const vec = await getEmbedding(memoryToText(m))
+    // One Ollama round-trip per batch instead of one per memory.
+    const vecs = await getEmbeddings(batch.map(m => memoryToText(m)))
+    batch.forEach((m, j) => {
+      const vec = vecs[j]
       if (vec) db.storeEmbedding(m.id, vec)
       done++
-    }))
+    })
     log.info(`[seed] ${done}/${needed.length}`)
   }
   log.info(`[seed] done — ${done} memories embedded`)

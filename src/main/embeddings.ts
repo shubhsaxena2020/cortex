@@ -41,6 +41,51 @@ export async function isEmbedModelAvailable(): Promise<boolean> {
   }
 }
 
+/**
+ * Batch variant: one Ollama request for N texts (the /api/embed endpoint
+ * accepts an array input). Cached texts are served locally and only misses
+ * hit the network, so mixed batches stay cheap. Result order matches input;
+ * blank texts and shape mismatches yield null at their position.
+ */
+export async function getEmbeddings(texts: string[]): Promise<(number[] | null)[]> {
+  const trimmed = texts.map(t => t.trim().slice(0, MAX_INPUT_CHARS))
+  const results: (number[] | null)[] = trimmed.map(t => (t ? cache.get(t) ?? null : null))
+
+  const missIdx = trimmed
+    .map((t, i) => (t && results[i] === null ? i : -1))
+    .filter(i => i !== -1)
+  if (missIdx.length === 0) return results
+
+  try {
+    const r = await fetch(`${OLLAMA_URL}/api/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: EMBED_MODEL, input: missIdx.map(i => trimmed[i]) })
+    })
+    if (!r.ok) {
+      log.warn(`[embeddings] ollama batch responded ${r.status}`)
+      return results
+    }
+    const body = await r.json() as { embeddings?: number[][] }
+    const vecs = body.embeddings ?? []
+    missIdx.forEach((inputIdx, batchIdx) => {
+      const vec = vecs[batchIdx]
+      if (Array.isArray(vec) && vec.length === EMBEDDING_DIM) {
+        results[inputIdx] = vec
+        if (cache.size >= CACHE_LIMIT) {
+          const firstKey = cache.keys().next().value
+          if (firstKey !== undefined) cache.delete(firstKey)
+        }
+        cache.set(trimmed[inputIdx], vec)
+      }
+    })
+    return results
+  } catch (err) {
+    log.warn('[embeddings] batch request failed:', err)
+    return results
+  }
+}
+
 export async function getEmbedding(text: string): Promise<number[] | null> {
   const trimmed = text.trim().slice(0, MAX_INPUT_CHARS)
   if (!trimmed) return null
