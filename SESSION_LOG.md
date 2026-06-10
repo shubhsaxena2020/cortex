@@ -1,3 +1,30 @@
+# Session Log — June 11, 2026
+
+## Summary
+Completed the remaining roadmap tasks: Tag Manager (Task 6), advanced
+date-range filters (Task 8), edge candidate caching (Task 10), and the
+§2.2.2 zoom-LOD / edge-culling perf work. Tests 303 → 324.
+
+## Shipped
+- **Tag Manager** (sidebar Tags ⚙): all tags with counts, filterable,
+  inline rename, merge-by-rename (dedupes per memory), two-step delete.
+  Pure logic in tag-ops.ts; bulk ops run in one transaction and skip
+  unchanged rows; updatedAt deliberately not bumped.
+- **Date-range filter** in Search: from/to pickers applied as timestamp
+  bounds in both FTS5 and LIKE query paths.
+- **Bug fix:** createRelationship wrote strength 0.0 (column default),
+  so manually created links were hidden by the renderer's <0.2 filter.
+  Now writes strength 1.0 / signal_type 'manual'.
+- **Edge candidate caching:** the per-memory tag-candidate scan (full
+  table + JSON.parse per row) is cached with a COUNT+MAX(updatedAt)
+  fingerprint; bulk tag ops invalidate explicitly.
+- **Zoom LOD wired in** (lod.ts existed but was never integrated): at
+  far zoom, nodes collapse to ~300 cluster discs and 50,000 edges
+  bundle to ~370 cluster-pair segments per frame; mention edges drop;
+  edge hover hit-testing bails. Verified live via CDP draw stats.
+
+## Tests
+- Start: 303/303 → End: 324/324, tsc clean.
 # Session Log — June 10, 2026
 
 ## Summary
