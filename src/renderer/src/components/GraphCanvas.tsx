@@ -24,6 +24,7 @@ import * as d3 from 'd3'
 import { useStore } from '../store'
 import { buildGraph, type FilterMode, type GraphNode } from '../utils/graph-builder'
 import { Quadtree } from '../utils/quadtree'
+import { getDetailLevel, clusterNodes } from '../utils/lod'
 import {
   drawNode, addEdgePath, applyEdgeStyle,
   type NodeState, type EdgeState,
@@ -268,8 +269,26 @@ export default function GraphCanvas({
         }
         return b
       }
+      // Zoom LOD: FAR collapses nodes into cluster discs, drops 'mention'
+      // edges, and bundles relationship edges to one segment per cluster
+      // pair (intra-cluster edges are sub-pixel at that scale — drawing all
+      // 50k of them per frame was the far-zoom FPS cliff). MEDIUM draws
+      // everything; CLOSE adds labels (gated separately by labelOpacity).
+      const lod = getDetailLevel(t.k)
+      let farClusters: ReturnType<typeof clusterNodes<D3Node & { x: number; y: number }>> | null = null
+      const clusterOf = new Map<string, number>()
+      if (lod === 'far') {
+        const positioned = visibleNodes.filter(n => n.x != null && n.y != null) as Array<D3Node & { x: number; y: number }>
+        farClusters = clusterNodes(positioned, t.k)
+        farClusters.forEach((c, i) => {
+          for (const m of c.members) clusterOf.set(m.id, i)
+        })
+      }
+
       let edgesDrawn = 0
+      const drawnClusterPairs = new Set<string>()
       for (const link of linksRef.current) {
+        if (lod === 'far' && link.edgeType === 'mention') continue
         const src = link.source as D3Node
         const tgt = link.target as D3Node
         // Cull edges with neither endpoint visible.
@@ -279,6 +298,21 @@ export default function GraphCanvas({
         const state = edgeStateOf(src.id, tgt.id)
         // Use signalType for auto-edges, kind for mentions
         const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined
+
+        if (lod === 'far' && farClusters) {
+          const ci = clusterOf.get(src.id)
+          const cj = clusterOf.get(tgt.id)
+          if (ci == null || cj == null) continue   // endpoint off-screen
+          if (ci === cj) continue                  // sub-pixel intra-cluster edge
+          const pairKey = ci < cj ? `${ci}-${cj}` : `${cj}-${ci}`
+          if (drawnClusterPairs.has(pairKey)) continue
+          drawnClusterPairs.add(pairKey)
+          const b = getBucket(state, link.edgeType, sigType)
+          b.segs.push([farClusters[ci].x, farClusters[ci].y, farClusters[cj].x, farClusters[cj].y])
+          edgesDrawn++
+          continue
+        }
+
         const b = getBucket(state, link.edgeType, sigType)
         b.segs.push([src.x ?? 0, src.y ?? 0, tgt.x ?? 0, tgt.y ?? 0])
         edgesDrawn++
@@ -308,17 +342,46 @@ export default function GraphCanvas({
       let nodesDrawn = 0
       const phase = selectedId ? pulsePhase(frameStart) : 0
       const emphasised: D3Node[] = []
-      for (const node of visibleNodes) {
-        const state = nodeStateOf(node.id)
-        if (state === 'dim') {
-          drawNode(ctx, node, 'dim', t.k)
+      if (lod === 'far' && farClusters) {
+        // FAR: one disc per spatial cluster instead of 10k sub-pixel dots.
+        // Selected/highlighted members still render individually on top so
+        // interaction state stays visible at any zoom.
+        for (const cluster of farClusters) {
+          const rep = cluster.members[0]
+          if (cluster.size === 1) {
+            const state = nodeStateOf(rep.id)
+            if (state === 'selected' || state === 'highlight') { emphasised.push(rep); continue }
+            drawNode(ctx, rep, state, t.k)
+            nodesDrawn++
+            continue
+          }
+          // Synthetic disc: radius driven by cluster population via the
+          // existing connections→radius curve; representative's color.
+          drawNode(
+            ctx,
+            { ...rep, x: cluster.x, y: cluster.y, connections: cluster.size * 2 },
+            'normal',
+            t.k,
+          )
           nodesDrawn++
-        } else if (state === 'normal') {
-          drawNode(ctx, node, 'normal', t.k)
-          nodesDrawn++
-        } else {
-          // selected + highlight come last so glow rings overlap correctly.
-          emphasised.push(node)
+          for (const m of cluster.members) {
+            const state = nodeStateOf(m.id)
+            if (state === 'selected' || state === 'highlight') emphasised.push(m)
+          }
+        }
+      } else {
+        for (const node of visibleNodes) {
+          const state = nodeStateOf(node.id)
+          if (state === 'dim') {
+            drawNode(ctx, node, 'dim', t.k)
+            nodesDrawn++
+          } else if (state === 'normal') {
+            drawNode(ctx, node, 'normal', t.k)
+            nodesDrawn++
+          } else {
+            // selected + highlight come last so glow rings overlap correctly.
+            emphasised.push(node)
+          }
         }
       }
       for (const node of emphasised) {
@@ -332,6 +395,14 @@ export default function GraphCanvas({
       // Cache positions for layout continuity across filter changes.
       for (const n of nodesRef.current) {
         if (n.x != null && n.y != null) nodePositions.current.set(n.id, { x: n.x, y: n.y })
+      }
+
+      // Per-frame stats for headless verification (dev only, no React churn).
+      if (import.meta.env.DEV) {
+        ;(window as unknown as Record<string, unknown>).__cortexDrawStats = {
+          lod, nodesDrawn, edgesDrawn, k: t.k,
+          frameMs: Math.round((performance.now() - frameStart) * 100) / 100,
+        }
       }
 
       // FPS sampling — rolling 60-frame window; throttle overlay updates.
@@ -470,6 +541,9 @@ export default function GraphCanvas({
 
     /** Find an edge near the given simulation-space point. Returns the link + distance squared. */
     function hitTestEdge(sx: number, sy: number): { link: D3Link; distSq: number } | null {
+      // At FAR zoom nodes are cluster discs and individual edges aren't
+      // meaningfully hoverable — skip the O(links) scan per mousemove.
+      if (getDetailLevel(transformRef.current.k) === 'far') return null
       let best: { link: D3Link; distSq: number } | null = null
       const threshold = 16 / (transformRef.current.k * transformRef.current.k) // ~4px in sim space
       for (const link of linksRef.current) {
