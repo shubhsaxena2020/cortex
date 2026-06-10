@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Search, Tag, X, HardDrive, Eye } from 'lucide-react'
+import { Search, Tag, X, HardDrive, Eye, Settings2 } from 'lucide-react'
 import { useStore } from '../store'
 import FileTree from './FileTree'
+import TagManager from './TagManager'
 import type { Memory, VaultFile } from '../../../types'
 
 type SidebarTab = 'memories' | 'files'
@@ -19,6 +20,7 @@ interface SidebarProps {
 
 export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): React.ReactElement {
   const [activeTab, setActiveTab] = useState<SidebarTab>('memories')
+  const [tagManagerOpen, setTagManagerOpen] = useState(false)
   const {
     memories, selectedMemoryId, selectedTags, currentView,
     setView, selectMemory, clearSelection, toggleTag, clearSelectedTags,
@@ -94,9 +96,18 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
                   <Tag size={10} />
                   <span className="text-xs uppercase tracking-wider">Tags</span>
                 </div>
-                {selectedTags.length > 0 && (
-                  <button onClick={clearSelectedTags} className="text-xs text-[#6B9FD4] hover:text-[#8ab5d4]">Clear</button>
-                )}
+                <div className="flex items-center gap-2">
+                  {selectedTags.length > 0 && (
+                    <button onClick={clearSelectedTags} className="text-xs text-[#6B9FD4] hover:text-[#8ab5d4]">Clear</button>
+                  )}
+                  <button
+                    onClick={() => setTagManagerOpen(true)}
+                    title="Manage tags (rename, merge, delete)"
+                    className="text-[#444] hover:text-[#6B9FD4] transition-colors"
+                  >
+                    <Settings2 size={11} />
+                  </button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1">
                 {allTags.slice(0, 10).map(tag => (
@@ -203,6 +214,8 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
           Indexing files: {indexProgress.current}/{indexProgress.total}…
         </div>
       )}
+
+      {tagManagerOpen && <TagManager onClose={() => setTagManagerOpen(false)} />}
     </div>
   )
 }

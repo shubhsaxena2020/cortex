@@ -14,6 +14,7 @@ import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVau
 import * as telemetry from './telemetry'
 import { buildEdgesForMemory, backfillAllEdges } from './edge-builder'
 import { memoriesToJson, memoriesToCsv, parseMemoriesJson } from './export-import'
+import { normalizeTag, isValidTag } from './tag-ops'
 import { version as appVersion } from '../../package.json'
 import type { TelemetryEventType, FeedbackSubmission } from '../types'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -522,6 +523,23 @@ function registerIpcHandlers(): void {
   // ── Feedback (independent of telemetry opt-in) ───────────────────────────
   ipcMain.handle('feedback:save', (_e, submission: FeedbackSubmission) => telemetry.saveFeedback(submission))
   ipcMain.handle('feedback:getAll', () => telemetry.getAllFeedback())
+
+  // ── Bulk tag operations ───────────────────────────────────────────────────
+  ipcMain.handle('tags:getCounts', () => db.getTagCounts())
+
+  ipcMain.handle('tags:rename', (_e, from: string, to: string) => {
+    const target = normalizeTag(to)
+    if (!isValidTag(target)) return { changed: 0, error: `Invalid tag name: "${to}"` }
+    const changed = db.renameTag(from, target)
+    if (changed > 0) broadcastMemoriesChanged()
+    return { changed, error: null }
+  })
+
+  ipcMain.handle('tags:delete', (_e, tag: string) => {
+    const changed = db.deleteTag(tag)
+    if (changed > 0) broadcastMemoriesChanged()
+    return { changed, error: null }
+  })
 
   // ── Data export / import ──────────────────────────────────────────────────
   ipcMain.handle('data:exportMemories', async (_e, format: 'json' | 'csv') => {

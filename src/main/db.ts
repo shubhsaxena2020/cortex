@@ -4,6 +4,7 @@ import { join, sep } from 'path'
 import { app } from 'electron'
 import { randomUUID } from 'crypto'
 import log from 'electron-log'
+import { applyTagRename, applyTagDelete, countTags } from './tag-ops'
 
 let db: Database.Database | null = null
 let vectorSearchEnabled = false
@@ -588,6 +589,53 @@ export function getMemoriesByTag(tag: string) {
     'SELECT * FROM memories WHERE tags LIKE ? ORDER BY updatedAt DESC'
   ).all(`%"${tag}"%`) as MemoryRow[]
   return rows.map(mapMemory)
+}
+
+// ── Bulk tag operations (logic in tag-ops.ts) ────────────────────────────────
+
+export function getTagCounts(): Array<{ tag: string; count: number }> {
+  const rows = getDb().prepare('SELECT tags FROM memories').all() as Array<{ tags: string | null }>
+  return countTags(rows.map(r => r.tags))
+}
+
+/**
+ * Rename a tag across every memory that carries it. Returns the number of
+ * rows changed. Renaming to an existing tag merges (the list is deduped).
+ * Note: only the tags JSON is touched — updatedAt is deliberately not bumped
+ * so a bulk rename doesn't shuffle the Recent ordering.
+ */
+export function renameTag(from: string, to: string): number {
+  const d = getDb()
+  // LIKE prefilter narrows the scan; applyTagRename gives the exact answer.
+  const rows = d.prepare('SELECT id, tags FROM memories WHERE tags LIKE ?')
+    .all(`%"${from}"%`) as Array<{ id: string; tags: string | null }>
+  const update = d.prepare('UPDATE memories SET tags = ? WHERE id = ?')
+  let changed = 0
+  const run = d.transaction(() => {
+    for (const row of rows) {
+      const next = applyTagRename(row.tags, from, to)
+      if (next !== null) { update.run(next, row.id); changed++ }
+    }
+  })
+  run()
+  return changed
+}
+
+/** Remove a tag from every memory that carries it. Returns rows changed. */
+export function deleteTag(tag: string): number {
+  const d = getDb()
+  const rows = d.prepare('SELECT id, tags FROM memories WHERE tags LIKE ?')
+    .all(`%"${tag}"%`) as Array<{ id: string; tags: string | null }>
+  const update = d.prepare('UPDATE memories SET tags = ? WHERE id = ?')
+  let changed = 0
+  const run = d.transaction(() => {
+    for (const row of rows) {
+      const next = applyTagDelete(row.tags, tag)
+      if (next !== null) { update.run(next, row.id); changed++ }
+    }
+  })
+  run()
+  return changed
 }
 
 export function getStats() {

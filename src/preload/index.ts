@@ -47,6 +47,11 @@ const api: ElectronAPI = {
     exportMemories: (format) => ipcRenderer.invoke('data:exportMemories', format),
     importMemories: () => ipcRenderer.invoke('data:importMemories'),
   },
+  tags: {
+    getCounts: () => ipcRenderer.invoke('tags:getCounts'),
+    rename: (from, to) => ipcRenderer.invoke('tags:rename', from, to),
+    delete: (tag) => ipcRenderer.invoke('tags:delete', tag),
+  },
   telemetry: {
     isEnabled: () => ipcRenderer.invoke('telemetry:isEnabled'),
     setEnabled: (enabled) => ipcRenderer.invoke('telemetry:setEnabled', enabled),

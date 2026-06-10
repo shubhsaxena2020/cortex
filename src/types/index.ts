@@ -149,6 +149,11 @@ export interface ElectronAPI {
     exportMemories: (format: 'json' | 'csv') => Promise<{ exported: number; path: string | null }>
     importMemories: () => Promise<{ imported: number; skipped: number; errors: string[] }>
   }
+  tags: {
+    getCounts: () => Promise<Array<{ tag: string; count: number }>>
+    rename: (from: string, to: string) => Promise<{ changed: number; error: string | null }>
+    delete: (tag: string) => Promise<{ changed: number; error: string | null }>
+  }
   telemetry: {
     isEnabled: () => Promise<boolean>
     setEnabled: (enabled: boolean) => Promise<void>
