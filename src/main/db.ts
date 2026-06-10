@@ -52,6 +52,10 @@ function mapRelationship(r: RelationshipRow) {
     sourceId: r.sourceId,
     targetId: r.targetId,
     relationship: r.relationship,
+    // Dropping these here silently degraded every auto-edge to gray
+    // 'manual'/strength-0 downstream (toRelationship fills the defaults).
+    strength: r.strength ?? 0,
+    signal_type: r.signal_type ?? 'manual',
   }
 }
 
