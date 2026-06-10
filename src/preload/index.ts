@@ -8,7 +8,7 @@ const api: ElectronAPI = {
     create: data => ipcRenderer.invoke('memories:create', data),
     update: (id, data) => ipcRenderer.invoke('memories:update', id, data),
     delete: id => ipcRenderer.invoke('memories:delete', id),
-    search: (query, tags, source) => ipcRenderer.invoke('memories:search', query, tags, source)
+    search: (query, tags, source, dates) => ipcRenderer.invoke('memories:search', query, tags, source, dates)
   },
   relationships: {
     getAll: () => ipcRenderer.invoke('relationships:getAll'),

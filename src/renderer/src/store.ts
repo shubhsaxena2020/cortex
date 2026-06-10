@@ -24,7 +24,7 @@ interface CortexState {
   createMemory: (data: Omit<Memory, 'id' | 'created_at' | 'updated_at'>) => Promise<Memory>
   updateMemory: (id: string, data: Partial<Memory>) => Promise<void>
   deleteMemory: (id: string) => Promise<void>
-  searchMemories: (query: string, tags?: string[], source?: string) => Promise<void>
+  searchMemories: (query: string, tags?: string[], source?: string, dates?: { from?: number; to?: number }) => Promise<void>
   setSearchQuery: (query: string) => void
   toggleTag: (tag: string) => void
   clearSelectedTags: () => void
@@ -101,8 +101,8 @@ export const useStore = create<CortexState>((set, get) => ({
     }))
   },
 
-  searchMemories: async (query, tags, source) => {
-    const results = await window.electron.memories.search(query, tags, source)
+  searchMemories: async (query, tags, source, dates) => {
+    const results = await window.electron.memories.search(query, tags, source, dates)
     set({ searchResults: results, searchQuery: query })
   },
 

@@ -509,7 +509,13 @@ function toFtsPhrase(query: string): string | null {
   return `"${trimmed.replace(/"/g, '""')}"`
 }
 
-export function searchMemories(query: string, source?: string, tags?: string[]) {
+export function searchMemories(
+  query: string,
+  source?: string,
+  tags?: string[],
+  dateFrom?: number,
+  dateTo?: number,
+) {
   const d = getDb()
   const phrase = toFtsPhrase(query)
 
@@ -532,6 +538,8 @@ export function searchMemories(query: string, source?: string, tags?: string[]) 
         params.push(`%"${escapeLike(t)}"%`)
       }
     }
+    if (dateFrom != null) { sql += ' AND m.timestamp >= ?'; params.push(dateFrom) }
+    if (dateTo != null) { sql += ' AND m.timestamp <= ?'; params.push(dateTo) }
     sql += ' ORDER BY m.updatedAt DESC LIMIT 50'
     try {
       const rows = d.prepare(sql).all(...params) as MemoryRow[]
@@ -561,6 +569,8 @@ export function searchMemories(query: string, source?: string, tags?: string[]) 
       params.push(`%"${escapeLike(t)}"%`)
     }
   }
+  if (dateFrom != null) { sql += ' AND timestamp >= ?'; params.push(dateFrom) }
+  if (dateTo != null) { sql += ' AND timestamp <= ?'; params.push(dateTo) }
   sql += ' ORDER BY updatedAt DESC LIMIT 50'
   const rows = d.prepare(sql).all(...params) as MemoryRow[]
   return rows.map(mapMemory)
@@ -568,10 +578,13 @@ export function searchMemories(query: string, source?: string, tags?: string[]) 
 
 export function createRelationship(sourceId: string, targetId: string, relationship: string) {
   const id = `${sourceId}-${targetId}`
+  // Manual links get full strength — the column default is 0.0, which the
+  // renderer's strength<0.2 noise filter would hide.
   getDb().prepare(
-    'INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship) VALUES (?, ?, ?, ?)'
+    `INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship, strength, signal_type)
+     VALUES (?, ?, ?, ?, 1.0, 'manual')`
   ).run(id, sourceId, targetId, relationship)
-  return { id, sourceId, targetId, relationship }
+  return { id, sourceId, targetId, relationship, strength: 1.0, signal_type: 'manual' }
 }
 
 export function getRelatedMemories(id: string) {

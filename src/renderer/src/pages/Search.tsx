@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Search as SearchIcon, X, Filter, FileText, HardDrive, History, Bookmark, BookmarkPlus } from 'lucide-react'
+import { Search as SearchIcon, X, Filter, FileText, HardDrive, History, Bookmark, BookmarkPlus, Calendar } from 'lucide-react'
 import { useStore } from '../store'
 import {
   addToHistory, loadHistory, clearHistory,
@@ -42,6 +42,8 @@ export default function Search(): React.ReactElement {
   const [memResults, setMemResults] = useState<SearchResult[]>([])
   const [fileResults, setFileResults] = useState<VaultFile[]>([])
   const [busy, setBusy] = useState(false)
+  const [dateFrom, setDateFrom] = useState('')   // yyyy-mm-dd from <input type=date>
+  const [dateTo, setDateTo] = useState('')
 
   // History + saved searches (localStorage-backed; logic in utils/search-history)
   const [history, setHistory] = useState<SearchEntry[]>(() => loadHistory(window.localStorage))
@@ -89,7 +91,11 @@ export default function Search(): React.ReactElement {
       ]
 
       if (searchType !== 'files') {
-        searchPromises[0] = searchMemories(query, tags.length ? tags : undefined, source || undefined)
+        // <input type=date> gives local yyyy-mm-dd; from = midnight, to = end of day.
+        const from = dateFrom ? new Date(`${dateFrom}T00:00:00`).getTime() : undefined
+        const to = dateTo ? new Date(`${dateTo}T23:59:59.999`).getTime() : undefined
+        const dates = from != null || to != null ? { from, to } : undefined
+        searchPromises[0] = searchMemories(query, tags.length ? tags : undefined, source || undefined, dates)
           .then(() => {}) as Promise<void>
       } else {
         setMemResults([])
@@ -117,7 +123,7 @@ export default function Search(): React.ReactElement {
     void runSearch()
     recordHistory(query, source, tags)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, source, tags, searchType])
+  }, [query, source, tags, searchType, dateFrom, dateTo])
 
   // Sync memResults from store
   const storeResults = useStore(s => s.searchResults)
@@ -290,6 +296,38 @@ export default function Search(): React.ReactElement {
                     {opt.label}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Date range (only for memories) */}
+            {searchType !== 'files' && (
+              <div className="flex items-center gap-1.5 ml-auto">
+                <Calendar size={11} className="text-[#555]" />
+                <input
+                  type="date"
+                  value={dateFrom}
+                  max={dateTo || undefined}
+                  onChange={e => setDateFrom(e.target.value)}
+                  title="Created on or after"
+                  className="bg-[#1a1a1a] text-[#888] text-xs px-2 py-1 rounded border border-[#404040] focus:outline-none focus:border-[#6366f1] [color-scheme:dark]"
+                />
+                <span className="text-xs text-[#444]">–</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  onChange={e => setDateTo(e.target.value)}
+                  title="Created on or before"
+                  className="bg-[#1a1a1a] text-[#888] text-xs px-2 py-1 rounded border border-[#404040] focus:outline-none focus:border-[#6366f1] [color-scheme:dark]"
+                />
+                {(dateFrom || dateTo) && (
+                  <button
+                    onClick={() => { setDateFrom(''); setDateTo('') }}
+                    className="text-xs text-[#6366f1] hover:text-[#818cf8]"
+                  >
+                    clear
+                  </button>
+                )}
               </div>
             )}
           </div>

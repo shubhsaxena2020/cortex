@@ -110,7 +110,7 @@ export interface ElectronAPI {
     create: (memory: Omit<Memory, 'id' | 'created_at' | 'updated_at'>) => Promise<Memory>
     update: (id: string, memory: Partial<Memory>) => Promise<Memory>
     delete: (id: string) => Promise<void>
-    search: (query: string, tags?: string[], source?: string) => Promise<SearchResult[]>
+    search: (query: string, tags?: string[], source?: string, dates?: { from?: number; to?: number }) => Promise<SearchResult[]>
   }
   relationships: {
     getAll: () => Promise<Relationship[]>

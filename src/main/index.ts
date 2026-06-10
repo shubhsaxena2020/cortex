@@ -348,10 +348,10 @@ function registerIpcHandlers(): void {
     telemetry.capture('memory_deleted', { count: 1 })
   })
 
-  ipcMain.handle('memories:search', (_e, query: string, tags?: string[], source?: string) => {
-    // db.searchMemories signature: (query, source?, tags?)
+  ipcMain.handle('memories:search', (_e, query: string, tags?: string[], source?: string, dates?: { from?: number; to?: number }) => {
+    // db.searchMemories signature: (query, source?, tags?, dateFrom?, dateTo?)
     const t0 = performance.now()
-    const rows = db.searchMemories(query || '', source, tags)
+    const rows = db.searchMemories(query || '', source, tags, dates?.from, dates?.to)
     const latency = performance.now() - t0
     // Only the query LENGTH is recorded — never the query text.
     telemetry.capture('search_executed', {
