@@ -13,6 +13,7 @@ import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
 import * as telemetry from './telemetry'
 import { buildEdgesForMemory, backfillAllEdges } from './edge-builder'
+import { memoriesToJson, memoriesToCsv, parseMemoriesJson } from './export-import'
 import { version as appVersion } from '../../package.json'
 import type { TelemetryEventType, FeedbackSubmission } from '../types'
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -521,4 +522,49 @@ function registerIpcHandlers(): void {
   // ── Feedback (independent of telemetry opt-in) ───────────────────────────
   ipcMain.handle('feedback:save', (_e, submission: FeedbackSubmission) => telemetry.saveFeedback(submission))
   ipcMain.handle('feedback:getAll', () => telemetry.getAllFeedback())
+
+  // ── Data export / import ──────────────────────────────────────────────────
+  ipcMain.handle('data:exportMemories', async (_e, format: 'json' | 'csv') => {
+    const memories = db.getAllMemories().map(toMemory)
+    const ext = format === 'csv' ? 'csv' : 'json'
+    const result = await dialog.showSaveDialog({
+      title: 'Export Memories',
+      defaultPath: `cortex-memories-${new Date().toISOString().slice(0, 10)}.${ext}`,
+      filters: [{ name: ext.toUpperCase(), extensions: [ext] }],
+    })
+    if (result.canceled || !result.filePath) return { exported: 0, path: null }
+    const payload = format === 'csv' ? memoriesToCsv(memories) : memoriesToJson(memories)
+    await writeFile(result.filePath, payload, 'utf-8')
+    return { exported: memories.length, path: result.filePath }
+  })
+
+  ipcMain.handle('data:importMemories', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Import Memories',
+      properties: ['openFile'],
+      filters: [{ name: 'JSON', extensions: ['json'] }],
+    })
+    if (result.canceled || !result.filePaths[0]) {
+      return { imported: 0, skipped: 0, errors: [] }
+    }
+    const raw = await readFile(result.filePaths[0], 'utf-8')
+    const { memories, errors } = parseMemoriesJson(raw)
+
+    // Skip exact duplicates (same title + content) already in the DB.
+    const existing = new Set(
+      db.getAllMemories().map(m => `${m.title}\u0000${m.content ?? ''}`)
+    )
+    let imported = 0
+    let skipped = 0
+    for (const m of memories) {
+      if (existing.has(`${m.title}\u0000${m.content}`)) { skipped++; continue }
+      const id = randomUUID()
+      const row = db.createMemory(id, m.title, m.content, m.source, m.tags, m.url)
+      void embedAndStore(id, memoryToText(row))
+      void buildEdgesForMemory(db.getDb(), id).catch(() => {})
+      imported++
+    }
+    if (imported > 0) broadcastMemoriesChanged()
+    return { imported, skipped, errors }
+  })
 }

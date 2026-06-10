@@ -145,6 +145,10 @@ export interface ElectronAPI {
     setWatchPath: (watchPath: string) => Promise<void>
     removeWatchPath: () => Promise<void>
   }
+  data: {
+    exportMemories: (format: 'json' | 'csv') => Promise<{ exported: number; path: string | null }>
+    importMemories: () => Promise<{ imported: number; skipped: number; errors: string[] }>
+  }
   telemetry: {
     isEnabled: () => Promise<boolean>
     setEnabled: (enabled: boolean) => Promise<void>

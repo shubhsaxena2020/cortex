@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Copy, Check, Globe, Key, FileText, Link2, FolderOpen, FolderSearch, ExternalLink, Eye, EyeOff, Cpu, RefreshCw } from 'lucide-react'
+import { Copy, Check, Globe, Key, FileText, Link2, FolderOpen, FolderSearch, ExternalLink, Eye, EyeOff, Cpu, RefreshCw, Download, Upload } from 'lucide-react'
 import { useStore } from '../store'
 import PrivacySettings from '../components/PrivacySettings'
 import type { ExtensionConfig, VaultConfig, SystemStatus } from '../../../types'
@@ -243,6 +243,8 @@ export default function Settings(): React.ReactElement {
             ) : null}
           </section>
 
+          <DataSection />
+
           <PrivacySettings />
 
           <section className="opacity-60">
@@ -254,6 +256,78 @@ export default function Settings(): React.ReactElement {
           </section>
         </div>
     </div>
+  )
+}
+
+// ── Data export / import ─────────────────────────────────────────────────────
+
+function DataSection(): React.ReactElement {
+  const [status, setStatus] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const { fetchMemories } = useStore()
+
+  const run = async (op: () => Promise<string | null>): Promise<void> => {
+    setBusy(true)
+    setStatus(null)
+    try {
+      setStatus(await op())
+    } catch (err) {
+      setStatus(`Failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleExport = (format: 'json' | 'csv'): void => {
+    void run(async () => {
+      const r = await window.electron.data.exportMemories(format)
+      return r.path ? `Exported ${r.exported} memories to ${r.path}` : null
+    })
+  }
+
+  const handleImport = (): void => {
+    void run(async () => {
+      const r = await window.electron.data.importMemories()
+      if (r.imported === 0 && r.skipped === 0 && r.errors.length === 0) return null
+      await fetchMemories()
+      const parts = [`Imported ${r.imported}`]
+      if (r.skipped) parts.push(`skipped ${r.skipped} duplicates`)
+      if (r.errors.length) parts.push(`${r.errors.length} invalid entries`)
+      return parts.join(' · ')
+    })
+  }
+
+  return (
+    <section className="mb-10">
+      <h2 className="text-base font-semibold text-[#E8E8E8] mb-1">Data</h2>
+      <p className="text-xs text-[#555] mb-3">
+        Export all memories to a file, or import from a previous export. Imports skip exact duplicates.
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => handleExport('json')}
+          disabled={busy}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] hover:bg-[#2e2e2e] border border-[#404040] text-xs text-[#aaa] disabled:opacity-50 transition-colors"
+        >
+          <Download size={12} /> Export JSON
+        </button>
+        <button
+          onClick={() => handleExport('csv')}
+          disabled={busy}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#252525] hover:bg-[#2e2e2e] border border-[#404040] text-xs text-[#aaa] disabled:opacity-50 transition-colors"
+        >
+          <Download size={12} /> Export CSV
+        </button>
+        <button
+          onClick={handleImport}
+          disabled={busy}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#6B9FD4]/20 hover:bg-[#6B9FD4]/30 border border-[#6B9FD4]/40 text-xs text-[#6B9FD4] disabled:opacity-50 transition-colors"
+        >
+          <Upload size={12} /> Import JSON
+        </button>
+      </div>
+      {status && <p className="text-xs text-[#888] mt-2 break-all">{status}</p>}
+    </section>
   )
 }
 

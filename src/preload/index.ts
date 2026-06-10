@@ -43,6 +43,10 @@ const api: ElectronAPI = {
     setWatchPath: (watchPath) => ipcRenderer.invoke('vault:setWatchPath', watchPath),
     removeWatchPath: () => ipcRenderer.invoke('vault:removeWatchPath'),
   },
+  data: {
+    exportMemories: (format) => ipcRenderer.invoke('data:exportMemories', format),
+    importMemories: () => ipcRenderer.invoke('data:importMemories'),
+  },
   telemetry: {
     isEnabled: () => ipcRenderer.invoke('telemetry:isEnabled'),
     setEnabled: (enabled) => ipcRenderer.invoke('telemetry:setEnabled', enabled),
