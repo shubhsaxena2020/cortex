@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react'
 import { Info, X, ExternalLink, Eye } from 'lucide-react'
 import GraphCanvas from '../components/GraphCanvas'
+import MemoryDetail from '../components/MemoryDetail'
 import type { FilterMode } from '../utils/graph-builder'
 import type { GraphNode } from '../utils/graph-builder'
 import { useStore } from '../store'
@@ -162,8 +163,19 @@ export default function GraphView(): React.ReactElement {
           </div>
         )}
 
-        {/* Info panel — bottom-left overlay */}
-        {selectedNode && (
+        {/* Memory nodes get the full detail panel; file nodes the compact one */}
+        {selectedNode && selectedNode.nodeType === 'memory' && (
+          <MemoryDetail
+            memoryId={selectedNode.id}
+            onClose={() => setSelectedNode(null)}
+            onOpen={() => handleNodeOpen(selectedNode)}
+            onJump={(id) => {
+              selectMemory(id)
+              setView('editor')
+            }}
+          />
+        )}
+        {selectedNode && selectedNode.nodeType !== 'memory' && (
           <InfoPanel
             node={selectedNode}
             connectedMemories={connectedNodes.filter((m): m is NonNullable<typeof m> => !!m)}
