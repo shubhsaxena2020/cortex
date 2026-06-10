@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { Search as SearchIcon, X, Filter, FileText, HardDrive } from 'lucide-react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Search as SearchIcon, X, Filter, FileText, HardDrive, History, Bookmark, BookmarkPlus } from 'lucide-react'
 import { useStore } from '../store'
+import {
+  addToHistory, loadHistory, clearHistory,
+  loadSaved, saveSearch, deleteSaved,
+  type SearchEntry, type SavedSearch,
+} from '../utils/search-history'
 import type { SearchResult, MemorySource, VaultFile } from '../../../types'
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -38,7 +43,41 @@ export default function Search(): React.ReactElement {
   const [fileResults, setFileResults] = useState<VaultFile[]>([])
   const [busy, setBusy] = useState(false)
 
+  // History + saved searches (localStorage-backed; logic in utils/search-history)
+  const [history, setHistory] = useState<SearchEntry[]>(() => loadHistory(window.localStorage))
+  const [saved, setSaved] = useState<SavedSearch[]>(() => loadSaved(window.localStorage))
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [savingName, setSavingName] = useState<string | null>(null)
+  const historyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const allTags = getAllTags()
+
+  const applyEntry = useCallback((e: SearchEntry) => {
+    setQuery(e.query)
+    setSource((e.source ?? '') as MemorySource | '')
+    setTags(e.tags ?? [])
+    setHistoryOpen(false)
+  }, [])
+
+  const recordHistory = useCallback((q: string, src: string, tg: string[]) => {
+    // Debounced so keystrokes don't each become a history entry — only the
+    // settled query is recorded.
+    if (historyTimer.current) clearTimeout(historyTimer.current)
+    historyTimer.current = setTimeout(() => {
+      setHistory(addToHistory(window.localStorage, {
+        query: q, source: src || undefined, tags: tg.length ? tg : undefined, at: Date.now(),
+      }))
+    }, 1200)
+  }, [])
+
+  const handleSave = useCallback(() => {
+    const name = (savingName ?? '').trim()
+    if (!name) { setSavingName(null); return }
+    setSaved(saveSearch(window.localStorage, {
+      name, query, source: source || undefined, tags: tags.length ? tags : undefined, at: Date.now(),
+    }))
+    setSavingName(null)
+  }, [savingName, query, source, tags])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const runSearch = async () => {
@@ -74,7 +113,11 @@ export default function Search(): React.ReactElement {
     }
   }
 
-  useEffect(() => { void runSearch() }, [query, source, tags, searchType])
+  useEffect(() => {
+    void runSearch()
+    recordHistory(query, source, tags)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, source, tags, searchType])
 
   // Sync memResults from store
   const storeResults = useStore(s => s.searchResults)
@@ -95,26 +138,120 @@ export default function Search(): React.ReactElement {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#404040] bg-[#222] space-y-3">
-          {/* Query input */}
-          <div className="relative">
-            <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
-            <input
-              autoFocus
-              type="text"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Search memories and files… (semantic when available)"
-              className="w-full bg-[#1a1a1a] text-[#e0e0e0] pl-10 pr-10 py-2.5 rounded-lg border border-[#404040] focus:outline-none focus:border-[#6366f1] text-sm placeholder-[#444]"
-            />
-            {query && (
+          {/* Query input + history / save controls */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <SearchIcon size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Search memories and files… (semantic when available)"
+                className="w-full bg-[#1a1a1a] text-[#e0e0e0] pl-10 pr-10 py-2.5 rounded-lg border border-[#404040] focus:outline-none focus:border-[#6366f1] text-sm placeholder-[#444]"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#b0b0b0]"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            {/* History dropdown */}
+            <div className="relative">
               <button
-                onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#555] hover:text-[#b0b0b0]"
+                onClick={() => setHistoryOpen(o => !o)}
+                title="Search history"
+                className={`flex items-center justify-center w-9 h-9 rounded-lg border transition-colors ${
+                  historyOpen ? 'border-[#6366f1] bg-[#6366f1]/20 text-[#a5b4fc]' : 'border-[#404040] text-[#555] hover:text-[#aaa] hover:border-[#555]'
+                }`}
               >
-                <X size={13} />
+                <History size={14} />
               </button>
+              {historyOpen && (
+                <div className="absolute right-0 top-11 w-72 max-h-80 overflow-y-auto bg-[#1d1d1d] border border-[#404040] rounded-lg shadow-2xl z-20">
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-[#2a2a2a]">
+                    <span className="text-[10px] text-[#555] uppercase tracking-wider">Recent searches</span>
+                    {history.length > 0 && (
+                      <button
+                        onClick={() => { clearHistory(window.localStorage); setHistory([]) }}
+                        className="text-[10px] text-[#6366f1] hover:text-[#818cf8]"
+                      >
+                        clear
+                      </button>
+                    )}
+                  </div>
+                  {history.length === 0 ? (
+                    <div className="px-3 py-3 text-xs text-[#444]">No history yet</div>
+                  ) : history.map((e, i) => (
+                    <button
+                      key={`${e.query}-${e.at}-${i}`}
+                      onClick={() => applyEntry(e)}
+                      className="w-full text-left px-3 py-1.5 text-xs text-[#999] hover:bg-[#252525] hover:text-[#e0e0e0] transition-colors"
+                    >
+                      <span className="truncate block">{e.query || <em className="text-[#555]">filters only</em>}</span>
+                      {(e.source || e.tags?.length) ? (
+                        <span className="text-[10px] text-[#555]">
+                          {e.source && <span className="capitalize">{e.source}</span>}
+                          {e.source && e.tags?.length ? ' · ' : ''}
+                          {e.tags?.map(t => `#${t}`).join(' ')}
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Save current search */}
+            {savingName === null ? (
+              <button
+                onClick={() => setSavingName('')}
+                disabled={!query.trim() && !tags.length && !source}
+                title="Save this search"
+                className="flex items-center justify-center w-9 h-9 rounded-lg border border-[#404040] text-[#555] hover:text-[#aaa] hover:border-[#555] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <BookmarkPlus size={14} />
+              </button>
+            ) : (
+              <input
+                autoFocus
+                value={savingName}
+                onChange={e => setSavingName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSave()
+                  if (e.key === 'Escape') setSavingName(null)
+                }}
+                onBlur={handleSave}
+                placeholder="Name this search…"
+                className="w-40 bg-[#1a1a1a] text-[#e0e0e0] px-3 py-2 rounded-lg border border-[#6366f1] focus:outline-none text-xs placeholder-[#444]"
+              />
             )}
           </div>
+
+          {/* Saved searches */}
+          {saved.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Bookmark size={10} className="text-[#444]" />
+              {saved.map(s => (
+                <span key={s.name} className="group flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#1a1a1a] border border-[#404040] text-xs">
+                  <button onClick={() => applyEntry(s)} className="text-[#888] hover:text-[#a5b4fc] transition-colors">
+                    {s.name}
+                  </button>
+                  <button
+                    onClick={() => setSaved(deleteSaved(window.localStorage, s.name))}
+                    aria-label={`Delete saved search ${s.name}`}
+                    className="text-[#444] hover:text-[#e57373] transition-colors"
+                  >
+                    <X size={9} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Type toggle */}
           <div className="flex items-center gap-3">
