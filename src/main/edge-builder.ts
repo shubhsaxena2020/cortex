@@ -77,19 +77,54 @@ function getKeywordCandidates(
 }
 
 /**
- * Load tag candidates: all memories with non-empty tags.
- * Returns memory IDs + tags for scoring.
+ * Tag-candidate cache. The scan (every memory with tags, tags parsed) is
+ * identical for every memory processed in a run — during a 10k-memory
+ * backfill the uncached version did 10k full-table scans with 10k×10k
+ * JSON.parse calls.
+ *
+ * Self-invalidating: a cheap COUNT(*)+MAX(updatedAt) fingerprint is checked
+ * per call, so memory creates/edits made through normal paths (which bump
+ * updatedAt or change the count) refresh the cache automatically. Operations
+ * that change tags WITHOUT bumping updatedAt (bulk tag rename/delete) must
+ * call invalidateEdgeCandidateCache() explicitly.
  */
+let tagCandidateCache: { fingerprint: string; rows: Array<{ id: string; tags: string[] }> } | null = null
+
+export function invalidateEdgeCandidateCache(): void {
+  tagCandidateCache = null
+}
+
 function getTagCandidates(
   db: Database.Database,
-  memoryId: string,
-): Array<{ id: string; tags: string }> {
-  return db.prepare(`
+): Array<{ id: string; tags: string[] }> {
+  const fp = db.prepare(
+    'SELECT COUNT(*) as n, COALESCE(MAX(updatedAt), 0) as u FROM memories'
+  ).get() as { n: number; u: number } | undefined
+  // No fingerprint row (mocked/edge case) — bypass the cache entirely.
+  if (!fp) return scanTagCandidates(db)
+
+  const fingerprint = `${fp.n}:${fp.u}`
+  if (tagCandidateCache?.fingerprint === fingerprint) return tagCandidateCache.rows
+
+  const rows = scanTagCandidates(db)
+  tagCandidateCache = { fingerprint, rows }
+  return rows
+}
+
+function scanTagCandidates(db: Database.Database): Array<{ id: string; tags: string[] }> {
+  const rows = db.prepare(`
     SELECT id, tags FROM memories
-    WHERE id != ?
-    AND tags IS NOT NULL
+    WHERE tags IS NOT NULL
     AND tags != '[]'
-  `).all(memoryId) as Array<{ id: string; tags: string }>
+  `).all() as Array<{ id: string; tags: string }>
+  return rows.map(r => {
+    try {
+      const parsed = JSON.parse(r.tags || '[]')
+      return { id: r.id, tags: Array.isArray(parsed) ? parsed : [] }
+    } catch {
+      return { id: r.id, tags: [] }
+    }
+  })
 }
 
 /**
@@ -198,13 +233,13 @@ export async function buildEdgesForMemory(
     }
   }
 
-  // --- Signal 1: Tag candidates (SQL — only if memory has tags) ---
+  // --- Signal 1: Tag candidates (cached scan — only if memory has tags) ---
   if (memoryTags.length > 0) {
-    const tagCandidates = getTagCandidates(db, memoryId)
+    const tagCandidates = getTagCandidates(db)
     for (const other of tagCandidates) {
-      if (candidateMap.has(other.id)) continue // Already found via keyword
-      const otherTags: string[] = JSON.parse(other.tags || '[]')
-      const score = tagScore(memoryTags, otherTags)
+      if (other.id === memoryId) continue            // Cache includes self
+      if (candidateMap.has(other.id)) continue       // Already found via keyword
+      const score = tagScore(memoryTags, other.tags)
       if (score > TAG_MIN_SCORE) {
         candidateMap.set(other.id, { targetId: other.id, score, signalType: 'auto:tag' })
       }

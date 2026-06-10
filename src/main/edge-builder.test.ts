@@ -160,7 +160,7 @@ describe('buildEdgesForMemory', () => {
       return undefined
     }
     db.prepare('SELECT id, content, tags FROM memories WHERE id = ?').get = () => undefined
-    db.prepare(`SELECT id, tags FROM memories WHERE id != ? AND tags IS NOT NULL AND tags != '[]'`).all = () => []
+    db.prepare(`SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`).all = () => []
 
     const count = await buildEdgesForMemory(db as any, 'mem-1')
     expect(count).toBe(0)
@@ -186,10 +186,7 @@ describe('buildEdgesForMemory', () => {
     db.prepare(`SELECT memory_id FROM memories_fts WHERE memories_fts MATCH ? AND memory_id != ? LIMIT 50`).all = () => []
 
     // Tag candidates: mem-b
-    db.prepare(`SELECT id, tags FROM memories WHERE id != ? AND tags IS NOT NULL AND tags != '[]'`).all = (mid: string) => {
-      if (mid === 'mem-a') return [{ id: 'mem-b', tags: '["typescript","vue"]' }]
-      return []
-    }
+    db.prepare(`SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`).all = () => [{ id: 'mem-b', tags: '["typescript","vue"]' }]
 
     // Track inserted edges
     const insertedEdges: Array<{ id: string; sourceId: string; targetId: string; relationship: string; strength: number; signalType: string }> = []
@@ -231,7 +228,7 @@ describe('buildEdgesForMemory', () => {
       id: `mem-${i}`,
       tags: '["shared","common"]',
     }))
-    db.prepare(`SELECT id, tags FROM memories WHERE id != ? AND tags IS NOT NULL AND tags != '[]'`).all = () => tagCandidates
+    db.prepare(`SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`).all = () => tagCandidates
 
     const insertedEdges: string[] = []
     db.prepare(`INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship, strength, signal_type) VALUES (?, ?, ?, ?, ?, ?)`).run = (...args: unknown[]) => {
@@ -254,8 +251,11 @@ describe('buildEdgesForMemory', () => {
     db.prepare('SELECT id, content, tags FROM memories WHERE id = ?').get = () => undefined
     db.prepare(`SELECT memory_id FROM memories_fts WHERE memories_fts MATCH ? AND memory_id != ? LIMIT 50`).all = () => []
 
-    // Self is the only memory with this tag
-    db.prepare(`SELECT id, tags FROM memories WHERE id != ? AND tags IS NOT NULL AND tags != '[]'`).all = () => []
+    // The candidate scan now includes the memory itself (the cached scan is
+    // memory-independent) — the builder loop must skip it.
+    db.prepare(`SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`).all = () => [
+      { id: 'self', tags: '["test"]' },
+    ]
 
     const insertedEdges: string[] = []
     db.prepare(`INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship, strength, signal_type) VALUES (?, ?, ?, ?, ?, ?)`).run = (...args: unknown[]) => {
@@ -285,10 +285,7 @@ describe('buildEdgesForMemory', () => {
     }
     db.prepare(`SELECT memory_id FROM memories_fts WHERE memories_fts MATCH ? AND memory_id != ? LIMIT 50`).all = () => []
 
-    db.prepare(`SELECT id, tags FROM memories WHERE id != ? AND tags IS NOT NULL AND tags != '[]'`).all = (mid: string) => {
-      if (mid === 'mem-a') return [{ id: 'mem-b', tags: '["idem","check"]' }]
-      return []
-    }
+    db.prepare(`SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`).all = () => [{ id: 'mem-b', tags: '["idem","check"]' }]
 
     let edgeIds = new Set<string>()
     db.prepare(`INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship, strength, signal_type) VALUES (?, ?, ?, ?, ?, ?)`).run = (...args: unknown[]) => {
@@ -321,10 +318,7 @@ describe('buildEdgesForMemory', () => {
     }
     db.prepare(`SELECT memory_id FROM memories_fts WHERE memories_fts MATCH ? AND memory_id != ? LIMIT 50`).all = () => []
 
-    db.prepare(`SELECT id, tags FROM memories WHERE id != ? AND tags IS NOT NULL AND tags != '[]'`).all = (mid: string) => {
-      if (mid === 'mem-a') return [{ id: 'mem-b', tags: '["noEmbed"]' }]
-      return []
-    }
+    db.prepare(`SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`).all = () => [{ id: 'mem-b', tags: '["noEmbed"]' }]
 
     // memory_vectors: throw to simulate sqlite-vec not loaded
     db.prepare('SELECT 1 FROM memory_vectors WHERE memory_id = ?').get = () => undefined
@@ -408,5 +402,100 @@ describe('backfillAllEdges', () => {
   `).all() as Array<{ id: string }>
 
     expect(unconnected).toHaveLength(0)
+  })
+})
+
+// ── Tag-candidate cache ───────────────────────────────────────────────────────
+
+describe('tag-candidate cache', () => {
+  const TAG_SCAN = `SELECT id, tags FROM memories WHERE tags IS NOT NULL AND tags != '[]'`
+  const FINGERPRINT = 'SELECT COUNT(*) as n, COALESCE(MAX(updatedAt), 0) as u FROM memories'
+
+  function setupTwoMemoryDb() {
+    const db = mockDb()
+    db.prepare('SELECT * FROM memories WHERE id = ?').get = (qid: string) => {
+      if (qid === 'mem-a') return { id: 'mem-a', title: 'A', content: 'cache test content', tags: '["cached"]', timestamp: 1, updatedAt: 1, source: 'manual', url: null }
+      return undefined
+    }
+    db.prepare('SELECT id, content, tags FROM memories WHERE id = ?').get = () => undefined
+    db.prepare(`SELECT memory_id FROM memories_fts WHERE memories_fts MATCH ? AND memory_id != ? LIMIT 50`).all = () => []
+    return db
+  }
+
+  beforeEach(async () => {
+    const { invalidateEdgeCandidateCache } = await import('./edge-builder')
+    invalidateEdgeCandidateCache()
+  })
+
+  it('reuses the scan across builds while the fingerprint is stable', async () => {
+    const db = setupTwoMemoryDb()
+    db.prepare(FINGERPRINT).get = () => ({ n: 2, u: 100 })
+    let scans = 0
+    db.prepare(TAG_SCAN).all = () => {
+      scans++
+      return [{ id: 'mem-b', tags: '["cached"]' }]
+    }
+
+    await buildEdgesForMemory(db as any, 'mem-a')
+    await buildEdgesForMemory(db as any, 'mem-a')
+    expect(scans).toBe(1)
+  })
+
+  it('rescans when the fingerprint changes (new/edited memory)', async () => {
+    const db = setupTwoMemoryDb()
+    let maxUpdated = 100
+    db.prepare(FINGERPRINT).get = () => ({ n: 2, u: maxUpdated })
+    let scans = 0
+    db.prepare(TAG_SCAN).all = () => {
+      scans++
+      return [{ id: 'mem-b', tags: '["cached"]' }]
+    }
+
+    await buildEdgesForMemory(db as any, 'mem-a')
+    maxUpdated = 200  // a memory was edited
+    await buildEdgesForMemory(db as any, 'mem-a')
+    expect(scans).toBe(2)
+  })
+
+  it('rescans after explicit invalidation (bulk tag ops)', async () => {
+    const { invalidateEdgeCandidateCache } = await import('./edge-builder')
+    const db = setupTwoMemoryDb()
+    db.prepare(FINGERPRINT).get = () => ({ n: 2, u: 100 })
+    let scans = 0
+    db.prepare(TAG_SCAN).all = () => {
+      scans++
+      return [{ id: 'mem-b', tags: '["cached"]' }]
+    }
+
+    await buildEdgesForMemory(db as any, 'mem-a')
+    invalidateEdgeCandidateCache()
+    await buildEdgesForMemory(db as any, 'mem-a')
+    expect(scans).toBe(2)
+  })
+
+  it('bypasses the cache when no fingerprint row is available', async () => {
+    const db = setupTwoMemoryDb()
+    // default mock: FINGERPRINT get() returns undefined
+    let scans = 0
+    db.prepare(TAG_SCAN).all = () => {
+      scans++
+      return [{ id: 'mem-b', tags: '["cached"]' }]
+    }
+
+    await buildEdgesForMemory(db as any, 'mem-a')
+    await buildEdgesForMemory(db as any, 'mem-a')
+    expect(scans).toBe(2)
+  })
+
+  it('tolerates corrupt tags JSON in the scan', async () => {
+    const db = setupTwoMemoryDb()
+    db.prepare(FINGERPRINT).get = () => ({ n: 2, u: 100 })
+    db.prepare(TAG_SCAN).all = () => [
+      { id: 'mem-bad', tags: '{corrupt' },
+      { id: 'mem-b', tags: '["cached"]' },
+    ]
+
+    const count = await buildEdgesForMemory(db as any, 'mem-a')
+    expect(count).toBeGreaterThan(0)  // mem-b edge still created
   })
 })

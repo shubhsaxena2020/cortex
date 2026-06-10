@@ -12,7 +12,7 @@ import { seedEmbeddingsIfNeeded, embedAndStore, memoryToText } from './seed-embe
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
 import * as telemetry from './telemetry'
-import { buildEdgesForMemory, backfillAllEdges } from './edge-builder'
+import { buildEdgesForMemory, backfillAllEdges, invalidateEdgeCandidateCache } from './edge-builder'
 import { memoriesToJson, memoriesToCsv, parseMemoriesJson } from './export-import'
 import { normalizeTag, isValidTag } from './tag-ops'
 import { version as appVersion } from '../../package.json'
@@ -531,13 +531,21 @@ function registerIpcHandlers(): void {
     const target = normalizeTag(to)
     if (!isValidTag(target)) return { changed: 0, error: `Invalid tag name: "${to}"` }
     const changed = db.renameTag(from, target)
-    if (changed > 0) broadcastMemoriesChanged()
+    if (changed > 0) {
+      // Bulk tag ops don't bump updatedAt, so the edge-builder's fingerprint
+      // cache can't see them — invalidate explicitly.
+      invalidateEdgeCandidateCache()
+      broadcastMemoriesChanged()
+    }
     return { changed, error: null }
   })
 
   ipcMain.handle('tags:delete', (_e, tag: string) => {
     const changed = db.deleteTag(tag)
-    if (changed > 0) broadcastMemoriesChanged()
+    if (changed > 0) {
+      invalidateEdgeCandidateCache()
+      broadcastMemoriesChanged()
+    }
     return { changed, error: null }
   })
 
