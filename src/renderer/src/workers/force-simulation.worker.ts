@@ -16,7 +16,7 @@
 // one per tick.
 
 import {
-  forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide,
+  forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, forceX, forceY,
   type Simulation, type SimulationNodeDatum, type SimulationLinkDatum,
 } from 'd3-force'
 import { nodeRadius } from '../utils/graph-renderer'
@@ -51,7 +51,6 @@ const ctx = self as unknown as {
 }
 
 const TICKS_PER_BATCH = 5
-const WARMUP_TICKS = 100
 
 let sim: Simulation<WNode, WLink> | null = null
 let nodes: WNode[] = []
@@ -114,13 +113,20 @@ ctx.onmessage = (e: MessageEvent<InMsg>): void => {
         .force('link', forceLink<WNode, WLink>(links).id(d => d.id).distance(60).strength(0.5))
         .force('charge', forceManyBody<WNode>().strength(-120))
         .force('center', forceCenter(msg.width / 2, msg.height / 2).strength(0.1))
+        // Weak positional pull keeps disconnected components from repelling
+        // each other to infinity — without it a 10k-node graph spreads to a
+        // ±16k-unit cloud that no zoom level can frame usefully.
+        .force('x', forceX<WNode>(msg.width / 2).strength(0.05))
+        .force('y', forceY<WNode>(msg.height / 2).strength(0.05))
         .force('collision', forceCollide<WNode>(n => nodeRadius(n as unknown as GraphNode) + 4).strength(0.8))
         .alphaDecay(0.028)
         .velocityDecay(0.4)
         .alphaMin(0.001)
         .stop() // we drive ticks manually — no internal d3-timer in the worker
-      // Warm up offline so the first frame the user sees is already laid out.
-      for (let i = 0; i < WARMUP_TICKS; i++) sim.tick()
+      // Stream positions from tick 0 so the first paint happens immediately —
+      // a synchronous 100-tick warmup over 10k nodes blocks the first batch
+      // for ~10s, which reads as a blank canvas. The early frames show the
+      // layout organizing, which is intentional feedback, not a bug.
       postPositions()
       schedule()
       break
