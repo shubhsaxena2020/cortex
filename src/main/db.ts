@@ -9,7 +9,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 5   // bump + add migration when schema changes
+const SCHEMA_VERSION = 6   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -305,6 +305,14 @@ function runMigrations(d: Database.Database, from: number, to: number): void {
         d.exec(`CREATE INDEX IF NOT EXISTS idx_memrel_signal ON memory_relationships(signal_type)`)
         // Index on tags column for tag-based candidate queries
         d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_tags ON memories(tags)`)
+      }
+      if (from < 6) {
+        // v6: index for the source filter in searchMemories / stats GROUP BY,
+        // plus ANALYZE so the query planner has real cardinality stats for
+        // the indices added in v2–v5 (it otherwise guesses, and on a 10k-row
+        // table guesses wrong about tags/signal_type selectivity).
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_source ON memories(source)`)
+        d.exec(`ANALYZE`)
       }
 
       // Bump (or write) the stored version. UPDATE if the row exists; INSERT
