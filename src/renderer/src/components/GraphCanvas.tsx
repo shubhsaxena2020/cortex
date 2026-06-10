@@ -86,6 +86,8 @@ export default function GraphCanvas({
   const quadtreeDirty  = useRef(true)
   const frameTimesRef  = useRef<number[]>([])
   const lastDebugTickRef = useRef(0)
+  const fitToBoundsRef = useRef<(animate?: boolean) => void>(() => {})
+  const userNavigatedRef = useRef(false)   // stops auto-fit once the user pans/zooms
 
   // Sync editor-open highlight without rebuilding the simulation.
   useEffect(() => {
@@ -104,9 +106,7 @@ export default function GraphCanvas({
     d3.select(c).transition().duration(250).call(zoomRef.current.scaleBy, 1 / 1.5)
   }, [])
   const handleFitScreen = useCallback(() => {
-    const c = canvasRef.current
-    if (!c || !zoomRef.current) return
-    d3.select(c).transition().duration(400).call(zoomRef.current.transform, d3.zoomIdentity)
+    fitToBoundsRef.current(true)
   }, [])
 
   useEffect(() => {
@@ -159,13 +159,25 @@ export default function GraphCanvas({
       const t = typeof l.target === 'string' ? l.target : (l.target as D3Node).id
       const src = nodeById.get(s)
       const tgt = nodeById.get(t)
-      if (src && tgt) visLinks.push({ source: src, target: tgt, edgeType: l.edgeType })
+      if (src && tgt) visLinks.push({ source: src, target: tgt, edgeType: l.edgeType, signalType: l.signalType, strength: l.strength })
     }
 
     nodesRef.current = visNodes
     linksRef.current = visLinks
     adjacencyRef.current = buildAdjacency(visNodes, visLinks)
     quadtreeDirty.current = true
+
+    // Dev-only inspection handle for headless verification (CDP scripts read
+    // live layout state through this; stripped from production builds).
+    if (import.meta.env.DEV) {
+      ;(window as unknown as Record<string, unknown>).__cortexGraphDebug = {
+        nodeCount: () => nodesRef.current.length,
+        linkCount: () => linksRef.current.length,
+        positions: () => nodesRef.current.slice(0, 2000).map(n => ({ x: n.x ?? 0, y: n.y ?? 0 })),
+        transform: () => ({ ...transformRef.current }),
+        dims: { w, h },
+      }
+    }
 
     // Throttled graph_interaction telemetry. No-op in the main process unless
     // the user opted in; throttle here keeps IPC chatter low regardless.
@@ -192,8 +204,11 @@ export default function GraphCanvas({
       // from center to give depth. The center glow uses a low-opacity purple
       // tone that matches the Claude source color theme.
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // Stops must be OPAQUE: a semi-transparent stop drawn without clearing
+      // compounds frame-over-frame into a white bloom. #14101B is #0D0D0D with
+      // ~4% of the Claude purple pre-blended.
       const bgGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.6)
-      bgGrad.addColorStop(0, 'rgba(124, 58, 237, 0.04)')
+      bgGrad.addColorStop(0, '#14101B')
       bgGrad.addColorStop(1, '#0D0D0D')
       ctx.fillStyle = bgGrad
       ctx.fillRect(0, 0, w, h)
@@ -374,6 +389,10 @@ export default function GraphCanvas({
         arr[i].y = pos[i * 2 + 1]
       }
       quadtreeDirty.current = true
+      // Track the layout while it settles: keep the whole graph in view until
+      // the user takes over the camera. Without this a 10k-node layout spreads
+      // far beyond the initial 1x viewport and looks like a blank screen.
+      if (!userNavigatedRef.current) fitToBoundsRef.current(false)
       scheduleRender()
     }
     worker.postMessage({
@@ -392,7 +411,7 @@ export default function GraphCanvas({
 
     // ── Zoom + pan ─────────────────────────────────────────────────────────
     const zoom = d3.zoom<HTMLCanvasElement, unknown>()
-      .scaleExtent([0.05, 8])
+      .scaleExtent([0.01, 8])
       .filter(event => {
         if (event instanceof WheelEvent) return true
         if (!(event instanceof MouseEvent)) return true
@@ -402,6 +421,9 @@ export default function GraphCanvas({
       })
       .on('zoom', ev => {
         transformRef.current = ev.transform
+        // Only direct user input (wheel/drag) disables auto-fit; programmatic
+        // transforms (fit itself) have no sourceEvent.
+        if (ev.sourceEvent) userNavigatedRef.current = true
         // Zoom/pan is a pure view transform — no physics involvement, just a
         // repaint next frame.
         scheduleRender()
@@ -410,6 +432,31 @@ export default function GraphCanvas({
       })
     zoomRef.current = zoom
     d3.select(canvas).call(zoom).on('dblclick.zoom', null)
+
+    // Fit the camera so the node bounding box fills ~90% of the viewport.
+    // Goes through the d3-zoom behavior (not transformRef directly) so wheel
+    // and drag gestures continue from the fitted transform.
+    fitToBoundsRef.current = (animate = false) => {
+      const arr = nodesRef.current
+      if (arr.length === 0) return
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+      for (const node of arr) {
+        const nx = node.x ?? 0, ny = node.y ?? 0
+        if (nx < minX) minX = nx
+        if (ny < minY) minY = ny
+        if (nx > maxX) maxX = nx
+        if (ny > maxY) maxY = ny
+      }
+      const bw = Math.max(maxX - minX, 1)
+      const bh = Math.max(maxY - minY, 1)
+      const k = Math.min(8, Math.max(0.01, 0.9 * Math.min(w / bw, h / bh)))
+      const tx = w / 2 - k * (minX + maxX) / 2
+      const ty = h / 2 - k * (minY + maxY) / 2
+      const t = d3.zoomIdentity.translate(tx, ty).scale(k)
+      const sel = d3.select(canvas)
+      if (animate) sel.transition().duration(400).call(zoom.transform, t)
+      else sel.call(zoom.transform, t)
+    }
     scheduleRender()
 
     // ── Hit detection ──────────────────────────────────────────────────────
