@@ -8,7 +8,12 @@ import * as db from './db'
 import { toMemory, toRelationship, makeHighlight } from './transformers'
 import { loadOrCreateConfig, bootstrapPort, getCachedConfig, getConfigPath, persistPort } from './extension-config'
 import { startHttpServer, stopHttpServer, armPairing } from './http'
-import { seedEmbeddingsIfNeeded, embedAndStore, memoryToText } from './seed-embeddings'
+import {
+  seedEmbeddingsIfNeeded, embedAndStore, memoryToText,
+  getSeedStatus, pauseSeeding, resumeSeeding, registerSeedProgressCallback,
+} from './seed-embeddings'
+import { syncWikiAfterChange, backfillWikiEdges } from './wiki-edges'
+import { suggestTags } from './auto-tag'
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
 import * as telemetry from './telemetry'
@@ -150,6 +155,9 @@ async function startServerWithRetry(): Promise<void> {
         } catch (err) {
           log.error('[edge-builder] Failed to build edges for new memory:', err)
         }
+        // Wiki edges: the capture may contain [[links]], and other memories
+        // may link to this conversation's title (v0.3.0).
+        syncWikiAfterChange(memory.id, memory.title)
       })
       telemetry.capture('memory_created', {
         source: memory.source,
@@ -242,7 +250,12 @@ app.whenReady().then(async () => {
 
   // Backfill embeddings in the background; doesn't block window creation.
   // If Ollama isn't installed/running, this silently no-ops and search degrades
-  // to keyword mode.
+  // to keyword mode. Progress is pushed to the renderer for the Settings UI.
+  registerSeedProgressCallback(s => {
+    for (const w of BrowserWindow.getAllWindows()) {
+      if (!w.isDestroyed()) w.webContents.send('embeddings:progress', s)
+    }
+  })
   void seedEmbeddingsIfNeeded()
     .then(r => {
       if (r.skipped) log.info(`[cortex] embedding seed skipped (${r.skipped})`)
@@ -266,6 +279,13 @@ app.whenReady().then(async () => {
       log.info('[cortex] Auto-edge backfill complete.')
     } catch (err) {
       log.error('[cortex] Backfill error:', err)
+    }
+    // Wiki edges (v0.3.0): cheap LIKE-prefiltered pass; no-op when no memory
+    // contains '[[' syntax.
+    try {
+      backfillWikiEdges()
+    } catch (err) {
+      log.error('[cortex] Wiki backfill error:', err)
     }
   })
 
@@ -320,6 +340,7 @@ function registerIpcHandlers(): void {
     )
     // Fire-and-forget: response returns immediately; embedding lands async.
     void embedAndStore(id, memoryToText(row))
+    setImmediate(() => syncWikiAfterChange(id, row.title))
     telemetry.capture('memory_created', {
       source: row.source,
       size_bytes: Buffer.byteLength(row.content ?? '', 'utf8'),
@@ -340,6 +361,9 @@ function registerIpcHandlers(): void {
     )
     const updated = db.getMemory(id)!
     void embedAndStore(id, memoryToText(updated))
+    // Content edits add/remove [[links]]; title edits resolve or orphan
+    // inbound links elsewhere. Both are covered by the change hook.
+    setImmediate(() => syncWikiAfterChange(id, updated.title))
     return toMemory(updated)
   })
 
@@ -523,6 +547,18 @@ function registerIpcHandlers(): void {
   // ── Feedback (independent of telemetry opt-in) ───────────────────────────
   ipcMain.handle('feedback:save', (_e, submission: FeedbackSubmission) => telemetry.saveFeedback(submission))
   ipcMain.handle('feedback:getAll', () => telemetry.getAllFeedback())
+
+  // ── Embedding backfill control (v0.3.0 backfill UI) ──────────────────────
+  ipcMain.handle('embeddings:getStatus', () => getSeedStatus())
+  ipcMain.handle('embeddings:pause', () => pauseSeeding())
+  ipcMain.handle('embeddings:resume', () => resumeSeeding())
+
+  // ── Tag suggestions (v0.3.0 auto-tagging) ─────────────────────────────────
+  ipcMain.handle('tags:suggest', (_e, id: string) => {
+    const memory = db.getMemory(id)
+    if (!memory) return []
+    return suggestTags(memory.title, memory.content || '', db.getTagCounts())
+  })
 
   // ── Bulk tag operations ───────────────────────────────────────────────────
   ipcMain.handle('tags:getCounts', () => db.getTagCounts())

@@ -7,7 +7,7 @@ import Search from './pages/Search'
 import Settings from './pages/Settings'
 import Sidebar from './components/Sidebar'
 import ErrorBoundary from './components/ErrorBoundary'
-import type { ViewType, SystemStatus } from '../../types'
+import type { ViewType, SystemStatus, SeedStatus } from '../../types'
 
 const NAV_ITEMS: { view: ViewType; icon: React.ReactNode; label: string; shortcut: string }[] = [
   { view: 'editor', icon: <FileText size={16} />, label: 'Notes', shortcut: 'Ctrl+1' },
@@ -32,6 +32,8 @@ export default function App(): React.ReactElement {
   // Lightweight status pulse for the bottom bar. Refreshes every 30s and on
   // memory changes (since embeddedCount updates as new memories are stored).
   const [status, setStatus] = useState<SystemStatus | null>(null)
+  // Live embedding backfill state (v0.3.0) — non-null only while running/paused.
+  const [seedStatus, setSeedStatus] = useState<SeedStatus | null>(null)
 
   useEffect(() => {
     fetchMemories()
@@ -64,7 +66,11 @@ export default function App(): React.ReactElement {
     const unsubProgress = window.electron.events.onIndexProgress(data => {
       useStore.setState({ indexProgress: data.current >= data.total ? null : data })
     })
-    return () => { unsubMemories(); unsubVault(); unsubProgress(); clearInterval(statusTimer) }
+    const unsubEmbed = window.electron.events.onEmbeddingsProgress(s => {
+      setSeedStatus(s.state === 'running' || s.state === 'paused' ? s : null)
+      if (s.state === 'done') refreshStatus()
+    })
+    return () => { unsubMemories(); unsubVault(); unsubProgress(); unsubEmbed(); clearInterval(statusTimer) }
   }, [])
 
   useEffect(() => {
@@ -188,13 +194,13 @@ export default function App(): React.ReactElement {
       </div>
 
       {/* Status bar */}
-      <StatusBar status={status} onOpenSettings={() => setView('settings')} />
+      <StatusBar status={status} seedStatus={seedStatus} onOpenSettings={() => setView('settings')} />
     </div>
     </ErrorBoundary>
   )
 }
 
-function StatusBar({ status, onOpenSettings }: { status: SystemStatus | null; onOpenSettings: () => void }): React.ReactElement {
+function StatusBar({ status, seedStatus, onOpenSettings }: { status: SystemStatus | null; seedStatus: SeedStatus | null; onOpenSettings: () => void }): React.ReactElement {
   // Indexing takes priority over the semantic-search status text — it's the
   // only live activity worth surfacing in a single status row.
   const indexProgress = useStore(s => s.indexProgress)
@@ -220,6 +226,36 @@ function StatusBar({ status, onOpenSettings }: { status: SystemStatus | null; on
             aria-valuemin={0}
             aria-valuemax={100}
             aria-label={`Indexing ${current} of ${total} files`}
+          />
+        </div>
+        <span className="text-[#444] tabular-nums">{pct}%</span>
+      </button>
+    )
+  }
+
+  // Embedding backfill in flight: show live progress instead of the stale
+  // embedded count (second priority, after vault indexing).
+  if (seedStatus && seedStatus.total > 0) {
+    const pct = Math.min(100, Math.round((seedStatus.done / seedStatus.total) * 100))
+    return (
+      <button
+        onClick={onOpenSettings}
+        title="Embedding memories — click for Settings"
+        className="flex items-center gap-3 h-6 px-4 text-[11px] bg-[#0a0a0a] border-t border-[#242424] flex-shrink-0 hover:bg-[#111] transition-colors text-left"
+      >
+        <span className={`w-1.5 h-1.5 rounded-full bg-[#a78bfa] ${seedStatus.state === 'running' ? 'animate-pulse' : ''}`} />
+        <span className="text-[#888]">
+          Embedding… {seedStatus.done}/{seedStatus.total}{seedStatus.state === 'paused' ? ' (paused)' : ''}
+        </span>
+        <div className="flex-1 max-w-[240px] h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[#a78bfa] transition-[width] duration-200 ease-out"
+            style={{ width: `${pct}%` }}
+            role="progressbar"
+            aria-valuenow={pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Embedded ${seedStatus.done} of ${seedStatus.total} memories`}
           />
         </div>
         <span className="text-[#444] tabular-nums">{pct}%</span>

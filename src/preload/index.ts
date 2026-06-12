@@ -51,6 +51,12 @@ const api: ElectronAPI = {
     getCounts: () => ipcRenderer.invoke('tags:getCounts'),
     rename: (from, to) => ipcRenderer.invoke('tags:rename', from, to),
     delete: (tag) => ipcRenderer.invoke('tags:delete', tag),
+    suggest: (id) => ipcRenderer.invoke('tags:suggest', id),
+  },
+  embeddings: {
+    getStatus: () => ipcRenderer.invoke('embeddings:getStatus'),
+    pause: () => ipcRenderer.invoke('embeddings:pause'),
+    resume: () => ipcRenderer.invoke('embeddings:resume'),
   },
   telemetry: {
     isEnabled: () => ipcRenderer.invoke('telemetry:isEnabled'),
@@ -86,6 +92,11 @@ const api: ElectronAPI = {
       const handler = (_e: Electron.IpcRendererEvent, data: { current: number; total: number }) => callback(data)
       ipcRenderer.on('vault:indexProgress', handler)
       return () => ipcRenderer.removeListener('vault:indexProgress', handler)
+    },
+    onEmbeddingsProgress: (callback) => {
+      const handler = (_e: Electron.IpcRendererEvent, data: import('../types').SeedStatus) => callback(data)
+      ipcRenderer.on('embeddings:progress', handler)
+      return () => ipcRenderer.removeListener('embeddings:progress', handler)
     }
   }
 }

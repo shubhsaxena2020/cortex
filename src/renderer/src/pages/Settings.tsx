@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Copy, Check, Globe, Key, FileText, Link2, FolderOpen, FolderSearch, ExternalLink, Eye, EyeOff, Cpu, RefreshCw, Download, Upload } from 'lucide-react'
+import { Copy, Check, Globe, Key, FileText, Link2, FolderOpen, FolderSearch, ExternalLink, Eye, EyeOff, Cpu, RefreshCw, Download, Upload, Pause, Play } from 'lucide-react'
 import { useStore } from '../store'
 import PrivacySettings from '../components/PrivacySettings'
-import type { ExtensionConfig, VaultConfig, SystemStatus } from '../../../types'
+import type { ExtensionConfig, VaultConfig, SystemStatus, SeedStatus } from '../../../types'
 
 type PairState =
   | { kind: 'idle' }
@@ -477,6 +477,7 @@ function AiStatusPanel(): React.ReactElement {
             : 'Disabled — sqlite-vec failed to load. Search will use keyword matching.'
         }
       />
+      <EmbeddingBackfillRow onStateSettled={() => void load()} />
       <button
         onClick={() => void load()}
         disabled={refreshing}
@@ -485,6 +486,78 @@ function AiStatusPanel(): React.ReactElement {
         <RefreshCw size={11} className={refreshing ? 'animate-spin' : ''} />
         {refreshing ? 'Checking…' : 'Refresh'}
       </button>
+    </div>
+  )
+}
+
+// Embedding backfill (v0.3.0): live progress with pause/resume. Subscribes to
+// the main-process push so the bar moves without polling; pause takes effect
+// at the next 10-memory batch boundary.
+function EmbeddingBackfillRow({ onStateSettled }: { onStateSettled: () => void }): React.ReactElement | null {
+  const [seed, setSeed] = useState<SeedStatus | null>(null)
+
+  useEffect(() => {
+    void window.electron.embeddings.getStatus().then(setSeed).catch(() => {})
+    const unsub = window.electron.events.onEmbeddingsProgress(s => {
+      setSeed(s)
+      if (s.state === 'done') onStateSettled()
+    })
+    return unsub
+  }, [])
+
+  if (!seed || seed.state === 'idle' || seed.state === 'done') return null
+
+  const pct = seed.total > 0 ? Math.min(100, Math.round((seed.done / seed.total) * 100)) : 0
+  const isRunning = seed.state === 'running'
+  const isPaused = seed.state === 'paused'
+  const skippedLabel: Record<string, string> = {
+    'vector-search-disabled': 'Vector search unavailable',
+    'ollama-unavailable': 'Ollama not running — start it and retry',
+    'model-not-pulled': 'Embed model missing — pull it and retry',
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg">
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+        isRunning ? 'bg-[#6B9FD4] animate-pulse' : isPaused ? 'bg-[#f59e0b]' : 'bg-[#555]'
+      }`} />
+      <div className="flex-1 min-w-0">
+        <div className="text-sm text-[#E8E8E8]">Embedding backfill</div>
+        <div className="text-xs text-[#666]">
+          {seed.state === 'skipped'
+            ? skippedLabel[seed.reason ?? ''] ?? 'Skipped'
+            : `${seed.done}/${seed.total} memories ${isPaused ? '(paused)' : ''}`}
+        </div>
+        {(isRunning || isPaused) && seed.total > 0 && (
+          <div className="mt-1.5 h-1 bg-[#0f0f0f] rounded-full overflow-hidden max-w-[260px]">
+            <div
+              className="h-full bg-[#6B9FD4] transition-[width] duration-300 ease-out"
+              style={{ width: `${pct}%` }}
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Embedded ${seed.done} of ${seed.total} memories`}
+            />
+          </div>
+        )}
+      </div>
+      {isRunning && (
+        <button
+          onClick={() => void window.electron.embeddings.pause().then(setSeed)}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#252525] hover:bg-[#2e2e2e] text-xs text-[#888] transition-colors"
+        >
+          <Pause size={11} /> Pause
+        </button>
+      )}
+      {(isPaused || seed.state === 'skipped') && (
+        <button
+          onClick={() => void window.electron.embeddings.resume().then(setSeed)}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#6B9FD4]/20 hover:bg-[#6B9FD4]/30 text-xs text-[#6B9FD4] transition-colors"
+        >
+          <Play size={11} /> Resume
+        </button>
+      )}
     </div>
   )
 }
