@@ -63,3 +63,34 @@ The store subscribes to `memories:changed` events pushed from the main process s
 ### Testing
 
 Vitest runs in `node` environment and picks up `src/**/*.test.ts`. The PostToolUse hook in `.claude/settings.local.json` runs `npm test` automatically after every file edit. New test files need no config changes.
+
+## Cortex Second Brain — Live Context
+
+The project knowledge base lives in `%APPDATA%\Cortex\memories.db` (13 `project_seed` memories).
+Claude Code can query it directly at any time — no app required.
+
+**Preferred: MCP tools.** The `cortex` MCP server is registered project-scoped in `.mcp.json`
+(and globally in `claude_desktop_config.json`). Use `cortex_search` / `cortex_get_memory` /
+`cortex_list_memories` / `cortex_create_memory` / `cortex_related` / `cortex_stats` as native
+tool calls — keyword (FTS5) and semantic (Ollama + sqlite-vec) search both work. See `mcp/README.md`.
+
+**Fallback: shell dump (works in any context, no MCP needed):**
+```
+node scripts/run-as-node.cjs scripts/cortex-dump.mjs
+```
+
+**Keyword search mid-session:**
+```
+node scripts/run-as-node.cjs scripts/cortex-dump.mjs "auto-edges"
+node scripts/run-as-node.cjs scripts/cortex-dump.mjs "constraint"
+```
+
+**Tag filter:**
+```
+node scripts/run-as-node.cjs scripts/cortex-dump.mjs --tags "bug,open-issue"
+node scripts/run-as-node.cjs scripts/cortex-dump.mjs --tags "architecture"
+```
+
+Run the dump at the start of any session that touches Cortex code so current constraints,
+open issues, and roadmap decisions are in context. The dump output is self-contained
+markdown — safe to paste into any Claude chat as well.

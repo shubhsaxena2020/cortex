@@ -3,6 +3,12 @@
     "higgsfield": {
       "type": "http",
       "url": "https://mcp.higgsfield.ai/mcp"
+    },
+    "cortex": {
+      "type": "stdio",
+      "command": "C:\\Users\\shubh\\cortex\\node_modules\\electron\\dist\\electron.exe",
+      "args": ["C:\\Users\\shubh\\cortex\\mcp\\server.mjs"],
+      "env": { "ELECTRON_RUN_AS_NODE": "1" }
     }
   }
 }
