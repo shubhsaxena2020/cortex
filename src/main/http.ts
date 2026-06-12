@@ -7,6 +7,7 @@ import { toMemory, makeHighlight } from './transformers'
 import { getEmbedding } from './embeddings'
 import { canonicalUrl } from './url-canon'
 import { extractKeywords as extractKeywordsFromText, jaccardSimilarity } from './utils/text'
+import { suggestTags } from './auto-tag'
 
 const APP_NAME = 'cortex'
 const API_VERSION = 1
@@ -212,8 +213,17 @@ export function buildApp(opts: BuildAppOptions = {}): FastifyInstance {
       // upsert path. Two captures of the same Claude/ChatGPT/Gemini
       // conversation produce identical canonical URLs and merge into one row.
       const canonical = canonicalUrl(url)
+
+      // Auto-tagging (v0.3.0) with lock semantics: a memory that already has
+      // tags keeps them across re-captures — user edits in the app are never
+      // clobbered by the pipeline. Heuristic tags only fill the empty case.
+      const existing = db.findMemoryByCanonicalUrl(canonical)
+      const lockedTags = existing && existing.tags.length > 0 ? existing.tags : null
+      const finalTags = lockedTags
+        ?? (tags.length > 0 ? tags : suggestTags(title, content, db.getTagCounts()))
+
       const newId = randomUUID()
-      const { memory: row, action } = db.upsertMemoryByUrl(newId, title, content, source, tags, canonical)
+      const { memory: row, action } = db.upsertMemoryByUrl(newId, title, content, source, finalTags, canonical)
       const memory = toMemory(row)
 
       try { onMemoryCreated?.(memory, url) } catch (e) { req.log.error(e, 'onMemoryCreated callback failed') }

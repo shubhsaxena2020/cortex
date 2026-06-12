@@ -82,7 +82,10 @@ vi.mock('./db', () => ({
     return [...vectors.keys()].slice(0, limit).map((id, i) => ({ memory_id: id, distance: i * 0.1 }))
   },
   getEmbeddedMemoryIds: () => new Set(vectors.keys()),
-  countEmbeddings: () => vectors.size
+  countEmbeddings: () => vectors.size,
+  // v0.3.0 auto-tagging: the POST route reads the tag vocabulary for
+  // heuristic suggestions. Empty vocab = suggestions come from content only.
+  getTagCounts: () => [] as Array<{ tag: string; count: number }>,
 }))
 
 vi.mock('./embeddings', () => ({
