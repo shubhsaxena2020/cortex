@@ -38,7 +38,7 @@ import { edgeColor } from '../utils/graph-builder'
 type D3Node = GraphNode & d3.SimulationNodeDatum
 interface D3Link extends d3.SimulationLinkDatum<D3Node> {
   edgeType: 'relationship' | 'mention'
-  signalType?: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual'
+  signalType?: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual' | 'wiki'
   strength?: number
 }
 
@@ -647,6 +647,7 @@ export default function GraphCanvas({
             'auto:tag':       'Shared tags',
             'auto:keyword':   'Shared keywords',
             'auto:embedding': 'Semantic similarity',
+            'wiki':           'Wiki link',
           }[edgeHit.link.signalType] ?? 'Connected'
           setEdgeTooltip({
             x: midX * t.k + t.x,

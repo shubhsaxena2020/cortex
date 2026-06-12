@@ -34,7 +34,7 @@ export interface GraphLink {
   source: string
   target: string
   edgeType: 'relationship' | 'mention'
-  signalType?: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual'
+  signalType?: 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual' | 'wiki'
   strength?: number
   color?: string
 }
@@ -51,6 +51,7 @@ export const EDGE_COLORS: Record<string, string> = {
   'auto:keyword':   'rgba(234, 179, 8, 0.28)',    // yellow-500 at 28%
   'auto:embedding': 'rgba(168, 85, 247, 0.32)',   // purple-500 at 32%
   'manual':         'rgba(148, 163, 184, 0.45)',   // slate-400 at 45%
+  'wiki':           'rgba(16, 185, 129, 0.40)',   // emerald-500 at 40% — explicit links read strongest
 }
 
 export function edgeColor(link: GraphLink): string {

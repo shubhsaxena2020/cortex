@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Save, Eye, Edit2, Tag, X, Trash2, Clock } from 'lucide-react'
 import { useStore } from '../store'
+import { wikiToMarkdown, wikiTargetFromHref, titleIndexOf } from '../utils/wiki-text'
 import type { MemorySource } from '../../../types'
 
 const SOURCES: { value: MemorySource; label: string; color: string }[] = [
@@ -24,7 +25,7 @@ function formatRelative(isoString: string): string {
 }
 
 export default function MemoryEditor(): React.ReactElement {
-  const { getSelectedMemory, updateMemory, deleteMemory, selectMemory, selectionKey } = useStore()
+  const { getSelectedMemory, updateMemory, deleteMemory, selectMemory, selectionKey, memories } = useStore()
   const memory = getSelectedMemory()
 
   const [title, setTitle] = useState('')
@@ -90,6 +91,34 @@ export default function MemoryEditor(): React.ReactElement {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [save])
+
+  // Wiki links (v0.3.0): preview renders [[Title]] as clickable links that
+  // jump to the linked memory. Unresolved targets render as muted text.
+  const titleIndex = useMemo(() => titleIndexOf(memories), [memories])
+  const previewMarkdown = useMemo(
+    () => (isPreview ? wikiToMarkdown(content || '*Nothing written yet…*') : ''),
+    [isPreview, content],
+  )
+
+  const WikiAnchor = useCallback(({ href, children }: { href?: string; children?: React.ReactNode }) => {
+    const target = wikiTargetFromHref(href)
+    if (target === null) {
+      return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+    }
+    const targetId = titleIndex.get(target.toLowerCase())
+    if (!targetId) {
+      return <span className="text-[#666] border-b border-dotted border-[#555]" title="No memory with this title yet">{children}</span>
+    }
+    return (
+      <button
+        onClick={() => selectMemory(targetId)}
+        className="text-[#6B9FD4] hover:underline"
+        title={`Open "${target}"`}
+      >
+        {children}
+      </button>
+    )
+  }, [titleIndex, selectMemory])
 
   // Dashboard only mounts MemoryEditor when selectedMemoryId is set;
   // this guard is a safety net for the async window between selection and memory load.
@@ -191,7 +220,7 @@ export default function MemoryEditor(): React.ReactElement {
       <div className="flex-1 overflow-y-auto px-6 py-4">
         {isPreview ? (
           <div className="prose max-w-none text-sm">
-            <ReactMarkdown>{content || '*Nothing written yet…*'}</ReactMarkdown>
+            <ReactMarkdown components={{ a: WikiAnchor }}>{previewMarkdown}</ReactMarkdown>
           </div>
         ) : (
           <textarea

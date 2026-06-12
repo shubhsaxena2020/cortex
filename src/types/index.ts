@@ -1,6 +1,14 @@
 export type MemorySource = 'claude' | 'chatgpt' | 'gemini' | 'manual'
-export type RelationshipType = 'related' | 'building_on' | 'contrasts' | 'example'
+export type RelationshipType = 'related' | 'building_on' | 'contrasts' | 'example' | 'wiki'
 export type ViewType = 'editor' | 'graph' | 'search' | 'settings'
+
+/** Embedding backfill state (v0.3.0 backfill UI). */
+export interface SeedStatus {
+  state: 'idle' | 'running' | 'paused' | 'done' | 'skipped'
+  done: number
+  total: number
+  reason?: string
+}
 
 export interface ExtensionConfig {
   token: string
@@ -153,6 +161,12 @@ export interface ElectronAPI {
     getCounts: () => Promise<Array<{ tag: string; count: number }>>
     rename: (from: string, to: string) => Promise<{ changed: number; error: string | null }>
     delete: (tag: string) => Promise<{ changed: number; error: string | null }>
+    suggest: (id: string) => Promise<string[]>
+  }
+  embeddings: {
+    getStatus: () => Promise<SeedStatus>
+    pause: () => Promise<SeedStatus>
+    resume: () => Promise<SeedStatus>
   }
   telemetry: {
     isEnabled: () => Promise<boolean>
@@ -172,6 +186,7 @@ export interface ElectronAPI {
     onExtensionPaired: (callback: () => void) => () => void  // returns unsubscribe
     onVaultChanged: (callback: () => void) => () => void     // returns unsubscribe
     onIndexProgress: (callback: (data: { current: number; total: number }) => void) => () => void
+    onEmbeddingsProgress: (callback: (data: SeedStatus) => void) => () => void
   }
 }
 

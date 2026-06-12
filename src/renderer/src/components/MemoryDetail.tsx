@@ -5,8 +5,9 @@
 // edge strength with signal provenance, and Copy / Open / Delete actions.
 
 import React, { useMemo, useState, useCallback } from 'react'
-import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag } from 'lucide-react'
+import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag, Link2, Sparkles } from 'lucide-react'
 import { useStore } from '../store'
+import { splitWikiSegments, titleIndexOf } from '../utils/wiki-text'
 
 const SOURCE_BADGES: Record<string, { label: string; bg: string; fg: string }> = {
   claude:  { label: 'Claude',  bg: 'bg-[#7C3AED]/20', fg: 'text-[#a78bfa]' },
@@ -20,6 +21,7 @@ const SIGNAL_LABELS: Record<string, string> = {
   'auto:keyword': 'keywords',
   'auto:embedding': 'similar',
   'manual': 'linked',
+  'wiki': 'wiki',
 }
 
 function formatDate(iso?: string): string {
@@ -40,13 +42,14 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [newTag, setNewTag] = useState('')
   const [addingTag, setAddingTag] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
 
   const memory = memories.find(m => m.id === memoryId)
 
   const related = useMemo(() => {
     if (!memory) return []
     return relationships
-      .filter(r => r.memory_a_id === memory.id || r.memory_b_id === memory.id)
+      .filter(r => (r.memory_a_id === memory.id || r.memory_b_id === memory.id) && r.signal_type !== 'wiki')
       .map(r => {
         const otherId = r.memory_a_id === memory.id ? r.memory_b_id : r.memory_a_id
         const other = memories.find(m => m.id === otherId)
@@ -56,6 +59,24 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
       .sort((a, b) => b.strength - a.strength)
       .slice(0, 8)
   }, [memory, relationships, memories])
+
+  // Backlinks: wiki edges pointing AT this memory — "what links here".
+  const backlinks = useMemo(() => {
+    if (!memory) return []
+    return relationships
+      .filter(r => r.signal_type === 'wiki' && r.memory_b_id === memory.id)
+      .map(r => memories.find(m => m.id === r.memory_a_id))
+      .filter((m): m is NonNullable<typeof m> => m !== undefined)
+  }, [memory, relationships, memories])
+
+  // Title → id map so [[links]] in the content preview can jump on click.
+  const titleIndex = useMemo(() => titleIndexOf(memories), [memories])
+
+  const contentSegments = useMemo(() => {
+    if (!memory?.content) return []
+    const text = memory.content.length > 600 ? memory.content.slice(0, 600) + '…' : memory.content
+    return splitWikiSegments(text)
+  }, [memory?.content])
 
   const handleCopy = useCallback(async () => {
     if (!memory) return
@@ -86,6 +107,21 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
     setAddingTag(false)
   }, [memory, newTag, updateMemory])
 
+  const handleSuggestTags = useCallback(async () => {
+    if (!memory || suggesting) return
+    setSuggesting(true)
+    try {
+      const suggested = await window.electron.tags.suggest(memory.id)
+      const merged = [...memory.tags]
+      for (const t of suggested) if (!merged.includes(t)) merged.push(t)
+      if (merged.length > memory.tags.length) {
+        await updateMemory(memory.id, { tags: merged })
+      }
+    } finally {
+      setSuggesting(false)
+    }
+  }, [memory, suggesting, updateMemory])
+
   if (!memory) return null
 
   const badge = SOURCE_BADGES[memory.source] ?? SOURCE_BADGES.manual
@@ -108,11 +144,28 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {/* Content preview */}
+        {/* Content preview — [[wiki links]] are clickable when they resolve */}
         {memory.content && (
           <div className="px-3 py-2 border-b border-[#2a2a2a]">
             <div className="text-xs text-[#999] leading-relaxed whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
-              {memory.content.length > 600 ? memory.content.slice(0, 600) + '…' : memory.content}
+              {contentSegments.map((seg, i) => {
+                if (seg.type === 'text') return <React.Fragment key={i}>{seg.value}</React.Fragment>
+                const targetId = titleIndex.get(seg.target.toLowerCase())
+                return targetId ? (
+                  <button
+                    key={i}
+                    onClick={() => onJump(targetId)}
+                    className="text-[#6B9FD4] hover:underline"
+                    title={`Open "${seg.target}"`}
+                  >
+                    {seg.label}
+                  </button>
+                ) : (
+                  <span key={i} className="text-[#666] border-b border-dotted border-[#444]" title="No memory with this title yet">
+                    {seg.label}
+                  </span>
+                )
+              })}
             </div>
           </div>
         )}
@@ -157,8 +210,37 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
                 <Plus size={8} /> add
               </button>
             )}
+            <button
+              onClick={() => void handleSuggestTags()}
+              disabled={suggesting}
+              aria-label="Suggest tags from content"
+              title="Suggest tags from content"
+              className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#1d1d1d] text-[10px] text-[#555] hover:text-[#a78bfa] hover:bg-[#252525] transition-colors disabled:opacity-50"
+            >
+              <Sparkles size={8} /> {suggesting ? '…' : 'suggest'}
+            </button>
           </div>
         </div>
+
+        {/* Backlinks — wiki links pointing at this memory */}
+        {backlinks.length > 0 && (
+          <div className="px-3 py-2 border-b border-[#2a2a2a]">
+            <div className="flex items-center gap-1 text-[10px] text-[#444] uppercase tracking-wider mb-1.5">
+              <Link2 size={9} /> Linked mentions · {backlinks.length}
+            </div>
+            <div className="space-y-0.5">
+              {backlinks.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => onJump(m.id)}
+                  className="w-full flex items-center gap-2 text-left text-xs text-[#888] hover:text-[#e8e8e8] hover:bg-[#1f1f1f] rounded px-1.5 py-1 transition-colors"
+                >
+                  <span className="truncate">{m.title}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Related memories */}
         {related.length > 0 && (

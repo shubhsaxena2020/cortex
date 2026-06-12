@@ -19,7 +19,7 @@ export type EdgeKind = 'relationship' | 'mention'
 export type EdgeState = 'normal' | 'dim' | 'highlight'
 
 /** Signal type for auto-edges — used to color-code relationship links. */
-export type SignalType = 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual'
+export type SignalType = 'auto:tag' | 'auto:keyword' | 'auto:embedding' | 'manual' | 'wiki'
 
 // Zoom thresholds for the label fade ramp. Matches Obsidian: labels are gone
 // at/below zoom 0.5 and fully shown at/above 1.0, fading linearly in log2(zoom)

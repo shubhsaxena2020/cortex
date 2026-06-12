@@ -677,6 +677,62 @@ export function deleteRelationship(id: string) {
   return { success: true }
 }
 
+// ── Wiki links (v0.3.0 bidirectional [[links]]) ──────────────────────────────
+
+/** id + title only — cheap enough to build a title index per sync call. */
+export function getAllMemoryTitles(): Array<{ id: string; title: string }> {
+  return getDb().prepare('SELECT id, title FROM memories').all() as Array<{ id: string; title: string }>
+}
+
+/**
+ * Replace the outgoing wiki edges of one memory with `targetIds`.
+ * Self-links are dropped; the whole swap runs in one transaction so the graph
+ * never observes a half-synced state. Returns the number of edges written.
+ */
+export function replaceWikiEdges(sourceId: string, targetIds: string[]): number {
+  const d = getDb()
+  const targets = targetIds.filter(t => t !== sourceId)
+  const insert = d.prepare(
+    `INSERT OR REPLACE INTO memory_relationships (id, sourceId, targetId, relationship, strength, signal_type)
+     VALUES (?, ?, ?, 'wiki', 1.0, 'wiki')`
+  )
+  const swap = d.transaction(() => {
+    d.prepare(`DELETE FROM memory_relationships WHERE sourceId = ? AND signal_type = 'wiki'`).run(sourceId)
+    for (const targetId of targets) {
+      insert.run(`wiki:${sourceId}:${targetId}`, sourceId, targetId)
+    }
+  })
+  swap()
+  return targets.length
+}
+
+/**
+ * Memory ids whose FTS-indexed text matches a phrase. Used to find memories
+ * that might contain `[[title]]` when a memory is created or renamed — FTS5
+ * narrows the candidates, extractWikiLinks gives the exact answer.
+ */
+export function findMemoryIdsByPhrase(phrase: string, limit = 200): string[] {
+  const fts = toFtsPhrase(phrase)
+  if (!fts) return []
+  try {
+    const rows = getDb().prepare(
+      'SELECT memory_id FROM memories_fts WHERE memories_fts MATCH ? LIMIT ?'
+    ).all(fts, limit) as Array<{ memory_id: string }>
+    return rows.map(r => r.memory_id)
+  } catch (err) {
+    log.warn('[db] findMemoryIdsByPhrase FTS error:', err)
+    return []
+  }
+}
+
+/** Cheap LIKE prefilter for the startup wiki backfill. */
+export function getMemoryIdsWithWikiSyntax(): string[] {
+  const rows = getDb().prepare(
+    "SELECT id FROM memories WHERE content LIKE '%[[%'"
+  ).all() as Array<{ id: string }>
+  return rows.map(r => r.id)
+}
+
 // ── Vector search (sqlite-vec, optional) ─────────────────────────────────────
 
 export function storeEmbedding(memoryId: string, vector: number[]): void {
