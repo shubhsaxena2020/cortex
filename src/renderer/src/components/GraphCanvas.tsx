@@ -98,7 +98,7 @@ export default function GraphCanvas({
   const [tooltip, setTooltip] = useState<{ x: number; y: number; title: string; sub?: string } | null>(null)
   const [edgeTooltip, setEdgeTooltip] = useState<{ x: number; y: number; label: string; signalType: string; strength: number } | null>(null)
   const [graphInfo, setGraphInfo] = useState<{ shown: number; total: number } | null>(null)
-  const [debug, setDebug] = useState<{ fps: number; visNodes: number; visEdges: number } | null>(null)
+  const [debug, setDebug] = useState<{ fps: number; rafFps: number; visNodes: number; visEdges: number } | null>(null)
 
   // Debug overlay opt-in via ?debug=graph or localStorage flag.
   const debugEnabled = useMemo(() =>
@@ -143,7 +143,13 @@ export default function GraphCanvas({
     segCount: number
   } | null>(null)
   const frameTimesRef  = useRef<number[]>([])
+  const rafTimesRef    = useRef<number[]>([])  // raw rAF tick times — proxies actual paint cadence
   const lastDebugTickRef = useRef(0)
+  // Drag state — kept in refs so mouse-handler closures see the current value
+  // without re-running the worker-setup effect.
+  const isDraggingRef  = useRef(false)
+  const dragIndexRef   = useRef(-1)
+  const dragPendingRef = useRef<{ index: number; x: number; y: number } | null>(null)
   const fitToBoundsRef = useRef<(animate?: boolean) => void>(() => {})
   const userNavigatedRef = useRef(false)   // stops auto-fit once the user pans/zooms
 
@@ -313,8 +319,14 @@ export default function GraphCanvas({
         const pos = pending.buffer
         const arr = nodesRef.current
         const count = Math.min(arr.length, pending.count)
+        // Don't overwrite the dragged node's position with the worker's last
+        // snapshot — the cursor owns its x/y until dragEnd. Without this gate
+        // the dragged node visibly snaps backward 2.5×/sec when the position
+        // batch ships a stale fx/fy.
+        const dragIdx = isDraggingRef.current ? dragIndexRef.current : -1
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
         for (let i = 0; i < count; i++) {
+          if (i === dragIdx) continue
           const x = pos[i * 2]
           const y = pos[i * 2 + 1]
           arr[i].x = x
@@ -466,8 +478,11 @@ export default function GraphCanvas({
       }
 
       // Flat-fill fast path once the frame has more nodes than the rich style
-      // (gradient + shadowBlur per node) can afford.
-      const fastDraw = visibleNodes.length > FAST_DRAW_THRESHOLD
+      // (gradient + shadowBlur per node) can afford. ALSO during drag at any
+      // size — Canvas2D shadowBlur saturates the compositor command buffer
+      // and the user sees frame stalls even when the JS-side FPS reads 60.
+      const dragging = isDraggingRef.current
+      const fastDraw = dragging || visibleNodes.length > FAST_DRAW_THRESHOLD
 
       let edgesDrawn = 0
       if (lod === 'far' && farPairSegs) {
@@ -492,10 +507,13 @@ export default function GraphCanvas({
         // medium band was the one painful zoom in v0.3 — 5–10k visible nodes
         // dragged ~40k edges of mostly-low strength into view at 78ms/frame.
         // Raising the floor to ~0.4 at scale halves the bill without losing
-        // anything the user perceives at this zoom.
-        const edgeStrengthMin = visibleNodes.length > 3000
-          ? Math.min(0.5, 0.2 + (visibleNodes.length - 3000) / 12000)
-          : 0.2
+        // anything the user perceives at this zoom. During drag the threshold
+        // bumps further: weak edges visibly wiggle but add no signal.
+        const edgeStrengthMin = dragging
+          ? 0.4
+          : visibleNodes.length > 3000
+            ? Math.min(0.5, 0.2 + (visibleNodes.length - 3000) / 12000)
+            : 0.2
         for (const link of linksRef.current) {
           const src = link.source as D3Node
           const tgt = link.target as D3Node
@@ -503,8 +521,8 @@ export default function GraphCanvas({
           if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
           // Skip weak auto-edges — they create visual noise without meaning.
           if (link.edgeType === 'relationship' && (link.strength ?? 1) < edgeStrengthMin) continue
-          // Mention edges are noisy at scale too — drop them when dense.
-          if (link.edgeType === 'mention' && visibleNodes.length > 4000) continue
+          // Mention edges are dropped during drag (always) and above 4k nodes.
+          if (link.edgeType === 'mention' && (dragging || visibleNodes.length > 4000)) continue
           const state = edgeStateOf(src.id, tgt.id)
           // Use signalType for auto-edges, kind for mentions
           const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined
@@ -596,8 +614,10 @@ export default function GraphCanvas({
       }
       for (const node of emphasised) {
         const state = nodeStateOf(node.id)
-        // Emphasised nodes are few — always rich, even on fast frames.
-        drawNode(ctx, node, state, t.k, phase)
+        // Emphasised nodes are few — usually rich. But during drag the rich
+        // path (shadowBlur for the pulse ring) is exactly what flooded the
+        // compositor; flat-fill them too while dragging.
+        drawNode(ctx, node, state, t.k, phase, dragging)
         nodesDrawn++
       }
 
@@ -611,16 +631,25 @@ export default function GraphCanvas({
         }
       }
 
-      // FPS sampling — rolling 60-frame window; throttle overlay updates.
+      // FPS sampling. Two metrics, because they diverge in exactly the
+      // pathology we just fixed:
+      //   fps    = how often draw() runs (rAF-callback rate when dirty).
+      //            High even when the compositor is dropping frames.
+      //   rafFps = raw rAF tick rate from the renderLoop. When the GPU
+      //            compositor is saturated, vsync slips and rAF fires less
+      //            often — this number tracks what the user actually sees.
       if (debugEnabled) {
         const ft = frameTimesRef.current
         ft.push(frameStart)
         if (ft.length > 60) ft.shift()
         const span = ft.length > 1 ? ft[ft.length - 1] - ft[0] : 0
         const fps = span > 0 ? Math.round(((ft.length - 1) / span) * 1000) : 0
+        const rt = rafTimesRef.current
+        const rspan = rt.length > 1 ? rt[rt.length - 1] - rt[0] : 0
+        const rafFps = rspan > 0 ? Math.round(((rt.length - 1) / rspan) * 1000) : 0
         if (frameStart - lastDebugTickRef.current > 200) {
           lastDebugTickRef.current = frameStart
-          setDebug({ fps, visNodes: nodesDrawn, visEdges: edgesDrawn })
+          setDebug({ fps, rafFps, visNodes: nodesDrawn, visEdges: edgesDrawn })
         }
       }
       } catch (err) {
@@ -638,7 +667,24 @@ export default function GraphCanvas({
     let renderRaf = 0
     const scheduleRender = (): void => { dirty = true }
     scheduleRenderRef.current = scheduleRender
-    function renderLoop(): void {
+    function renderLoop(now: number): void {
+      // Sample raw rAF cadence regardless of draw — that's what tells us
+      // whether the compositor is actually granting paint slots at 60Hz.
+      if (debugEnabled) {
+        const rt = rafTimesRef.current
+        rt.push(now)
+        if (rt.length > 60) rt.shift()
+      }
+      // Coalesce drag traffic at rAF rate. Native mousemove fires at 120-250Hz
+      // on modern hardware; that was structured-cloning a drag message per
+      // event AND triggering reheat(0.3) per event in the worker, which
+      // posted a position batch per reheat. Flushing once per rAF caps the
+      // worker round-trips at the screen refresh rate.
+      if (dragPendingRef.current) {
+        const msg = dragPendingRef.current
+        dragPendingRef.current = null
+        workerRef.current?.postMessage({ type: 'drag', index: msg.index, x: msg.x, y: msg.y })
+      }
       if (dirty || selectedIdRef.current != null) {
         dirty = false
         draw()
@@ -839,9 +885,13 @@ export default function GraphCanvas({
       const found = hitTest(sx, sy)
       dragId = found?.id ?? null
       if (found) {
+        const idx = nodeIndexById.get(found.id) ?? -1
+        isDraggingRef.current = true
+        dragIndexRef.current = idx
         // Pin the node in the worker at its current position so the layout
         // holds it under the cursor. Worker protocol is index-based.
-        worker.postMessage({ type: 'drag', index: nodeIndexById.get(found.id) ?? -1, x: found.x ?? sx, y: found.y ?? sy })
+        worker.postMessage({ type: 'drag', index: idx, x: found.x ?? sx, y: found.y ?? sy })
+        scheduleRender()
       }
     }
 
@@ -852,11 +902,13 @@ export default function GraphCanvas({
       const [sx, sy] = toSim(cx, cy)
 
       if (dragId) {
-        // Instant local feedback: move the node now, and tell the worker to pin
-        // it there so neighbours follow on the next physics batch.
+        // Instant local feedback: move the node now. Defer the worker postMessage
+        // to the next rAF flush so 120-250Hz mousemoves don't flood the worker
+        // (each worker drag message was triggering reheat + a fresh position
+        // batch — the compositor saw an unbroken stream of canvas commands).
         const node = nodeById.get(dragId)
         if (node) { node.x = sx; node.y = sy }
-        worker.postMessage({ type: 'drag', index: nodeIndexById.get(dragId) ?? -1, x: sx, y: sy })
+        dragPendingRef.current = { index: nodeIndexById.get(dragId) ?? -1, x: sx, y: sy }
         quadtreeDirty.current = true
         scheduleRender()
         return
@@ -916,8 +968,18 @@ export default function GraphCanvas({
 
     const onMouseUp = () => {
       if (dragId) {
+        // Flush any pending drag coords so the worker's final fx/fy is the
+        // cursor's last position, not a stale one.
+        if (dragPendingRef.current) {
+          const msg = dragPendingRef.current
+          dragPendingRef.current = null
+          worker.postMessage({ type: 'drag', index: msg.index, x: msg.x, y: msg.y })
+        }
         worker.postMessage({ type: 'dragEnd', index: nodeIndexById.get(dragId) ?? -1 })
         dragId = null
+        isDraggingRef.current = false
+        dragIndexRef.current = -1
+        scheduleRender()
         captureGraph('drag')
       }
     }
@@ -961,6 +1023,11 @@ export default function GraphCanvas({
     canvas.addEventListener('mouseleave', onMouseLeave)
 
     return () => {
+      // Clear drag state — a mid-drag teardown (HMR, prop change) must not
+      // leave the next mount stuck in flat-fill or with a stale drag index.
+      isDraggingRef.current = false
+      dragIndexRef.current = -1
+      dragPendingRef.current = null
       worker.postMessage({ type: 'stop' })
       worker.terminate()
       workerRef.current = null
@@ -1023,7 +1090,10 @@ export default function GraphCanvas({
 
       {debug && (
         <div className="absolute top-2 left-2 bg-[#1a1a1a]/90 text-[#ccc] text-xs px-3 py-2 rounded font-mono pointer-events-none select-none">
-          <div>fps: <span className={debug.fps >= 55 ? 'text-green-400' : debug.fps >= 30 ? 'text-yellow-400' : 'text-red-400'}>{debug.fps}</span></div>
+          <div>
+            paint: <span className={debug.rafFps >= 55 ? 'text-green-400' : debug.rafFps >= 30 ? 'text-yellow-400' : 'text-red-400'}>{debug.rafFps}</span>
+            <span className="text-[#666]"> · draw:</span> <span className={debug.fps >= 55 ? 'text-green-400' : debug.fps >= 30 ? 'text-yellow-400' : 'text-red-400'}>{debug.fps}</span>
+          </div>
           <div>nodes: {debug.visNodes} / {nodesRef.current.length}</div>
           <div>edges: {debug.visEdges} / {linksRef.current.length}</div>
         </div>
