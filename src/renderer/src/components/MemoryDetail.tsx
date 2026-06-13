@@ -4,7 +4,7 @@
 // nodes): shows content preview, editable tags, related memories sorted by
 // edge strength with signal provenance, and Copy / Open / Delete actions.
 
-import React, { useMemo, useState, useCallback } from 'react'
+import React, { useMemo, useState, useCallback, useEffect } from 'react'
 import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag, Link2, Sparkles } from 'lucide-react'
 import { useStore } from '../store'
 import { splitWikiSegments, titleIndexOf } from '../utils/wiki-text'
@@ -37,7 +37,7 @@ interface MemoryDetailProps {
 }
 
 export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: MemoryDetailProps): React.ReactElement | null {
-  const { memories, relationships, updateMemory, deleteMemory } = useStore()
+  const { memories, relationships, updateMemory, deleteMemory, hydrateMemory } = useStore()
   const [copied, setCopied] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [newTag, setNewTag] = useState('')
@@ -45,6 +45,13 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
   const [suggesting, setSuggesting] = useState(false)
 
   const memory = memories.find(m => m.id === memoryId)
+
+  // Store rows are light — pull full content for the preview. The panel
+  // renders immediately with the snippet-less body and fills in when the
+  // hydrated row lands.
+  useEffect(() => {
+    void hydrateMemory(memoryId)
+  }, [memoryId, hydrateMemory])
 
   const related = useMemo(() => {
     if (!memory) return []

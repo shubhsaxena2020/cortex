@@ -1,9 +1,17 @@
 import { create } from 'zustand'
-import type { Memory, Relationship, ViewType, SearchResult, VaultFile, VaultConfig } from '../../types'
+import type { Memory, Relationship, ViewType, SearchResult, VaultFile, VaultConfig, MentionEdge } from '../../types'
 
 interface CortexState {
   memories: Memory[]
   relationships: Relationship[]
+  mentionEdges: MentionEdge[]
+  /**
+   * Memories whose full content has been loaded. memories:getAll ships the
+   * light projection (content '', snippet present) so 100k-memory vaults
+   * don't pay a giant IPC bill at startup; anything that renders or edits
+   * full content must go through hydrateMemory first.
+   */
+  hydratedIds: Set<string>
   selectedMemoryId: string | null
   selectionKey: number
   currentView: ViewType
@@ -18,6 +26,9 @@ interface CortexState {
 
   fetchMemories: () => Promise<void>
   fetchRelationships: () => Promise<void>
+  fetchMentionEdges: () => Promise<void>
+  hydrateMemory: (id: string) => Promise<void>
+  isHydrated: (id: string) => boolean
   selectMemory: (id: string | null) => void
   clearSelection: () => void
   setView: (view: ViewType) => void
@@ -43,6 +54,8 @@ interface CortexState {
 export const useStore = create<CortexState>((set, get) => ({
   memories: [],
   relationships: [],
+  mentionEdges: [],
+  hydratedIds: new Set<string>(),
   selectedMemoryId: null,
   selectionKey: 0,
   currentView: 'editor',
@@ -59,7 +72,10 @@ export const useStore = create<CortexState>((set, get) => ({
     set({ isLoading: true })
     try {
       const memories = await window.electron.memories.getAll()
-      set({ memories })
+      // Fresh light rows: drop hydration state — content may have changed
+      // under us (capture pipeline, MCP writes), so previously hydrated rows
+      // must re-hydrate on next open.
+      set({ memories, hydratedIds: new Set<string>() })
     } finally {
       set({ isLoading: false })
     }
@@ -70,11 +86,35 @@ export const useStore = create<CortexState>((set, get) => ({
     set({ relationships })
   },
 
-  selectMemory: id => set(state => ({
-    selectedMemoryId: id,
-    selectedFileId: null,
-    selectionKey: state.selectionKey + 1,
-  })),
+  fetchMentionEdges: async () => {
+    const mentionEdges = await window.electron.graph.getMentionEdges()
+    set({ mentionEdges })
+  },
+
+  hydrateMemory: async id => {
+    if (get().hydratedIds.has(id)) return
+    const full = await window.electron.memories.get(id)
+    if (!full) return
+    set(state => {
+      const hydratedIds = new Set(state.hydratedIds)
+      hydratedIds.add(id)
+      return {
+        memories: state.memories.map(m => (m.id === id ? { ...m, ...full } : m)),
+        hydratedIds,
+      }
+    })
+  },
+
+  isHydrated: id => get().hydratedIds.has(id),
+
+  selectMemory: id => {
+    set(state => ({
+      selectedMemoryId: id,
+      selectedFileId: null,
+      selectionKey: state.selectionKey + 1,
+    }))
+    if (id) void get().hydrateMemory(id)
+  },
 
   clearSelection: () => set({ selectedMemoryId: null, selectedFileId: null }),
 
@@ -82,23 +122,34 @@ export const useStore = create<CortexState>((set, get) => ({
 
   createMemory: async data => {
     const memory = await window.electron.memories.create(data)
-    set(state => ({ memories: [memory, ...state.memories] }))
+    set(state => {
+      const hydratedIds = new Set(state.hydratedIds)
+      hydratedIds.add(memory.id) // create returns the full row
+      return { memories: [memory, ...state.memories], hydratedIds }
+    })
     return memory
   },
 
   updateMemory: async (id, data) => {
     const updated = await window.electron.memories.update(id, data)
-    set(state => ({
-      memories: state.memories.map(m => (m.id === id ? updated : m))
-    }))
+    set(state => {
+      const hydratedIds = new Set(state.hydratedIds)
+      hydratedIds.add(id) // update returns the full row
+      return { memories: state.memories.map(m => (m.id === id ? updated : m)), hydratedIds }
+    })
   },
 
   deleteMemory: async id => {
     await window.electron.memories.delete(id)
-    set(state => ({
-      memories: state.memories.filter(m => m.id !== id),
-      selectedMemoryId: state.selectedMemoryId === id ? null : state.selectedMemoryId
-    }))
+    set(state => {
+      const hydratedIds = new Set(state.hydratedIds)
+      hydratedIds.delete(id)
+      return {
+        memories: state.memories.filter(m => m.id !== id),
+        hydratedIds,
+        selectedMemoryId: state.selectedMemoryId === id ? null : state.selectedMemoryId,
+      }
+    })
   },
 
   searchMemories: async (query, tags, source, dates) => {

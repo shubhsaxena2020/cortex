@@ -27,9 +27,14 @@ export default function InsightPopup({ onClose }: InsightPopupProps): React.Reac
     return memories.filter(m => m.id !== selectedMemoryId).slice(0, 3)
   }, [memories, relationships, selectedMemoryId])
 
-  const copyContext = (): void => {
-    const text = related.map(m => `# ${m.title}\n\n${m.content}`).join('\n\n---\n\n')
-    navigator.clipboard.writeText(text)
+  const copyContext = async (): Promise<void> => {
+    // Store rows are light (no content) — fetch full bodies for the copy.
+    const full = await Promise.all(related.map(m => window.electron.memories.get(m.id)))
+    const text = full
+      .filter((m): m is NonNullable<typeof m> => m !== null)
+      .map(m => `# ${m.title}\n\n${m.content}`)
+      .join('\n\n---\n\n')
+    await navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -62,7 +67,7 @@ export default function InsightPopup({ onClose }: InsightPopupProps): React.Reac
             >
               <p className="text-xs font-medium text-[#e0e0e0] truncate">{m.title}</p>
               <p className="text-xs text-[#555] truncate mt-0.5">
-                {m.content.replace(/[#*`_]/g, '').slice(0, 65)}
+                {(m.content || m.snippet || '').replace(/[#*`_]/g, '').slice(0, 65)}
               </p>
             </div>
           ))}
@@ -70,7 +75,7 @@ export default function InsightPopup({ onClose }: InsightPopupProps): React.Reac
 
         {related.length > 0 && (
           <button
-            onClick={copyContext}
+            onClick={() => void copyContext()}
             className="mt-3 w-full flex items-center justify-center gap-2 py-2 bg-[#6366f1] hover:bg-[#4f46e5] text-white text-xs rounded-lg font-medium transition-colors"
           >
             {copied ? <Check size={12} /> : <Copy size={12} />}

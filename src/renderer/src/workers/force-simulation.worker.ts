@@ -5,40 +5,51 @@
 // is multi-millisecond, and the old code both ticked AND redrew on the main
 // thread. Here the physics runs in a Worker; the main thread only renders.
 //
-// PROTOCOL
-//   main → worker : init | drag | dragEnd | reheat | stop
-//   worker → main : positions  (a transferable Float32Array of [x,y,x,y,…] in
-//                               the SAME index order as the init nodes array)
+// PROTOCOL (typed arrays end-to-end — at 100k nodes structured-cloning object
+// arrays costs seconds; transferable buffers cost ~0):
+//   main → worker : init     { count, positions: Float32Array buffer (NaN =
+//                              unset), connections: Float32Array buffer,
+//                              links: Uint32Array buffer of [src,tgt] index
+//                              pairs, width, height }
+//                   drag     { index, x, y } | dragEnd { index }
+//                   reheat | stop
+//   worker → main : positions (transferable Float32Array of [x,y,…] in init
+//                              index order)
 //
-// Positions are batched: we run TICKS_PER_BATCH ticks, post once, then yield
-// (setTimeout 0 — Workers have no requestAnimationFrame) so incoming drag/stop
-// messages are handled promptly. This keeps message volume ~1/batch instead of
-// one per tick.
+// Node identity is INDEX-based: the main thread owns id↔index mapping; the
+// worker never sees an id string.
+//
+// SCALE ADAPTATION: d3-force defaults are tuned for hundreds of nodes. At
+// 100k, forceCollide dominates every tick (it rebuilds its own quadtree per
+// pass) for spacing that's invisible below LOD-far anyway, and a slow
+// alphaDecay means thousands of ticks before settle. Forces and cadence are
+// therefore stepped by node count — visually identical at small scale,
+// convergent within seconds at 100k.
 
 import {
   forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide, forceX, forceY,
   type Simulation, type SimulationNodeDatum, type SimulationLinkDatum,
 } from 'd3-force'
-import { nodeRadius } from '../utils/graph-renderer'
-import type { GraphNode } from '../utils/graph-builder'
 
 interface WNode extends SimulationNodeDatum {
-  id: string
+  index: number
   connections: number
 }
-type WLink = SimulationLinkDatum<WNode> & { edgeType?: string; strength?: number }
+type WLink = SimulationLinkDatum<WNode>
 
 type InitMsg = {
   type: 'init'
-  nodes: { id: string; connections: number; x?: number; y?: number }[]
-  links: { source: string; target: string; edgeType?: string; strength?: number }[]
+  count: number
+  positions: ArrayBuffer    // Float32 [x,y,…], NaN = let d3 place it
+  connections: ArrayBuffer  // Float32 per node (radius input)
+  links: ArrayBuffer        // Uint32 [srcIndex, tgtIndex, …]
   width: number
   height: number
 }
 type InMsg =
   | InitMsg
-  | { type: 'drag'; id: string; x: number; y: number }
-  | { type: 'dragEnd'; id: string }
+  | { type: 'drag'; index: number; x: number; y: number }
+  | { type: 'dragEnd'; index: number }
   | { type: 'reheat'; alpha?: number }
   | { type: 'stop' }
 
@@ -50,18 +61,16 @@ const ctx = self as unknown as {
   postMessage: (message: unknown, transfer?: Transferable[]) => void
 }
 
-const TICKS_PER_BATCH = 5
-
 let sim: Simulation<WNode, WLink> | null = null
 let nodes: WNode[] = []
-let byId = new Map<string, WNode>()
 let scheduled = false
+let ticksPerBatch = 5
 
-// Collide radius must match the renderer's node radius so layout spacing and
-// drawn discs agree. Reuse nodeRadius (it only reads `.connections`); the cast
-// is safe because WNode carries that field.
-function collideRadius(n: WNode): number {
-  return nodeRadius(n as unknown as GraphNode) + 3
+// Mirrors graph-renderer nodeRadius (4 + sqrt(connections) * 3, clamped) —
+// duplicated to keep this worker dependency-free for the typed-array protocol.
+function radiusOf(connections: number): number {
+  const r = 4 + Math.sqrt(connections) * 3
+  return Math.max(4, Math.min(r, 50))
 }
 
 function postPositions(): void {
@@ -78,7 +87,7 @@ function postPositions(): void {
 function runBatch(): void {
   scheduled = false
   if (!sim) return
-  for (let i = 0; i < TICKS_PER_BATCH; i++) sim.tick()
+  for (let i = 0; i < ticksPerBatch; i++) sim.tick()
   postPositions()
   if (sim.alpha() > sim.alphaMin()) schedule()
 }
@@ -101,45 +110,74 @@ ctx.onmessage = (e: MessageEvent<InMsg>): void => {
   const msg = e.data
   switch (msg.type) {
     case 'init': {
-      nodes = msg.nodes.map(n => ({ id: n.id, connections: n.connections, x: n.x, y: n.y }))
-      byId = new Map(nodes.map(n => [n.id, n]))
-      const links: WLink[] = msg.links.map(l => ({ source: l.source, target: l.target }))
+      const positions = new Float32Array(msg.positions)
+      const connections = new Float32Array(msg.connections)
+      const linkPairs = new Uint32Array(msg.links)
+      const n = msg.count
+
+      nodes = new Array<WNode>(n)
+      for (let i = 0; i < n; i++) {
+        const x = positions[i * 2]
+        const y = positions[i * 2 + 1]
+        nodes[i] = {
+          index: i,
+          connections: connections[i],
+          // NaN means "no cached position" — leave undefined so d3 uses its
+          // phyllotaxis initial placement (deterministic, no overlap pile).
+          ...(Number.isNaN(x) ? {} : { x, y }),
+        }
+      }
+      const links: WLink[] = new Array(linkPairs.length / 2)
+      for (let i = 0; i < links.length; i++) {
+        links[i] = { source: linkPairs[i * 2], target: linkPairs[i * 2 + 1] }
+      }
+
+      // Scale tiers. HUGE drops collide (its per-tick quadtree dominates the
+      // profile and the spacing it buys is sub-pixel at the zoom levels where
+      // 100k nodes are on screen), relaxes Barnes-Hut precision, and cools
+      // faster. Batch size shrinks so position frames stream steadily even
+      // when a single tick costs hundreds of ms.
+      const big = n >= 20_000
+      const huge = n >= 50_000
+      ticksPerBatch = huge ? 1 : big ? 2 : 5
+      // Barnes-Hut theta 1.2 at scale: coarser approximation, ~2× faster
+      // ticks, indistinguishable layout at the zooms where 100k nodes show.
+      const charge = forceManyBody<WNode>().strength(big ? -60 : -120).theta(big ? 1.2 : 0.9)
+
       sim = forceSimulation<WNode, WLink>(nodes)
-        // Obsidian-matched force values:
-        // linkDistance 60 (tight clusters), linkStrength 0.5.
-        // Charge: -120 (strong repulsion prevents piles).
-        // Collide: degree-based radius + 4px buffer prevents overlap.
-        // alphaDecay 0.028: slower settle = better final layout.
-        .force('link', forceLink<WNode, WLink>(links).id(d => d.id).distance(60).strength(0.5))
-        .force('charge', forceManyBody<WNode>().strength(-120))
+        // Obsidian-matched force values at normal scale (see v0.2 notes):
+        // linkDistance 60, linkStrength 0.5, charge -120, collide r+4.
+        .force('link', forceLink<WNode, WLink>(links).distance(60).strength(big ? 0.3 : 0.5))
+        .force('charge', charge)
         .force('center', forceCenter(msg.width / 2, msg.height / 2).strength(0.1))
         // Weak positional pull keeps disconnected components from repelling
         // each other to infinity — without it a 10k-node graph spreads to a
         // ±16k-unit cloud that no zoom level can frame usefully.
-        .force('x', forceX<WNode>(msg.width / 2).strength(0.05))
-        .force('y', forceY<WNode>(msg.height / 2).strength(0.05))
-        .force('collision', forceCollide<WNode>(n => nodeRadius(n as unknown as GraphNode) + 4).strength(0.8))
-        .alphaDecay(0.028)
+        .force('x', forceX<WNode>(msg.width / 2).strength(big ? 0.08 : 0.05))
+        .force('y', forceY<WNode>(msg.height / 2).strength(big ? 0.08 : 0.05))
+        .alphaDecay(huge ? 0.06 : big ? 0.045 : 0.028)
         .velocityDecay(0.4)
-        .alphaMin(0.001)
+        .alphaMin(big ? 0.005 : 0.001)
         .stop() // we drive ticks manually — no internal d3-timer in the worker
+      if (!big) {
+        sim.force('collision', forceCollide<WNode>(node => radiusOf(node.connections) + 4).strength(0.8))
+      }
       // Stream positions from tick 0 so the first paint happens immediately —
-      // a synchronous 100-tick warmup over 10k nodes blocks the first batch
-      // for ~10s, which reads as a blank canvas. The early frames show the
-      // layout organizing, which is intentional feedback, not a bug.
+      // a synchronous warmup blocks the first batch and reads as a blank
+      // canvas. Early frames show the layout organizing: feedback, not a bug.
       postPositions()
       schedule()
       break
     }
     case 'drag': {
-      const n = byId.get(msg.id)
-      if (n) { n.fx = msg.x; n.fy = msg.y }
+      const node = nodes[msg.index]
+      if (node) { node.fx = msg.x; node.fy = msg.y }
       reheat(0.3)
       break
     }
     case 'dragEnd': {
-      const n = byId.get(msg.id)
-      if (n) { n.fx = null; n.fy = null }
+      const node = nodes[msg.index]
+      if (node) { node.fx = null; node.fy = null }
       if (sim) sim.alphaTarget(0) // let it cool and the loop stop on its own
       break
     }

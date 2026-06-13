@@ -1,11 +1,12 @@
-import type { VaultFile } from '../../../types'
+import type { VaultFile, MentionEdge } from '../../../types'
 
 export type FilterMode = 'both' | 'memories' | 'files'
 
 export interface GraphMemory {
   id: string
   title: string
-  content: string
+  /** Unused by the graph since mention edges moved to the main process; kept optional for callers passing full rows. */
+  content?: string
   source: string
   tags: string[]
 }
@@ -87,6 +88,7 @@ export function buildGraph(
   vaultFiles: VaultFile[],
   filter: FilterMode,
   watchPath?: string | null,
+  mentionEdges: MentionEdge[] = [],
 ): { nodes: GraphNode[]; links: GraphLink[] } {
   const nodes: GraphNode[] = []
   const memoryIdSet = new Set<string>()
@@ -139,39 +141,17 @@ export function buildGraph(
   }
 
   if (filter === 'both') {
-    // Mention edges link a memory to a vault file it names. The naive form was
-    // O(memories × files) with a substring test — at 10k memories × 5k files
-    // that cost ~80s on the main thread AND produced ~1.35M edges, because a
-    // common filename stem ("testing", "hooks", "index", "app", …) substring-
-    // matches most memories. That double whammy left the graph canvas black:
-    // buildGraph hogged the thread, then the layout worker hung on 1.35M links
-    // before it could emit a single frame.
-    //
-    // Invert it: tokenise each memory's text into words ONCE into a word→memory
-    // index, then look up each file's stem directly. O(total words) to build +
-    // O(files) lookups (measured ~0.4s vs ~80s). Matching whole words instead
-    // of substrings also removes false positives like "app" inside
-    // "application". Per-file fan-out is capped so a stem shared by thousands
-    // of memories stays a few representative edges, not a hairball.
-    const MAX_MENTIONS_PER_FILE = 8
-    const wordToMemoryIds = new Map<string, string[]>()
-    for (const m of memories) {
-      const words = new Set((m.title + ' ' + m.content).toLowerCase().match(/[a-z0-9]+/g) ?? [])
-      for (const w of words) {
-        if (w.length <= 2) continue
-        const arr = wordToMemoryIds.get(w)
-        if (arr) arr.push(m.id)
-        else wordToMemoryIds.set(w, [m.id])
-      }
-    }
-    for (const f of vaultFiles) {
-      const stem = filenameStem(f)
-      if (stem.length <= 2) continue
-      const matched = wordToMemoryIds.get(stem)
-      if (!matched) continue
-      const n = Math.min(matched.length, MAX_MENTIONS_PER_FILE)
-      for (let i = 0; i < n; i++) {
-        links.push({ source: matched[i], target: f.id, edgeType: 'mention' })
+    // Mention edges are precomputed in the MAIN process (mention-edges.ts)
+    // behind a fingerprint cache, because building them needs memory content
+    // — which no longer ships to the renderer at all. (History: the original
+    // renderer-side O(memories × files) substring scan cost ~80s and 1.35M
+    // edges at 10k+5k; the inverted-index rewrite fixed the algorithm, and
+    // the 100k overhaul moved it server-side to kill the content IPC bill.)
+    // Endpoints are validated against the current node sets so stale cache
+    // rows or filtered nodes can't produce dangling links.
+    for (const e of mentionEdges) {
+      if (memoryIdSet.has(e.source) && fileIdSet.has(e.target)) {
+        links.push({ source: e.source, target: e.target, edgeType: 'mention' })
       }
     }
   }

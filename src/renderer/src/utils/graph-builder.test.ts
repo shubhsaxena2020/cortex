@@ -111,35 +111,42 @@ describe('buildGraph — relationship edges', () => {
 
 // ── buildGraph — mention edges ────────────────────────────────────────────────
 
+// Mention MATCHING moved to the main process (src/main/mention-edges.ts,
+// tested there) so memory content never ships to the renderer. buildGraph now
+// consumes precomputed edges and is responsible only for endpoint validation
+// and filter gating.
 describe('buildGraph — mention edges', () => {
-  it('creates mention edge when filename stem appears in memory content', () => {
-    const memories = [mem('m1', 'Notes', 'I wrote a script for this')]
+  it('includes a precomputed mention edge when both endpoints exist', () => {
+    const memories = [mem('m1', 'Notes')]
     const files = [file('f1', 'script.py', '.py')]
-    const { links } = buildGraph(memories, [], files, 'both')
+    const { links } = buildGraph(memories, [], files, 'both', null, [{ source: 'm1', target: 'f1' }])
     const mentionLink = links.find(l => l.edgeType === 'mention')
     expect(mentionLink).toBeDefined()
     expect(mentionLink?.source).toBe('m1')
     expect(mentionLink?.target).toBe('f1')
   })
 
-  it('creates mention edge when stem appears in title', () => {
-    const memories = [mem('m1', 'about readme file', '')]
-    const files = [file('f1', 'README.md', '.md')]
-    const { links } = buildGraph(memories, [], files, 'both')
-    expect(links.some(l => l.edgeType === 'mention')).toBe(true)
-  })
-
-  it('ignores stems that are too short (<=2 chars)', () => {
-    const memories = [mem('m1', 'a readme', 'about it')]
-    const files = [file('f1', 'to.md', '.md')]  // stem = "to" (2 chars)
-    const { links } = buildGraph(memories, [], files, 'both')
+  it('drops mention edges whose endpoints are not in the node set (stale cache rows)', () => {
+    const memories = [mem('m1', 'Notes')]
+    const files = [file('f1', 'script.py', '.py')]
+    const { links } = buildGraph(memories, [], files, 'both', null, [
+      { source: 'm-deleted', target: 'f1' },
+      { source: 'm1', target: 'f-deleted' },
+    ])
     expect(links.some(l => l.edgeType === 'mention')).toBe(false)
   })
 
   it('does not add mention edges when filter=memories', () => {
-    const memories = [mem('m1', 'Notes', 'I wrote a script')]
+    const memories = [mem('m1', 'Notes')]
     const files = [file('f1', 'script.py', '.py')]
-    const { links } = buildGraph(memories, [], files, 'memories')
+    const { links } = buildGraph(memories, [], files, 'memories', null, [{ source: 'm1', target: 'f1' }])
+    expect(links.some(l => l.edgeType === 'mention')).toBe(false)
+  })
+
+  it('defaults to no mention edges when none are provided', () => {
+    const memories = [mem('m1', 'Notes')]
+    const files = [file('f1', 'script.py', '.py')]
+    const { links } = buildGraph(memories, [], files, 'both')
     expect(links.some(l => l.edgeType === 'mention')).toBe(false)
   })
 })

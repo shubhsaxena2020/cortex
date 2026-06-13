@@ -16,6 +16,9 @@ const api: ElectronAPI = {
     create: data => ipcRenderer.invoke('relationships:create', data),
     delete: id => ipcRenderer.invoke('relationships:delete', id)
   },
+  graph: {
+    getMentionEdges: () => ipcRenderer.invoke('graph:getMentionEdges'),
+  },
   extension: {
     getConfig: () => ipcRenderer.invoke('extension:getConfig'),
     armPairing: (durationMs) => ipcRenderer.invoke('extension:armPairing', durationMs)

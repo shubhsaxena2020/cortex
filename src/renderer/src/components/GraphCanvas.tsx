@@ -52,11 +52,48 @@ interface GraphCanvasProps {
 
 const BTN_CLS = 'w-7 h-7 flex items-center justify-center bg-[#1a1a1a]/80 hover:bg-[#252525] border border-[#333] rounded text-[#888] hover:text-[#ccc] transition-colors'
 
+// Above this many visible nodes the frame switches to flat-fill node
+// rendering (no gradient / shadowBlur / rings) — the rich style costs ~40µs
+// per node, which is invisible at 300 nodes and 200ms+ at 5k.
+const FAST_DRAW_THRESHOLD = 1500
+
+// Dev-only staleness sentinel: lets CDP harnesses confirm which revision of
+// this module the renderer actually loaded (HMR/orphaned-vite mixups cost a
+// debugging hour during the 100k overhaul).
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  ;(window as unknown as Record<string, unknown>).__cortexGraphRev = 'overhaul-v3'
+}
+// Above this many visible nodes the frame clusters regardless of zoom level —
+// a fit-to-bounds view of 100k nodes can sit in the 'medium' zoom band while
+// tens of thousands of nodes are on screen. Sized by the EDGE bill, not the
+// node bill: ~5k visible nodes on a dense graph drag in ~40k edge segments
+// (measured 168ms/frame), so the cutover happens well before that.
+const DENSITY_FAR_THRESHOLD = 2500
+// While the simulation streams, positions (and the quadtree version) change
+// every batch; rebuilding the far scene cache each time costs O(nodes+links).
+// A stale cluster scene is visually fine for a settling layout — rebuild at
+// most this often. Zoom-band changes still rebuild immediately.
+const FAR_CACHE_MIN_REBUILD_MS = 700
+// While the simulation streams, worker position batches can arrive faster
+// than they're worth applying (each apply is an O(nodes) copy + bounds pass,
+// and invalidates the spatial index). Only the NEWEST snapshot matters —
+// stash it and apply on this cadence.
+const POSITIONS_APPLY_MS = 400
+// Full-scan edge hover is exact but O(links) per mousemove; above this many
+// links it switches to a quadtree-local test (edges incident to nodes near
+// the cursor). Trade-off: hovering a long edge far from both endpoints stops
+// tooltipping on huge graphs — acceptable against 300k-iteration mousemoves.
+const EDGE_HOVER_FULL_SCAN_MAX = 20_000
+// Hard ceiling on bundled far-LOD edge segments per scene-cache build. Pair
+// dedupe alone doesn't bound the count when links span distant clusters
+// (measured 114k pairs at 60k memories / 150k links).
+const FAR_EDGE_SEG_CAP = 6000
+
 export default function GraphCanvas({
   filter, showAll, watchPath, onNodeSelect, onNodeOpen,
 }: GraphCanvasProps): React.ReactElement {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { memories, relationships, vaultFiles, selectedMemoryId, selectedFileId } = useStore()
+  const { memories, relationships, vaultFiles, mentionEdges, selectedMemoryId, selectedFileId } = useStore()
 
   const [tooltip, setTooltip] = useState<{ x: number; y: number; title: string; sub?: string } | null>(null)
   const [edgeTooltip, setEdgeTooltip] = useState<{ x: number; y: number; label: string; signalType: string; strength: number } | null>(null)
@@ -85,6 +122,26 @@ export default function GraphCanvas({
   const nodePositions  = useRef<Map<string, { x: number; y: number }>>(new Map())
   const quadtreeRef    = useRef<Quadtree<D3Node> | null>(null)
   const quadtreeDirty  = useRef(true)
+  const quadtreeVersionRef = useRef(0)
+  const quadtreeBuiltAtRef = useRef(0)
+  const pendingPositionsRef = useRef<{ buffer: Float32Array; count: number } | null>(null)
+  const positionsAppliedAtRef = useRef(0)
+  const scheduleRenderRef = useRef<() => void>(() => {})
+  const linksByNodeRef = useRef<Map<string, D3Link[]>>(new Map())
+  const cloudBoundsRef = useRef<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null)
+  // Far-LOD scene cache: clusters + bundled edge segments computed over ALL
+  // nodes once per (positions version × zoom band), reused across every pan /
+  // zoom frame inside the band. Per-frame far cost is then O(clusters), not
+  // O(nodes + links).
+  const farCacheRef = useRef<{
+    key: string
+    kBucket: number
+    builtAt: number
+    clusters: ReturnType<typeof clusterNodes<D3Node & { x: number; y: number }>>
+    clusterOf: Map<string, number>
+    pairSegs: Map<string, Array<[number, number, number, number]>>
+    segCount: number
+  } | null>(null)
   const frameTimesRef  = useRef<number[]>([])
   const lastDebugTickRef = useRef(0)
   const fitToBoundsRef = useRef<(animate?: boolean) => void>(() => {})
@@ -133,7 +190,7 @@ export default function GraphCanvas({
     const existingT = d3.zoomTransform(canvas)
     if (existingT !== d3.zoomIdentity) transformRef.current = existingT
 
-    const raw = buildGraph(memories, relationships, vaultFiles, filter, watchPath)
+    const raw = buildGraph(memories, relationships, vaultFiles, filter, watchPath, mentionEdges)
     const allNodes = raw.nodes as D3Node[]
     const visNodes = showAll ? allNodes : allNodes.filter(n => n.connections > 0)
     setGraphInfo(visNodes.length < allNodes.length
@@ -167,6 +224,25 @@ export default function GraphCanvas({
     linksRef.current = visLinks
     adjacencyRef.current = buildAdjacency(visNodes, visLinks)
     quadtreeDirty.current = true
+    farCacheRef.current = null
+
+    // Per-node incident links for quadtree-local edge hover on huge graphs.
+    const linksByNode = new Map<string, D3Link[]>()
+    for (const l of visLinks) {
+      const sId = (l.source as D3Node).id
+      const tId = (l.target as D3Node).id
+      let sArr = linksByNode.get(sId)
+      if (!sArr) { sArr = []; linksByNode.set(sId, sArr) }
+      sArr.push(l)
+      let tArr = linksByNode.get(tId)
+      if (!tArr) { tArr = []; linksByNode.set(tId, tArr) }
+      tArr.push(l)
+    }
+    linksByNodeRef.current = linksByNode
+
+    // Index lookup for the worker protocol (it identifies nodes by init order).
+    const nodeIndexById = new Map<string, number>()
+    visNodes.forEach((node, i) => nodeIndexById.set(node.id, i))
 
     // Dev-only inspection handle for headless verification (CDP scripts read
     // live layout state through this; stripped from production builds).
@@ -226,15 +302,83 @@ export default function GraphCanvas({
       const vT = (-t.y) / t.k - buf
       const vB = (h - t.y) / t.k + buf
 
-      // Refresh spatial index when the sim marked it dirty. On a settled
-      // graph the same tree is reused across many pan/zoom frames.
-      if (quadtreeDirty.current || quadtreeRef.current == null) {
+      // Apply the newest pending physics snapshot on a fixed cadence. The
+      // worker may post per tick; intermediate snapshots are dropped (only
+      // the latest is stashed). Apply + spatial-index rebuild happen together
+      // so hit-testing, culling, and the far cache stay mutually consistent.
+      const pending = pendingPositionsRef.current
+      if (pending && frameStart - positionsAppliedAtRef.current >= POSITIONS_APPLY_MS) {
+        pendingPositionsRef.current = null
+        positionsAppliedAtRef.current = frameStart
+        const pos = pending.buffer
+        const arr = nodesRef.current
+        const count = Math.min(arr.length, pending.count)
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+        for (let i = 0; i < count; i++) {
+          const x = pos[i * 2]
+          const y = pos[i * 2 + 1]
+          arr[i].x = x
+          arr[i].y = y
+          if (x < minX) minX = x
+          if (y < minY) minY = y
+          if (x > maxX) maxX = x
+          if (y > maxY) maxY = y
+          nodePositions.current.set(arr[i].id, { x, y })
+        }
+        if (count > 0) cloudBoundsRef.current = { minX, minY, maxX, maxY }
+        quadtreeDirty.current = true
+        if (!userNavigatedRef.current) fitToBoundsRef.current(false)
+      } else if (pending) {
+        // Gate not open yet — keep the render loop alive so the snapshot
+        // lands on a later frame even if nothing else marks the frame dirty.
+        scheduleRenderRef.current()
+      }
+
+      // Refresh spatial index when positions or drags marked it dirty — but
+      // at most a few times per second. While the simulation streams,
+      // rebuilding a 100k-node tree per batch starved the frame budget;
+      // hit-testing and culling tolerate ≤300ms of staleness.
+      if ((quadtreeDirty.current && frameStart - quadtreeBuiltAtRef.current > 300) || quadtreeRef.current == null) {
         quadtreeRef.current = Quadtree.build(nodesRef.current, 128)
         quadtreeDirty.current = false
+        quadtreeBuiltAtRef.current = frameStart
+        quadtreeVersionRef.current++
       }
-      const visibleNodes = quadtreeRef.current.query({ minX: vL, minY: vT, maxX: vR, maxY: vB })
+
+      // LOD decision BEFORE any per-node work. Zoom band first; then a
+      // density override using a cheap visible-count estimate (viewport area
+      // vs node-cloud area) so a fitted 100k view in the 'medium' band still
+      // takes the cluster path — without paying a 30k-result quadtree query
+      // just to discover the frame is unpayable.
+      const zoomLod = getDetailLevel(t.k)
+      let lod: ReturnType<typeof getDetailLevel> = zoomLod
+      const totalNodes = nodesRef.current.length
+      if (zoomLod !== 'far' && totalNodes > DENSITY_FAR_THRESHOLD) {
+        const cb = cloudBoundsRef.current
+        if (cb) {
+          const cloudArea = Math.max(1, (cb.maxX - cb.minX) * (cb.maxY - cb.minY))
+          const viewArea = (vR - vL) * (vB - vT)
+          const estimate = totalNodes * Math.min(1, viewArea / cloudArea)
+          if (estimate > DENSITY_FAR_THRESHOLD) lod = 'far'
+        } else {
+          // No physics batch yet — the layout is still the initial dense pile,
+          // where clustering is right at ANY zoom. Without this, the first
+          // seconds after opening a 100k graph draw every node per frame.
+          lod = 'far'
+        }
+      }
+
+      // The exact visible set is only needed on the medium/close path; far
+      // frames draw from the cluster cache and never query the tree.
+      const visibleNodes = lod === 'far'
+        ? ([] as D3Node[])
+        : quadtreeRef.current.query({ minX: vL, minY: vT, maxX: vR, maxY: vB })
+      // The area-based estimate undercounts dense centers (uniform-density
+      // assumption); the actual query result is authoritative. The query was
+      // already paid for — the unpayable part is DRAWING it.
+      if (lod !== 'far' && visibleNodes.length > DENSITY_FAR_THRESHOLD) lod = 'far'
       const visibleSet = new Set<string>()
-      for (const n of visibleNodes) visibleSet.add(n.id)
+      if (lod !== 'far') for (const n of visibleNodes) visibleSet.add(n.id)
 
       const hoverSet = hoverSetRef.current
       const hoverActive = hoverSet !== null && hoverSet.size > 0
@@ -269,62 +413,71 @@ export default function GraphCanvas({
         }
         return b
       }
-      // Zoom LOD: FAR collapses nodes into cluster discs, drops 'mention'
-      // edges, and bundles relationship edges to one segment per cluster
-      // pair (intra-cluster edges are sub-pixel at that scale — drawing all
-      // 50k of them per frame was the far-zoom FPS cliff). MEDIUM draws
-      // everything; CLOSE adds labels (gated separately by labelOpacity).
-      const lod = getDetailLevel(t.k)
+      // Far-LOD scene cache. Keyed on positions version × half-octave zoom
+      // band — pans and intra-band zooms reuse it wholesale. Built over ALL
+      // nodes (not the viewport) so panning never recomputes; bundled edges
+      // are deduped per cluster pair AND hard-capped, because on a graph with
+      // long-range links "one segment per pair" alone can still mean 100k+
+      // strokes (measured: 114,796 segs / 347ms per frame at 60k memories).
       let farClusters: ReturnType<typeof clusterNodes<D3Node & { x: number; y: number }>> | null = null
-      const clusterOf = new Map<string, number>()
+      let clusterOf = new Map<string, number>()
+      let farPairSegs: Map<string, Array<[number, number, number, number]>> | null = null
+      let farSegCount = 0
       if (lod === 'far') {
-        const positioned = visibleNodes.filter(n => n.x != null && n.y != null) as Array<D3Node & { x: number; y: number }>
-        farClusters = clusterNodes(positioned, t.k)
-        farClusters.forEach((c, i) => {
-          for (const m of c.members) clusterOf.set(m.id, i)
-        })
+        const kBucket = Math.round(Math.log2(Math.max(t.k, 1e-4)) * 2)
+        const cacheKey = `${quadtreeVersionRef.current}|${kBucket}`
+        const cached = farCacheRef.current
+        const staleButUsable =
+          cached != null && cached.kBucket === kBucket &&
+          frameStart - cached.builtAt < FAR_CACHE_MIN_REBUILD_MS
+        if (cached?.key !== cacheKey && !staleButUsable) {
+          const kNominal = Math.pow(2, kBucket / 2)
+          const positioned = nodesRef.current.filter(n => n.x != null && n.y != null) as Array<D3Node & { x: number; y: number }>
+          const clusters = clusterNodes(positioned, kNominal)
+          const co = new Map<string, number>()
+          clusters.forEach((c, i) => {
+            for (const m of c.members) co.set(m.id, i)
+          })
+          const pairSegs = new Map<string, Array<[number, number, number, number]>>()
+          const seenPairs = new Set<number>()
+          let segCount = 0
+          for (const link of linksRef.current) {
+            if (segCount >= FAR_EDGE_SEG_CAP) break
+            if (link.edgeType === 'mention') continue
+            if ((link.strength ?? 1) < 0.2) continue
+            const ci = co.get((link.source as D3Node).id)
+            const cj = co.get((link.target as D3Node).id)
+            if (ci == null || cj == null || ci === cj) continue
+            const pairKey = ci < cj ? ci * 0x100000 + cj : cj * 0x100000 + ci
+            if (seenPairs.has(pairKey)) continue
+            seenPairs.add(pairKey)
+            const sig = link.signalType ?? 'manual'
+            let segs = pairSegs.get(sig)
+            if (!segs) { segs = []; pairSegs.set(sig, segs) }
+            segs.push([clusters[ci].x, clusters[ci].y, clusters[cj].x, clusters[cj].y])
+            segCount++
+          }
+          farCacheRef.current = { key: cacheKey, kBucket, builtAt: frameStart, clusters, clusterOf: co, pairSegs, segCount }
+        }
+        farClusters = farCacheRef.current.clusters
+        clusterOf = farCacheRef.current.clusterOf
+        farPairSegs = farCacheRef.current.pairSegs
+        farSegCount = farCacheRef.current.segCount
       }
+
+      // Flat-fill fast path once the frame has more nodes than the rich style
+      // (gradient + shadowBlur per node) can afford.
+      const fastDraw = visibleNodes.length > FAST_DRAW_THRESHOLD
 
       let edgesDrawn = 0
-      const drawnClusterPairs = new Set<string>()
-      for (const link of linksRef.current) {
-        if (lod === 'far' && link.edgeType === 'mention') continue
-        const src = link.source as D3Node
-        const tgt = link.target as D3Node
-        // Cull edges with neither endpoint visible.
-        if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
-        // Skip very weak auto-edges — they create visual noise without meaning
-        if (link.edgeType === 'relationship' && (link.strength ?? 1) < 0.2) continue
-        const state = edgeStateOf(src.id, tgt.id)
-        // Use signalType for auto-edges, kind for mentions
-        const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined
-
-        if (lod === 'far' && farClusters) {
-          const ci = clusterOf.get(src.id)
-          const cj = clusterOf.get(tgt.id)
-          if (ci == null || cj == null) continue   // endpoint off-screen
-          if (ci === cj) continue                  // sub-pixel intra-cluster edge
-          const pairKey = ci < cj ? `${ci}-${cj}` : `${cj}-${ci}`
-          if (drawnClusterPairs.has(pairKey)) continue
-          drawnClusterPairs.add(pairKey)
-          const b = getBucket(state, link.edgeType, sigType)
-          b.segs.push([farClusters[ci].x, farClusters[ci].y, farClusters[cj].x, farClusters[cj].y])
-          edgesDrawn++
-          continue
-        }
-
-        const b = getBucket(state, link.edgeType, sigType)
-        b.segs.push([src.x ?? 0, src.y ?? 0, tgt.x ?? 0, tgt.y ?? 0])
-        edgesDrawn++
-      }
-      // Order matters: dim first (sinks behind), normal next, highlight on top.
-      const order: EdgeState[] = ['dim', 'normal', 'highlight']
-      for (const state of order) {
-        for (const [key, { segs, signalColor }] of buckets) {
-          if (!key.startsWith(state + ':')) continue
+      if (lod === 'far' && farPairSegs) {
+        // Cached bundled edges, one stroke pass per signal colour. Hover
+        // dim/highlight is deliberately skipped at far zoom — per-frame state
+        // classification is what the cache exists to avoid, and at cluster
+        // scale a highlighted member edge is sub-pixel anyway.
+        for (const [sig, segs] of farPairSegs) {
           if (segs.length === 0) continue
-          const kind = key.includes(':mention') ? 'mention' : 'relationship'
-          applyEdgeStyle(ctx, state, kind, t.k, signalColor)
+          applyEdgeStyle(ctx, 'normal', 'relationship', t.k, edgeColor({ source: '', target: '', edgeType: 'relationship', signalType: sig as D3Link['signalType'] }))
           ctx.beginPath()
           for (let i = 0; i < segs.length; i++) {
             const s = segs[i]
@@ -332,8 +485,41 @@ export default function GraphCanvas({
           }
           ctx.stroke()
         }
+        edgesDrawn = farSegCount
+        ctx.setLineDash([])
+      } else {
+        for (const link of linksRef.current) {
+          const src = link.source as D3Node
+          const tgt = link.target as D3Node
+          // Cull edges with neither endpoint visible.
+          if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
+          // Skip very weak auto-edges — they create visual noise without meaning
+          if (link.edgeType === 'relationship' && (link.strength ?? 1) < 0.2) continue
+          const state = edgeStateOf(src.id, tgt.id)
+          // Use signalType for auto-edges, kind for mentions
+          const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined
+          const b = getBucket(state, link.edgeType, sigType)
+          b.segs.push([src.x ?? 0, src.y ?? 0, tgt.x ?? 0, tgt.y ?? 0])
+          edgesDrawn++
+        }
+        // Order matters: dim first (sinks behind), normal next, highlight on top.
+        const order: EdgeState[] = ['dim', 'normal', 'highlight']
+        for (const state of order) {
+          for (const [key, { segs, signalColor }] of buckets) {
+            if (!key.startsWith(state + ':')) continue
+            if (segs.length === 0) continue
+            const kind = key.includes(':mention') ? 'mention' : 'relationship'
+            applyEdgeStyle(ctx, state, kind, t.k, signalColor)
+            ctx.beginPath()
+            for (let i = 0; i < segs.length; i++) {
+              const s = segs[i]
+              addEdgePath(ctx, s[0], s[1], s[2], s[3])
+            }
+            ctx.stroke()
+          }
+        }
+        ctx.setLineDash([])
       }
-      ctx.setLineDash([])
 
       // ── Nodes ────────────────────────────────────────────────────────────
       // Two-tier draw: dim first (background layer), then everything else.
@@ -344,14 +530,24 @@ export default function GraphCanvas({
       const emphasised: D3Node[] = []
       if (lod === 'far' && farClusters) {
         // FAR: one disc per spatial cluster instead of 10k sub-pixel dots.
+        // Clusters come from the scene cache (whole graph) — cull centers
+        // against the viewport here, which is O(clusters) per frame.
         // Selected/highlighted members still render individually on top so
-        // interaction state stays visible at any zoom.
+        // interaction state stays visible at any zoom; the member scan only
+        // runs when there IS interaction state (it's O(total nodes)).
+        const clusterFast = farClusters.length > FAST_DRAW_THRESHOLD
+        const interacting = hoverActive || selectedId != null || openId != null
+        const cullMargin = 60
         for (const cluster of farClusters) {
+          if (
+            cluster.x < vL - cullMargin || cluster.x > vR + cullMargin ||
+            cluster.y < vT - cullMargin || cluster.y > vB + cullMargin
+          ) continue
           const rep = cluster.members[0]
           if (cluster.size === 1) {
-            const state = nodeStateOf(rep.id)
+            const state = interacting ? nodeStateOf(rep.id) : 'normal'
             if (state === 'selected' || state === 'highlight') { emphasised.push(rep); continue }
-            drawNode(ctx, rep, state, t.k)
+            drawNode(ctx, rep, state, t.k, 0, clusterFast)
             nodesDrawn++
             continue
           }
@@ -362,21 +558,25 @@ export default function GraphCanvas({
             { ...rep, x: cluster.x, y: cluster.y, connections: cluster.size * 2 },
             'normal',
             t.k,
+            0,
+            clusterFast,
           )
           nodesDrawn++
-          for (const m of cluster.members) {
-            const state = nodeStateOf(m.id)
-            if (state === 'selected' || state === 'highlight') emphasised.push(m)
+          if (interacting) {
+            for (const m of cluster.members) {
+              const state = nodeStateOf(m.id)
+              if (state === 'selected' || state === 'highlight') emphasised.push(m)
+            }
           }
         }
       } else {
         for (const node of visibleNodes) {
           const state = nodeStateOf(node.id)
           if (state === 'dim') {
-            drawNode(ctx, node, 'dim', t.k)
+            drawNode(ctx, node, 'dim', t.k, 0, fastDraw)
             nodesDrawn++
           } else if (state === 'normal') {
-            drawNode(ctx, node, 'normal', t.k)
+            drawNode(ctx, node, 'normal', t.k, 0, fastDraw)
             nodesDrawn++
           } else {
             // selected + highlight come last so glow rings overlap correctly.
@@ -386,16 +586,12 @@ export default function GraphCanvas({
       }
       for (const node of emphasised) {
         const state = nodeStateOf(node.id)
+        // Emphasised nodes are few — always rich, even on fast frames.
         drawNode(ctx, node, state, t.k, phase)
         nodesDrawn++
       }
 
       ctx.restore()
-
-      // Cache positions for layout continuity across filter changes.
-      for (const n of nodesRef.current) {
-        if (n.x != null && n.y != null) nodePositions.current.set(n.id, { x: n.x, y: n.y })
-      }
 
       // Per-frame stats for headless verification (dev only, no React churn).
       if (import.meta.env.DEV) {
@@ -431,6 +627,7 @@ export default function GraphCanvas({
     let dirty = true
     let renderRaf = 0
     const scheduleRender = (): void => { dirty = true }
+    scheduleRenderRef.current = scheduleRender
     function renderLoop(): void {
       if (dirty || selectedIdRef.current != null) {
         dirty = false
@@ -452,33 +649,44 @@ export default function GraphCanvas({
     worker.onmessage = (ev: MessageEvent): void => {
       const msg = ev.data as { type: string; buffer?: ArrayBuffer; count?: number }
       if (msg.type !== 'positions' || !msg.buffer) return
-      const pos = new Float32Array(msg.buffer)
-      const arr = nodesRef.current
-      const n = Math.min(arr.length, msg.count ?? 0)
-      for (let i = 0; i < n; i++) {
-        arr[i].x = pos[i * 2]
-        arr[i].y = pos[i * 2 + 1]
-      }
-      quadtreeDirty.current = true
-      // Track the layout while it settles: keep the whole graph in view until
-      // the user takes over the camera. Without this a 10k-node layout spreads
-      // far beyond the initial 1x viewport and looks like a blank screen.
-      if (!userNavigatedRef.current) fitToBoundsRef.current(false)
+      // Stash only — applying every batch (an O(nodes) copy + bounds pass)
+      // starved the main thread at 100k while the sim streamed per-tick.
+      // draw() applies the newest snapshot on a fixed cadence; superseded
+      // snapshots are simply dropped.
+      pendingPositionsRef.current = { buffer: new Float32Array(msg.buffer), count: msg.count ?? 0 }
       scheduleRender()
     }
-    worker.postMessage({
-      type: 'init',
-      width: w,
-      height: h,
-      nodes: visNodes.map(node => ({ id: node.id, connections: node.connections, x: node.x, y: node.y })),
-      // Endpoints already resolved to node objects above — send their ids.
-      links: visLinks.map(l => ({
-        source: (l.source as D3Node).id,
-        target: (l.target as D3Node).id,
-        edgeType: l.edgeType,
-        strength: l.strength,
-      })),
-    })
+    // Typed-array init (zero-copy transfer). At 100k nodes structured-cloning
+    // object arrays into the worker costs seconds; three buffers cost ~0.
+    // Node identity is index-based from here on — drag messages carry the
+    // node's init-order index, never its id.
+    {
+      const count = visNodes.length
+      const positions = new Float32Array(count * 2)
+      const connections = new Float32Array(count)
+      visNodes.forEach((node, i) => {
+        positions[i * 2] = node.x ?? NaN
+        positions[i * 2 + 1] = node.y ?? NaN
+        connections[i] = node.connections
+      })
+      const linkPairs = new Uint32Array(visLinks.length * 2)
+      visLinks.forEach((l, i) => {
+        linkPairs[i * 2] = nodeIndexById.get((l.source as D3Node).id) ?? 0
+        linkPairs[i * 2 + 1] = nodeIndexById.get((l.target as D3Node).id) ?? 0
+      })
+      worker.postMessage(
+        {
+          type: 'init',
+          count,
+          positions: positions.buffer,
+          connections: connections.buffer,
+          links: linkPairs.buffer,
+          width: w,
+          height: h,
+        },
+        [positions.buffer, connections.buffer, linkPairs.buffer],
+      )
+    }
 
     // ── Zoom + pan ─────────────────────────────────────────────────────────
     const zoom = d3.zoom<HTMLCanvasElement, unknown>()
@@ -539,28 +747,58 @@ export default function GraphCanvas({
       return getNodeAtPoint(sx, sy, quadtreeRef.current, nodesRef.current, 4, transformRef.current.k)
     }
 
+    /** Point-to-segment distance check shared by both edge hover strategies. */
+    function edgeDistSq(link: D3Link, sx: number, sy: number): number | null {
+      const src = link.source as D3Node
+      const tgt = link.target as D3Node
+      if (src.x == null || tgt.x == null) return null
+      const dx = (tgt.x - src.x)
+      const dy = (tgt.y - src.y)
+      const lenSq = dx * dx + dy * dy
+      let t = ((sx - src.x) * dx + (sy - src.y) * dy) / (lenSq || 1)
+      t = Math.max(0, Math.min(1, t))
+      const px = src.x + t * dx
+      const py = src.y + t * dy
+      return (sx - px) * (sx - px) + (sy - py) * (sy - py)
+    }
+
     /** Find an edge near the given simulation-space point. Returns the link + distance squared. */
     function hitTestEdge(sx: number, sy: number): { link: D3Link; distSq: number } | null {
       // At FAR zoom nodes are cluster discs and individual edges aren't
-      // meaningfully hoverable — skip the O(links) scan per mousemove.
+      // meaningfully hoverable — skip the scan per mousemove.
       if (getDetailLevel(transformRef.current.k) === 'far') return null
+      const k = transformRef.current.k
+      const threshold = 16 / (k * k) // ~4px in sim space
       let best: { link: D3Link; distSq: number } | null = null
-      const threshold = 16 / (transformRef.current.k * transformRef.current.k) // ~4px in sim space
-      for (const link of linksRef.current) {
-        const src = link.source as D3Node
-        const tgt = link.target as D3Node
-        if (src.x == null || tgt.x == null) continue
-        // Point-to-line-segment distance squared
-        const dx = (tgt.x - src.x)
-        const dy = (tgt.y - src.y)
-        const lenSq = dx * dx + dy * dy
-        let t = ((sx - src.x) * dx + (sy - src.y) * dy) / (lenSq || 1)
-        t = Math.max(0, Math.min(1, t))
-        const px = src.x + t * dx
-        const py = src.y + t * dy
-        const distSq = (sx - px) * (sx - px) + (sy - py) * (sy - py)
-        if (distSq < threshold && (!best || distSq < best.distSq)) {
-          best = { link, distSq }
+
+      if (linksRef.current.length <= EDGE_HOVER_FULL_SCAN_MAX) {
+        // Exact: every edge, every mousemove. Fine up to ~20k links.
+        for (const link of linksRef.current) {
+          const distSq = edgeDistSq(link, sx, sy)
+          if (distSq != null && distSq < threshold && (!best || distSq < best.distSq)) {
+            best = { link, distSq }
+          }
+        }
+        return best
+      }
+
+      // Huge graphs: only test edges incident to nodes near the cursor
+      // (quadtree window), de-duplicated. O(local degree) per mousemove.
+      const radius = 48 / k
+      const nearby = quadtreeRef.current?.query({
+        minX: sx - radius, minY: sy - radius, maxX: sx + radius, maxY: sy + radius,
+      }) ?? []
+      const seen = new Set<D3Link>()
+      for (const node of nearby) {
+        const incident = linksByNodeRef.current.get(node.id)
+        if (!incident) continue
+        for (const link of incident) {
+          if (seen.has(link)) continue
+          seen.add(link)
+          const distSq = edgeDistSq(link, sx, sy)
+          if (distSq != null && distSq < threshold && (!best || distSq < best.distSq)) {
+            best = { link, distSq }
+          }
         }
       }
       return best
@@ -592,8 +830,8 @@ export default function GraphCanvas({
       dragId = found?.id ?? null
       if (found) {
         // Pin the node in the worker at its current position so the layout
-        // holds it under the cursor.
-        worker.postMessage({ type: 'drag', id: found.id, x: found.x ?? sx, y: found.y ?? sy })
+        // holds it under the cursor. Worker protocol is index-based.
+        worker.postMessage({ type: 'drag', index: nodeIndexById.get(found.id) ?? -1, x: found.x ?? sx, y: found.y ?? sy })
       }
     }
 
@@ -608,7 +846,7 @@ export default function GraphCanvas({
         // it there so neighbours follow on the next physics batch.
         const node = nodeById.get(dragId)
         if (node) { node.x = sx; node.y = sy }
-        worker.postMessage({ type: 'drag', id: dragId, x: sx, y: sy })
+        worker.postMessage({ type: 'drag', index: nodeIndexById.get(dragId) ?? -1, x: sx, y: sy })
         quadtreeDirty.current = true
         scheduleRender()
         return
@@ -668,7 +906,7 @@ export default function GraphCanvas({
 
     const onMouseUp = () => {
       if (dragId) {
-        worker.postMessage({ type: 'dragEnd', id: dragId })
+        worker.postMessage({ type: 'dragEnd', index: nodeIndexById.get(dragId) ?? -1 })
         dragId = null
         captureGraph('drag')
       }
@@ -728,7 +966,7 @@ export default function GraphCanvas({
       canvas.style.cursor = ''
       setTooltip(null)
     }
-  }, [memories, relationships, vaultFiles, filter, showAll, watchPath, onNodeSelect, onNodeOpen, debugEnabled])
+  }, [memories, relationships, vaultFiles, mentionEdges, filter, showAll, watchPath, onNodeSelect, onNodeOpen, debugEnabled])
 
   return (
     <div className="w-full h-full relative">

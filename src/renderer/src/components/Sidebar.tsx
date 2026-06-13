@@ -7,6 +7,9 @@ import type { Memory, VaultFile } from '../../../types'
 
 type SidebarTab = 'memories' | 'files'
 
+// Max memory rows mounted at once — see the render-cap comment at the list.
+const SIDEBAR_RENDER_CAP = 300
+
 const SOURCE_COLORS: Record<string, string> = {
   claude: '#E53E3E',
   chatgpt: '#F0F0F0',
@@ -36,9 +39,12 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
 
   const filtered = memories.filter(m => {
     const q = searchQuery.toLowerCase()
+    // Light rows carry a snippet instead of full content; full-text matches
+    // beyond the snippet come from the Search view (FTS5), not this filter.
+    const body = m.content || m.snippet || ''
     const matchesQuery = !q ||
       m.title.toLowerCase().includes(q) ||
-      m.content.toLowerCase().includes(q)
+      body.toLowerCase().includes(q)
     const matchesTags = selectedTags.length === 0 ||
       selectedTags.some(t => m.tags.includes(t))
     return matchesQuery && matchesTags
@@ -139,7 +145,11 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
                 {memories.length === 0 ? 'No memories yet.' : 'No matches found.'}
               </div>
             ) : (
-              filtered.map(m => (
+              // Render cap (100k-scale): mounting one DOM row per memory put
+              // 7+ MB of nodes in the tree at 60k memories and froze first
+              // paint. The list is recency-ordered; anything beyond the cap
+              // is reachable via the filter box or the Search view (FTS5).
+              filtered.slice(0, SIDEBAR_RENDER_CAP).map(m => (
                 <MemoryItem
                   key={m.id}
                   memory={m}
@@ -150,6 +160,11 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
                   }}
                 />
               ))
+            )}
+            {filtered.length > SIDEBAR_RENDER_CAP && (
+              <div className="px-4 py-3 text-center text-[#444] text-xs">
+                Showing {SIDEBAR_RENDER_CAP} of {filtered.length} — narrow with the filter box or use Search
+              </div>
             )}
           </div>
         </>
@@ -240,7 +255,7 @@ function MemoryItem({ memory, isSelected, onClick }: {
   memory: Memory; isSelected: boolean; onClick: () => void
 }): React.ReactElement {
   const dot = SOURCE_COLORS[memory.source] || '#6B9FD4'
-  const preview = memory.content.replace(/[#*`_>\-]/g, '').trim().slice(0, 80)
+  const preview = (memory.content || memory.snippet || '').replace(/[#*`_>\-]/g, '').trim().slice(0, 80)
 
   return (
     <div

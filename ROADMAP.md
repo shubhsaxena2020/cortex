@@ -40,22 +40,25 @@ All five P0 items landed. Two items (Web-worker force simulation, embedding thro
 - 245/245 tests green · build clean · graph verified rendering live (6,603 non-background canvas pixels at 10k nodes, worker streaming).
 - **Still open (external):** third-party Windows 11 smoke test of the installer — see `docs/SMOKE-TEST-CHECKLIST.md`.
 
-## v0.3.0 — "It feels smart"
+## v0.3.0 — "It feels smart" ✅ SHIPPED (2026-06-13)
 
 The features the name "Cortex" implies. Earns the right to exist after v0.2 proves the pipeline is correct.
 
-- [ ] **Bidirectional `[[wiki]]` links + backlinks panel** — promoted from v0.4. Every prior-art comparator (Obsidian, Roam, Logseq) has these; their absence reads as incomplete, not minimalist.
-- [ ] Conversation summarization via local Ollama (`llama3.2:3b` or equivalent) — one-line + paragraph summaries
-- [ ] Auto-tagging from content; user can edit / lock tags
-- [ ] Multi-model Ollama picker (swap embedding + summarization models from Settings)
+Shipped 5 of 8 per the kill criteria, plus two items the criteria didn't anticipate: an MCP server (the second brain as native Claude tool calls) and a 100k-node graph performance overhaul.
+
+- [x] **Bidirectional `[[wiki]]` links + backlinks panel** — Obsidian-style `[[Title]]` / `[[Title|alias]]`; edges persist as `signal_type='wiki'` (emerald), clickable in detail + editor previews, "Linked mentions" panel, FTS5-driven inbound re-resolution on create/retitle.
+- [x] Auto-tagging from content; user can edit / lock tags — deterministic heuristic tagger (title-weighted keywords + existing-vocab preference, offline, no Ollama); first capture tags an untagged conversation, re-captures never clobber user edits; per-memory "suggest" button.
+- [x] Embedding backfill UI — visible progress, pause/resume — status machine in seed-embeddings, live progress in status bar + Settings AI panel, pause at batch boundaries.
+- [x] Saved searches / smart folders — search history (last 20) + named saved searches; date-range filters.
 - [x] ~~Graph force simulation in a web worker~~ — **shipped in v0.2.0** (culling alone wasn't enough at 10k nodes)
-- [ ] Embedding backfill UI — visible progress, pause/resume
-- [ ] Saved searches / smart folders
-- [ ] `db.test.disabled.ts` → vitest-electron — proper Electron-Node test runner; CI-green DB integration tests
+- [ ] Conversation summarization via local Ollama → **slipped to v0.4**: requires a generative model dependency (`llama3.2:3b`) the embed-only Ollama setup doesn't have; not worth blocking the release on a second model pull.
+- [ ] Multi-model Ollama picker → **slipped to v0.4**: settings plumbing with no user pull until summarization (the second model consumer) exists.
+- [ ] `db.test.disabled.ts` → vitest-electron → **slipped to v0.4**: infra-only; current coverage of the DB layer via live-process scripts + 399 unit tests is adequate while feature surface moves fast.
 
-### v0.3 kill criteria
+### Shipped beyond scope (v0.3.0)
 
-- Ship at most 5 of these 8. The other 3 slip publicly to v0.4 with a one-line "why."
+- **Cortex MCP server** (`mcp/`) — six tools over stdio JSON-RPC (keyword FTS5 + semantic sqlite-vec search, get/list/create/related/stats), zero new dependencies, runs under Electron-as-Node, registered for Claude Code (project `.mcp.json`) and Claude Desktop. The second brain is now queryable as native tool calls.
+- **Graph performance overhaul to 100k+ nodes** — memory content no longer ships to the renderer (light projections + 200-char snippets + per-selection hydration); mention edges computed in the main process behind a fingerprint cache; worker simulation scales by node count (collide dropped ≥20k, Barnes-Hut theta 1.2, adaptive cooling/batching) with a zero-copy typed-array protocol; density-based LOD (clusters whenever >8k nodes are on screen, any zoom); flat-fill fast path above 1.5k visible nodes (no per-node shadowBlur); memoized clustering; quadtree-local edge hover above 20k links. Measured numbers in RELEASE_NOTES.md.
 
 ## v0.4.0 — Polish + Distribution (the boring, expensive layer)
 

@@ -6,15 +6,24 @@ import InsightPopup from '../components/InsightPopup'
 import { useStore } from '../store'
 
 export default function Dashboard(): React.ReactElement {
-  const { getSelectedFile, selectedMemoryId } = useStore()
+  const { getSelectedFile, selectedMemoryId, isHydrated } = useStore()
   const selectedFile = getSelectedFile()
   const [showInsights, setShowInsights] = useState(false)
+
+  // The editor must never mount on a light (content-less) row: its autosave
+  // would write the empty content back over the real body. Hydration is
+  // triggered by selectMemory; this gate holds until it lands.
+  const editorReady = selectedMemoryId !== null && isHydrated(selectedMemoryId)
 
   return (
     <div className="flex w-full h-full relative overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {selectedFile ? (
           <FileViewer file={selectedFile} />
+        ) : selectedMemoryId && !editorReady ? (
+          <div className="flex-1 flex items-center justify-center bg-[#1a1a1a]">
+            <div className="text-[#444] text-sm animate-pulse">Loading…</div>
+          </div>
         ) : selectedMemoryId ? (
           <MemoryEditor />
         ) : (

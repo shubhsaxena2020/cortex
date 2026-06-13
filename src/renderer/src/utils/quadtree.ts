@@ -22,6 +22,8 @@ export interface Point2D {
 }
 
 const CAPACITY = 8         // empirical sweet spot for 10k random points
+const CAPACITY_LARGE = 32  // ≥20k points: 4× fewer tree nodes, same query asymptotics
+const LARGE_POINT_COUNT = 20_000
 const MAX_DEPTH = 16       // hard stop so degenerate inputs (all-same-position) don't recurse forever
 
 interface QNode<T extends Point2D> {
@@ -43,7 +45,7 @@ function overlaps(a: Bounds, b: Bounds): boolean {
   return !(a.maxX <= b.minX || a.minX >= b.maxX || a.maxY <= b.minY || a.minY >= b.maxY)
 }
 
-function subdivide<T extends Point2D>(n: QNode<T>): void {
+function subdivide<T extends Point2D>(n: QNode<T>, capacity: number): void {
   const { minX, minY, maxX, maxY } = n.bounds
   const midX = (minX + maxX) / 2
   const midY = (minY + maxY) / 2
@@ -57,22 +59,22 @@ function subdivide<T extends Point2D>(n: QNode<T>): void {
   // Re-distribute existing items into the new children.
   const old = n.items
   n.items = []
-  for (const it of old) insertInto(n, it)
+  for (const it of old) insertInto(n, it, capacity)
 }
 
-function insertInto<T extends Point2D>(n: QNode<T>, item: T): boolean {
+function insertInto<T extends Point2D>(n: QNode<T>, item: T, capacity: number): boolean {
   const ix = item.x ?? 0
   const iy = item.y ?? 0
   if (!within(n.bounds, ix, iy)) return false
   if (n.children) {
-    for (const c of n.children) if (insertInto(c, item)) return true
+    for (const c of n.children) if (insertInto(c, item, capacity)) return true
     // Should be unreachable — children fully tile parent. Fall through to
     // leaf storage as a safety net for floating-point edge cases.
     n.items.push(item)
     return true
   }
   n.items.push(item)
-  if (n.items.length > CAPACITY && n.depth < MAX_DEPTH) subdivide(n)
+  if (n.items.length > capacity && n.depth < MAX_DEPTH) subdivide(n, capacity)
   return true
 }
 
@@ -96,13 +98,15 @@ function queryInto<T extends Point2D>(n: QNode<T>, b: Bounds, out: T[]): void {
 export class Quadtree<T extends Point2D> {
   private root: QNode<T>
   private _size = 0
+  private capacity: number
 
-  constructor(bounds: Bounds) {
+  constructor(bounds: Bounds, capacity = CAPACITY) {
     this.root = makeNode<T>(bounds, 0)
+    this.capacity = capacity
   }
 
   insert(item: T): boolean {
-    const ok = insertInto(this.root, item)
+    const ok = insertInto(this.root, item, this.capacity)
     if (ok) this._size++
     return ok
   }
@@ -117,8 +121,11 @@ export class Quadtree<T extends Point2D> {
   size(): number { return this._size }
 
   /** Build a tree sized to fit `points` plus a margin. Avoids the gotcha of
-   *  inserting points outside the root bounds (which silently get dropped). */
+   *  inserting points outside the root bounds (which silently get dropped).
+   *  Leaf capacity steps up automatically for ≥20k points — deeper capacity-8
+   *  trees cost more to build (4× the node objects) for no query win. */
   static build<T extends Point2D>(points: readonly T[], margin = 100): Quadtree<T> {
+    const capacity = points.length >= LARGE_POINT_COUNT ? CAPACITY_LARGE : CAPACITY
     if (points.length === 0) {
       return new Quadtree({ minX: -margin, minY: -margin, maxX: margin, maxY: margin })
     }
@@ -137,7 +144,7 @@ export class Quadtree<T extends Point2D> {
       minY: minY - margin,
       maxX: maxX + margin + 1,
       maxY: maxY + margin + 1,
-    })
+    }, capacity)
     for (const p of points) t.insert(p)
     return t
   }

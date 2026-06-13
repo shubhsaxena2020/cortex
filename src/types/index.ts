@@ -53,13 +53,26 @@ export interface VaultFile {
 export interface Memory {
   id: string
   title: string
+  /**
+   * Full body. List surfaces receive the LIGHT projection where this is ''
+   * until the memory is hydrated via memories:get (see store.hydrateMemory) —
+   * at 100k memories shipping every content over IPC is hundreds of MB.
+   */
   content: string
+  /** First 200 chars of content — always present on light rows, for previews/filtering. */
+  snippet?: string
   source: MemorySource
   created_at: string
   updated_at: string
   tags: string[]
   /** Canonical source URL — present for chats captured via the extension; null otherwise. Used for dedup (P0 #1). */
   url: string | null
+}
+
+/** Memory→file mention edge, computed in the main process (graph perf). */
+export interface MentionEdge {
+  source: string
+  target: string
 }
 
 export interface Relationship {
@@ -125,6 +138,9 @@ export interface ElectronAPI {
     getForMemory: (memoryId: string) => Promise<Relationship[]>
     create: (rel: Omit<Relationship, 'id'>) => Promise<Relationship>
     delete: (id: string) => Promise<void>
+  }
+  graph: {
+    getMentionEdges: () => Promise<MentionEdge[]>
   }
   extension: {
     getConfig: () => Promise<ExtensionConfig>

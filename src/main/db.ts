@@ -32,6 +32,9 @@ type RelationshipRow = {
   sourceId: string
   targetId: string
   relationship: string
+  /** Added in schema v5 — optional because pre-v5 rows are mapped through here too. */
+  strength?: number | null
+  signal_type?: string | null
 }
 
 function mapMemory(r: MemoryRow) {
@@ -461,6 +464,52 @@ export function getAllMemories() {
   return rows.map(mapMemory)
 }
 
+/**
+ * Light projection for list/graph surfaces (P0 100k-scale): everything except
+ * content, plus a 200-char snippet for sidebar previews and quick filtering.
+ * At 100k memories the full-content getAll ships hundreds of MB over IPC;
+ * this ships a few MB. Full content is hydrated per-memory via memories:get.
+ */
+export function getAllMemoriesLight() {
+  const rows = getDb().prepare(`
+    SELECT id, title, substr(COALESCE(content, ''), 1, 200) AS snippet,
+           timestamp, updatedAt, source, tags, url
+    FROM memories ORDER BY updatedAt DESC
+  `).all() as Array<Omit<MemoryRow, 'content'> & { snippet: string }>
+  return rows.map(r => ({
+    id: r.id,
+    title: r.title,
+    content: '',
+    snippet: r.snippet,
+    timestamp: r.timestamp,
+    updatedAt: r.updatedAt,
+    source: r.source,
+    tags: JSON.parse(r.tags || '[]') as string[],
+    url: r.url ?? null,
+  }))
+}
+
+/** Raw id/title/content rows for the main-process mention-edge builder. */
+export function getMentionSourceRows(): Array<{ id: string; title: string; content: string | null }> {
+  return getDb().prepare('SELECT id, title, content FROM memories').all() as Array<{ id: string; title: string; content: string | null }>
+}
+
+/** Cheap change fingerprint for caches keyed on the memories table. */
+export function getMemoriesFingerprint(): string {
+  const r = getDb().prepare(
+    'SELECT COUNT(*) AS n, COALESCE(MAX(updatedAt), 0) AS u FROM memories'
+  ).get() as { n: number; u: number }
+  return `${r.n}:${r.u}`
+}
+
+/** Cheap change fingerprint for caches keyed on the vault_files table. */
+export function getVaultFilesFingerprint(): string {
+  const r = getDb().prepare(
+    'SELECT COUNT(*) AS n, COALESCE(MAX(indexed_at), 0) AS u FROM vault_files'
+  ).get() as { n: number; u: number }
+  return `${r.n}:${r.u}`
+}
+
 export function updateMemory(id: string, title: string, content: string, tags: string[] = []) {
   const d = getDb()
   const now = Date.now()
@@ -863,6 +912,27 @@ export function getAllVaultFiles(): ReturnType<typeof mapVaultFile>[] {
     'SELECT * FROM vault_files WHERE linked_memory_id IS NULL ORDER BY last_modified DESC'
   ).all() as VaultFileRow[]
   return rows.map(mapVaultFile)
+}
+
+/**
+ * Light projection without content (P0 100k-scale). The renderer never reads
+ * vault file content from this list — FileViewer loads from disk via
+ * vault:readFile, and search hits come from searchVaultFiles (LIMIT 50).
+ */
+export function getAllVaultFilesLight(): ReturnType<typeof mapVaultFile>[] {
+  const rows = getDb().prepare(`
+    SELECT id, filepath, filename, extension, NULL AS content, size,
+           last_modified, indexed_at, frontmatter_url, linked_memory_id
+    FROM vault_files WHERE linked_memory_id IS NULL ORDER BY last_modified DESC
+  `).all() as VaultFileRow[]
+  return rows.map(mapVaultFile)
+}
+
+/** Raw id/filename rows for the main-process mention-edge builder. */
+export function getMentionFileRows(): Array<{ id: string; filename: string }> {
+  return getDb().prepare(
+    'SELECT id, filename FROM vault_files WHERE linked_memory_id IS NULL'
+  ).all() as Array<{ id: string; filename: string }>
 }
 
 export function deleteVaultFileByPath(filepath: string): void {

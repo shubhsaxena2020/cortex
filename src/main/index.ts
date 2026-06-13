@@ -14,6 +14,7 @@ import {
 } from './seed-embeddings'
 import { syncWikiAfterChange, backfillWikiEdges } from './wiki-edges'
 import { suggestTags } from './auto-tag'
+import { getMentionEdges } from './mention-edges'
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
 import * as telemetry from './telemetry'
@@ -317,9 +318,12 @@ app.on('window-all-closed', () => {
 // ─── IPC handlers ─────────────────────────────────────────────────────────────
 
 function registerIpcHandlers(): void {
-  // Memories
+  // Memories.
+  // getAll ships the LIGHT projection (no content, 200-char snippet) — at
+  // 100k memories full content is hundreds of MB of IPC. Renderer surfaces
+  // hydrate full content per-memory through memories:get on selection.
   ipcMain.handle('memories:getAll', () =>
-    db.getAllMemories().map(toMemory)
+    db.getAllMemoriesLight().map(r => ({ ...toMemory(r), snippet: r.snippet }))
   )
 
   ipcMain.handle('memories:get', (_e, id: string) => {
@@ -410,6 +414,10 @@ function registerIpcHandlers(): void {
     db.deleteRelationship(id)
   })
 
+  // Graph: mention edges are computed here (content never leaves the main
+  // process) behind a fingerprint cache — see mention-edges.ts.
+  ipcMain.handle('graph:getMentionEdges', () => getMentionEdges())
+
   // Extension config (read-only — for the Settings page)
   ipcMain.handle('extension:getConfig', () => {
     const cfg = getCachedConfig()
@@ -464,7 +472,8 @@ function registerIpcHandlers(): void {
     broadcastVaultChanged()
   })
 
-  ipcMain.handle('vault:getFiles', () => db.getAllVaultFiles())
+  // Light projection — content stays in the DB; FileViewer reads from disk.
+  ipcMain.handle('vault:getFiles', () => db.getAllVaultFilesLight())
 
   ipcMain.handle('vault:searchFiles', (_e, query: string) => db.searchVaultFiles(query))
 

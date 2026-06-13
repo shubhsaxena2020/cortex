@@ -17,7 +17,7 @@ const NAV_ITEMS: { view: ViewType; icon: React.ReactNode; label: string; shortcu
 
 export default function App(): React.ReactElement {
   const {
-    fetchMemories, fetchRelationships, fetchVaultFiles,
+    fetchMemories, fetchRelationships, fetchVaultFiles, fetchMentionEdges,
     currentView, setView, clearSelection,
     createMemory, selectMemory,
     searchQuery, setSearchQuery,
@@ -39,6 +39,7 @@ export default function App(): React.ReactElement {
     fetchMemories()
     fetchRelationships()
     void fetchVaultFiles()
+    void fetchMentionEdges()
 
     void window.electron.vault.getConfig().then(cfg => {
       if (!cfg?.vaultPath) {
@@ -55,10 +56,12 @@ export default function App(): React.ReactElement {
 
     const unsubMemories = window.electron.events.onMemoriesChanged(() => {
       fetchMemories()
+      void fetchMentionEdges()
       refreshStatus()
     })
     const unsubVault = window.electron.events.onVaultChanged(() => {
       void fetchVaultFiles()
+      void fetchMentionEdges()
       void window.electron.vault.getConfig().then(cfg => {
         if (cfg?.vaultPath) setNeedsVault(false)
       }).catch(() => {})

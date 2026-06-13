@@ -75,6 +75,12 @@ export function nodeFill(node: GraphNode, state: NodeState): string {
  * Draw one node. ctx is already translated+scaled to simulation space.
  * Pass `pulsePhase` in [0,1) for the selected state to drive the glow ring.
  * High-degree nodes (connections >= 8) get a subtle glow effect.
+ *
+ * `fast` (100k overhaul): flat fill only — no gradient, no shadowBlur, no
+ * rings. The rich style costs ~40µs/node (shadowBlur dominates); at a few
+ * thousand visible nodes that alone blows the 16ms frame budget. The caller
+ * flips this per-frame from the visible-node count, so small graphs and
+ * close zooms keep the full treatment.
  */
 export function drawNode(
   ctx: CanvasRenderingContext2D,
@@ -82,6 +88,7 @@ export function drawNode(
   state: NodeState,
   zoom: number,
   pulsePhase = 0,
+  fast = false,
 ): void {
   const x = node.x ?? 0
   const y = node.y ?? 0
@@ -92,6 +99,14 @@ export function drawNode(
   // Safe radius computation — guard against NaN by defaulting to minimum
   const connections = (node.connections ?? 0)
   const r = 4 + Math.sqrt(connections) * 3
+
+  if (fast) {
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fillStyle = nodeFill(node, state)
+    ctx.fill()
+    return
+  }
 
   // Glow / pulse ring for selected + highlight. Sized to scale with the node
   // so a 4px dot doesn't get a 20px ring.

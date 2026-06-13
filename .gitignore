@@ -5,6 +5,9 @@ node_modules/
 dist/
 release/
 *.tsbuildinfo
+# tsc --build can emit .d.ts/.js into src/ — those are artifacts, never source.
+src/**/*.d.ts
+src/**/*.js
 
 # Local Electron data
 .cortex-shots/
