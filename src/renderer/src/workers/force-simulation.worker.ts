@@ -66,6 +66,16 @@ let nodes: WNode[] = []
 let scheduled = false
 let ticksPerBatch = 5
 
+// Cap cross-thread position messages at ~60 Hz. The setTimeout(0) cascade in
+// runBatch() fires every ~1-4ms on Chromium; without this throttle the worker
+// emitted 250-300 postMessages/sec during drag, burying the main thread in
+// HandlePostMessage / SerializedScriptValue deserialize work and starving rAF
+// callbacks to ~1 Hz (confirmed by CDP trace: 387 deserializes + 605 AsyncTask
+// runs over 3 seconds while rAF fired 4 times). The simulation still ticks at
+// full speed; we just coalesce the latest state for cross-thread delivery.
+const POSITIONS_POST_MIN_MS = 14  // ~71 Hz cap — safely above 60 Hz vsync
+let lastPostMs = 0
+
 // Mirrors graph-renderer nodeRadius (4 + sqrt(connections) * 3, clamped) —
 // duplicated to keep this worker dependency-free for the typed-array protocol.
 function radiusOf(connections: number): number {
@@ -73,7 +83,10 @@ function radiusOf(connections: number): number {
   return Math.max(4, Math.min(r, 50))
 }
 
-function postPositions(): void {
+function postPositions(force = false): void {
+  const now = performance.now()
+  if (!force && now - lastPostMs < POSITIONS_POST_MIN_MS) return
+  lastPostMs = now
   const buf = new Float32Array(nodes.length * 2)
   for (let i = 0; i < nodes.length; i++) {
     buf[i * 2] = nodes[i].x ?? 0
@@ -165,7 +178,9 @@ ctx.onmessage = (e: MessageEvent<InMsg>): void => {
       // Stream positions from tick 0 so the first paint happens immediately —
       // a synchronous warmup blocks the first batch and reads as a blank
       // canvas. Early frames show the layout organizing: feedback, not a bug.
-      postPositions()
+      // Force this first post (bypass the 60-Hz throttle) so first paint is
+      // never delayed.
+      postPositions(true)
       schedule()
       break
     }
