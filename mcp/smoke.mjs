@@ -86,10 +86,10 @@ try {
   check('initialize', init.result?.serverInfo?.name === 'cortex', `protocol=${init.result?.protocolVersion}`)
   notify('notifications/initialized')
 
-  // 2. tools/list (v0.4: 9 tools — added digest, pinned, pin)
+  // 2. tools/list (v0.5: 11 tools — added extract, journal)
   const list = await rpc('tools/list')
   const names = (list.result?.tools ?? []).map((t) => t.name)
-  check('tools/list', names.length === 9, names.join(', '))
+  check('tools/list', names.length === 11, names.join(', '))
 
   // 3. stats
   const stats = toolPayload(await rpc('tools/call', { name: 'cortex_stats', arguments: {} }))
@@ -143,7 +143,11 @@ try {
   const pinned = toolPayload(await rpc('tools/call', { name: 'cortex_pinned', arguments: {} }))
   check('cortex_pinned', Array.isArray(pinned.results))
 
-  // 10. error paths
+  // 10. v0.5 journal + extract
+  const journalRead = toolPayload(await rpc('tools/call', { name: 'cortex_journal', arguments: {} }))
+  check('cortex_journal (read)', 'entry' in journalRead, `entry present: ${journalRead.entry != null}`)
+
+  // 11. error paths
   const ghost = await rpc('tools/call', { name: 'cortex_get_memory', arguments: { id: 'no-such-id' } })
   check('missing-id is isError', ghost.result?.isError === true)
   const unknown = await rpc('tools/call', { name: 'bogus_tool', arguments: {} })

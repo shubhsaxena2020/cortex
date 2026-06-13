@@ -22,7 +22,7 @@
 //     newId()      -> string                      (UUID)
 //   }
 
-export const SERVER_INFO = { name: 'cortex', version: '0.4.0' }
+export const SERVER_INFO = { name: 'cortex', version: '0.5.0' }
 export const PROTOCOL_VERSION = '2025-06-18'
 
 const SNIPPET_LEN = 240
@@ -139,6 +139,27 @@ export const TOOLS = [
         pinned: { type: 'boolean', description: 'true to pin, false to unpin' },
       },
       required: ['id', 'pinned'],
+    },
+  },
+  {
+    name: 'cortex_extract',
+    description: 'Extract atomic learnings from a memory (v0.5). Triggers Ollama; creates one or more derived memories.',
+    inputSchema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'Parent memory id' } },
+      required: ['id'],
+    },
+  },
+  {
+    name: 'cortex_journal',
+    description:
+      'Get today\'s journal entry, or upsert one. Without content, returns the existing entry (or null). ' +
+      'With content, replaces today\'s entry.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        content: { type: 'string', description: 'Journal text to write (omit to read)' },
+      },
     },
   },
   {
@@ -363,6 +384,26 @@ function toolPinned(_args, ctx) {
   return jsonResult({ count: results.length, results })
 }
 
+async function toolExtract(args, ctx) {
+  const id = typeof args.id === 'string' ? args.id.trim() : ''
+  if (!id) return errorResult('cortex_extract: "id" must be a non-empty string')
+  if (!ctx.extract) return errorResult('cortex_extract: server has no extract support')
+  if (!ctx.queries.getMemory(id)) return errorResult(`cortex_extract: no memory with id "${id}"`)
+  const ids = await ctx.extract(id)
+  return jsonResult({ parent: id, created: ids.length, ids })
+}
+
+function toolJournal(args, ctx) {
+  if (!ctx.journal) return errorResult('cortex_journal: server has no journal support')
+  const content = typeof args.content === 'string' ? args.content.trim() : ''
+  if (!content) {
+    const entry = ctx.journal.today()
+    return jsonResult({ entry })
+  }
+  const entry = ctx.journal.upsert(content)
+  return jsonResult({ entry, updated: true })
+}
+
 function toolPin(args, ctx) {
   const id = typeof args.id === 'string' ? args.id.trim() : ''
   if (!id) return errorResult('cortex_pin: "id" must be a non-empty string')
@@ -385,6 +426,8 @@ export async function callTool(name, args, ctx) {
     case 'cortex_digest': return toolDigest(a, ctx)
     case 'cortex_pinned': return toolPinned(a, ctx)
     case 'cortex_pin': return toolPin(a, ctx)
+    case 'cortex_extract': return toolExtract(a, ctx)
+    case 'cortex_journal': return toolJournal(a, ctx)
     default: return null // caller maps to JSON-RPC -32602
   }
 }

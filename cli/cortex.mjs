@@ -16,7 +16,11 @@
 //   cortex unpin <id>
 //   cortex help
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 
 const DB_PATH = process.env.CORTEX_DB_PATH || `${process.env.APPDATA}\\Cortex\\memories.db`
@@ -269,6 +273,111 @@ function cmdUnpin(args) {
   if (setPinned(row.id, false)) process.stdout.write(`unpinned ${C.bold(row.title)} ${C.dim(row.id.slice(0, 8))}\n`)
 }
 
+// ── v0.5: add + journal ─────────────────────────────────────────────────────
+function escapeFts(s) { return s }
+function cmdAdd(args) {
+  // `cortex add "text" [--tag T] [--source cli]`
+  // Pulls text from stdin when piped: `echo "thought" | cortex add`
+  let text = args._.slice(1).join(' ')
+  if (!text && !process.stdin.isTTY) {
+    text = readFileSync(0, 'utf8').trim()
+  }
+  if (!text) die('usage: cortex add "<text>" [--tag T] [--source S]\n       or: echo "text" | cortex add')
+  const id = randomUUID()
+  const tags = []
+  if (args.flags.tag) tags.push(args.flags.tag)
+  const source = args.flags.source ?? 'cli'
+  const title = text.length > 80 ? text.slice(0, 77) + '…' : text
+  const content = text
+  const now = Date.now()
+  // Keep INSERT to v1 columns only — pinned (v7) and derived_from (v8) take
+  // their DEFAULT values when the columns exist, and an INSERT that names
+  // them would fail against a pre-migration DB. The Electron app runs the
+  // migrations on next launch.
+  const tx = db.transaction(() => {
+    db.prepare(
+      `INSERT INTO memories (id, title, content, timestamp, updatedAt, source, tags, url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NULL)`
+    ).run(id, title, content, now, now, source, JSON.stringify(tags))
+    db.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(id, title, content)
+  })
+  tx()
+  process.stdout.write(`${C.green('+ added')} ${C.bold(title)} ${C.dim(id.slice(0, 8))}\n`)
+}
+
+function cmdJournal(args) {
+  // No arg: print today's entry or open $EDITOR on it.
+  // With text: replace today's content with the given text.
+  const today = new Date()
+  const dayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  const end = start + 86_400_000
+
+  const provided = args._.slice(1).join(' ').trim()
+  // Stdin pipe support: `cat thoughts.md | cortex journal`
+  let textFromStdin = ''
+  if (!provided && !args.flags.edit && !process.stdin.isTTY) {
+    textFromStdin = readFileSync(0, 'utf8').trim()
+  }
+  const text = provided || textFromStdin
+
+  const existing = db.prepare(
+    "SELECT * FROM memories WHERE source = 'journal' AND timestamp >= ? AND timestamp < ? ORDER BY timestamp DESC LIMIT 1"
+  ).get(start, end)
+
+  // Pure-read path: no text, no --edit flag → show today's entry.
+  if (!text && !args.flags.edit) {
+    if (!existing) {
+      process.stdout.write(C.dim(`No journal entry for ${dayKey}. Write one with:\n`))
+      process.stdout.write(`  cortex journal "what you've been thinking"\n`)
+      process.stdout.write(`  cortex journal --edit\n`)
+      return
+    }
+    process.stdout.write(`${C.bold(`Journal — ${dayKey}`)}\n\n${existing.content}\n`)
+    return
+  }
+
+  // --edit flag → open $EDITOR on a temp file seeded with the current entry.
+  let content = text
+  if (args.flags.edit) {
+    const editor = process.env.VISUAL || process.env.EDITOR || (process.platform === 'win32' ? 'notepad' : 'nano')
+    const tmpDir = mkdtempSync(join(tmpdir(), 'cortex-journal-'))
+    const tmpFile = join(tmpDir, `${dayKey}.md`)
+    writeFileSync(tmpFile, existing?.content ?? `# Journal — ${dayKey}\n\n`, 'utf8')
+    const r = spawnSync(editor, [tmpFile], { stdio: 'inherit' })
+    if (r.status !== 0) {
+      rmSync(tmpDir, { recursive: true, force: true })
+      die(`editor "${editor}" returned ${r.status}`)
+    }
+    content = readFileSync(tmpFile, 'utf8').trim()
+    rmSync(tmpDir, { recursive: true, force: true })
+    if (!content) { process.stdout.write(C.dim('Empty journal entry — nothing saved.\n')); return }
+  }
+
+  const title = `Journal — ${dayKey}`
+  const now = Date.now()
+  if (existing) {
+    const tx = db.transaction(() => {
+      db.prepare("UPDATE memories SET content = ?, updatedAt = ? WHERE id = ?").run(content, now, existing.id)
+      db.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(existing.id)
+      db.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(existing.id, title, content)
+    })
+    tx()
+    process.stdout.write(`${C.green('✓ updated')} journal for ${dayKey}\n`)
+  } else {
+    const id = randomUUID()
+    const tx = db.transaction(() => {
+      db.prepare(
+        `INSERT INTO memories (id, title, content, timestamp, updatedAt, source, tags, url)
+         VALUES (?, ?, ?, ?, ?, 'journal', ?, NULL)`
+      ).run(id, title, content, start, now, JSON.stringify(['journal']))
+      db.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(id, title, content)
+    })
+    tx()
+    process.stdout.write(`${C.green('+ journal')} ${dayKey}  ${C.dim(id.slice(0, 8))}\n`)
+  }
+}
+
 function cmdExport(args) {
   const id = args._[1]
   if (!id) die('usage: cortex export <id> [--format md|json]')
@@ -329,15 +438,22 @@ function cmdDigest(args) {
 function cmdHelp() {
   process.stdout.write(`${C.bold('cortex')} — terminal companion for the second brain
 
+Read / search:
   cortex search <query> [--mode auto|keyword|semantic] [--limit N] [--tag T] [--source S]
   cortex recent [--limit N] [--tag T] [--source S]
   cortex digest [--week]
-  cortex export <id> [--format md|json]
-  cortex pinned
-  cortex pin <id>
-  cortex unpin <id>
   cortex stats
   cortex tags
+  cortex pinned
+
+Write:
+  cortex add "<text>" [--tag T] [--source S]
+  cortex journal ["<text>"] [--edit]
+  cortex pin <id>
+  cortex unpin <id>
+
+Export:
+  cortex export <id> [--format md|json]
   cortex help
 
 Memory ids can be abbreviated (first 8 chars are usually enough).
@@ -358,6 +474,8 @@ const COMMANDS = {
   pin: cmdPin,
   unpin: cmdUnpin,
   export: cmdExport,
+  add: cmdAdd, a: cmdAdd,
+  journal: cmdJournal, j: cmdJournal,
   help: cmdHelp, '-h': cmdHelp, '--help': cmdHelp,
 }
 const fn = COMMANDS[cmd]

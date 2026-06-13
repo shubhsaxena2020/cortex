@@ -1,6 +1,6 @@
-export type MemorySource = 'claude' | 'chatgpt' | 'gemini' | 'manual'
+export type MemorySource = 'claude' | 'chatgpt' | 'gemini' | 'manual' | 'derived' | 'journal' | 'mcp' | 'cli' | 'project_seed'
 export type RelationshipType = 'related' | 'building_on' | 'contrasts' | 'example' | 'wiki'
-export type ViewType = 'editor' | 'graph' | 'search' | 'digest' | 'settings'
+export type ViewType = 'editor' | 'graph' | 'search' | 'digest' | 'journal' | 'settings'
 
 /** Embedding backfill state (v0.3.0 backfill UI). */
 export interface SeedStatus {
@@ -69,6 +69,8 @@ export interface Memory {
   url: string | null
   /** v0.4: pinned memories are "always-relevant context" — prepended everywhere. */
   pinned?: boolean
+  /** v0.5: if non-null, this memory is an atomic learning derived from another. */
+  derivedFrom?: string | null
 }
 
 export interface MemorySummary {
@@ -177,6 +179,16 @@ export interface ElectronAPI {
   }
   digest: {
     get: (window: DigestWindow) => Promise<Digest>
+  }
+  extract: {
+    run: (parentId: string) => Promise<string[]>
+    backfill: (limit?: number) => Promise<{ done: number; total: number; created: number; skipped?: string }>
+    getDerived: (parentId: string) => Promise<Memory[]>
+  }
+  journal: {
+    today: () => Promise<Memory | null>
+    upsert: (content: string, dayMs?: number) => Promise<Memory>
+    recent: (limit?: number) => Promise<Memory[]>
   }
   relationships: {
     getAll: () => Promise<Relationship[]>

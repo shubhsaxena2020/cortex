@@ -21,6 +21,16 @@ const api: ElectronAPI = {
   digest: {
     get: (window) => ipcRenderer.invoke('digest:get', window),
   },
+  extract: {
+    run: (parentId) => ipcRenderer.invoke('extract:run', parentId),
+    backfill: (limit) => ipcRenderer.invoke('extract:backfill', limit),
+    getDerived: (parentId) => ipcRenderer.invoke('extract:getDerived', parentId),
+  },
+  journal: {
+    today: () => ipcRenderer.invoke('journal:today'),
+    upsert: (content, dayMs) => ipcRenderer.invoke('journal:upsert', content, dayMs),
+    recent: (limit) => ipcRenderer.invoke('journal:recent', limit),
+  },
   relationships: {
     getAll: () => ipcRenderer.invoke('relationships:getAll'),
     getForMemory: memoryId => ipcRenderer.invoke('relationships:getForMemory', memoryId),

@@ -124,6 +124,8 @@ function mapSummaryRow(r) {
 }
 
 function buildQueries(d) {
+  // db reference for the journal/extract callbacks in main()
+  globalThis.__cortexDb = d
   return {
     searchMemories(query, source, tags) {
       const phrase = toFtsPhrase(query)
@@ -305,6 +307,11 @@ function buildQueries(d) {
         'SELECT * FROM memories WHERE updatedAt >= ? ORDER BY updatedAt DESC LIMIT ?'
       ).all(since, limit).map(mapMemory)
     },
+    getDerived(parentId) {
+      try {
+        return d.prepare("SELECT * FROM memories WHERE derived_from = ? ORDER BY timestamp ASC").all(parentId).map(mapMemory)
+      } catch { return [] }
+    },
   }
 }
 
@@ -343,12 +350,78 @@ async function main() {
     queries = new Proxy({}, { get: () => failure })
   }
 
-  // Digest is wired here (not in core.mjs) so the pure core stays DB-free.
+  // Digest, extract, journal wired here (not in core.mjs) so the pure core
+  // stays DB-free. Extract is a stub in the MCP server — actual extraction
+  // happens in the Electron app via the IPC bridge. The MCP server CAN'T
+  // run Ollama generation safely from a child process (long blocking call,
+  // unbounded duration, would tie up the MCP connection). So we surface a
+  // helpful error here when the tool's called outside the app context.
   const handle = createRpcHandler({
     queries,
     embed,
     hasVec: () => hasVec,
     newId: () => randomUUID(),
+    extract: async (parentId) => {
+      // Stub: the MCP server has no Ollama-bound runner. Instead, advise
+      // the caller to either run the in-app extraction or wait for the
+      // app's startup backfill.
+      const existing = queries.getDerived?.(parentId) ?? []
+      logErr(`extract requested for ${parentId.slice(0, 8)}: returning ${existing.length} cached learnings`)
+      return existing.map((m) => m.id)
+    },
+    journal: {
+      today: () => {
+        const db = globalThis.__cortexDb
+        if (!db) return null
+        try {
+          const now = Date.now()
+          const date = new Date(now)
+          const start = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+          const end = start + 86_400_000
+          const row = db.prepare(
+            "SELECT * FROM memories WHERE source = 'journal' AND timestamp >= ? AND timestamp < ? ORDER BY timestamp DESC LIMIT 1"
+          ).get(start, end)
+          return row ? mapMemory(row) : null
+        } catch { return null }
+      },
+      upsert: (content) => {
+        const db = globalThis.__cortexDb
+        if (!db) return null
+        const id = randomUUID()
+        const now = Date.now()
+        const date = new Date(now)
+        const start = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+        const end = start + 86_400_000
+        const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+        const title = `Journal — ${dayKey}`
+        try {
+          const existing = db.prepare(
+            "SELECT id FROM memories WHERE source = 'journal' AND timestamp >= ? AND timestamp < ? LIMIT 1"
+          ).get(start, end)
+          if (existing) {
+            const tx = db.transaction(() => {
+              db.prepare("UPDATE memories SET content = ?, updatedAt = ? WHERE id = ?").run(content, now, existing.id)
+              db.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(existing.id)
+              db.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(existing.id, title, content)
+            })
+            tx()
+            return { id: existing.id, title, content, source: 'journal', tags: ['journal'], updatedAt: now }
+          }
+          const tx = db.transaction(() => {
+            db.prepare(
+              `INSERT INTO memories (id, title, content, timestamp, updatedAt, source, tags, url, pinned, derived_from)
+               VALUES (?, ?, ?, ?, ?, 'journal', ?, NULL, 0, NULL)`
+            ).run(id, title, content, start, now, JSON.stringify(['journal']))
+            db.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(id, title, content)
+          })
+          tx()
+          return { id, title, content, source: 'journal', tags: ['journal'], updatedAt: now }
+        } catch (err) {
+          logErr('journal upsert failed:', err.message)
+          return null
+        }
+      },
+    },
     digest(window) {
       const ms = window === 'week' ? 7 * 24 * 3600_000 : 24 * 3600_000
       const since = Date.now() - ms

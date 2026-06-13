@@ -1,11 +1,12 @@
 import React, { useEffect, useCallback, useState } from 'react'
-import { FileText, Network, Search as SearchIcon, Sun, Settings as SettingsIcon, Plus, FolderOpen } from 'lucide-react'
+import { FileText, Network, Search as SearchIcon, Sun, BookOpen, Settings as SettingsIcon, Plus, FolderOpen } from 'lucide-react'
 import { useStore } from './store'
 import Dashboard from './pages/Dashboard'
 import GraphView from './pages/GraphView'
 import Search from './pages/Search'
 import Settings from './pages/Settings'
 import DigestView from './pages/DigestView'
+import JournalView from './pages/JournalView'
 import Sidebar from './components/Sidebar'
 import ErrorBoundary from './components/ErrorBoundary'
 import type { ViewType, SystemStatus, SeedStatus } from '../../types'
@@ -15,6 +16,7 @@ const NAV_ITEMS: { view: ViewType; icon: React.ReactNode; label: string; shortcu
   { view: 'graph', icon: <Network size={16} />, label: 'Graph', shortcut: 'Ctrl+2' },
   { view: 'search', icon: <SearchIcon size={16} />, label: 'Search', shortcut: 'Ctrl+3' },
   { view: 'digest', icon: <Sun size={16} />, label: 'Digest', shortcut: 'Ctrl+4' },
+  { view: 'journal', icon: <BookOpen size={16} />, label: 'Journal', shortcut: 'Ctrl+5' },
 ]
 
 export default function App(): React.ReactElement {
@@ -86,6 +88,7 @@ export default function App(): React.ReactElement {
       if (e.key === '2') { e.preventDefault(); clearSelection(); setView('graph') }
       if (e.key === '3') { e.preventDefault(); clearSelection(); setView('search') }
       if (e.key === '4') { e.preventDefault(); clearSelection(); setView('digest') }
+      if (e.key === '5') { e.preventDefault(); clearSelection(); setView('journal') }
       if (e.key === 'k') { e.preventDefault(); clearSelection(); setView('search') }
       if (e.key === ',') { e.preventDefault(); setView('settings') }
     }
@@ -196,6 +199,7 @@ export default function App(): React.ReactElement {
           {currentView === 'graph' && <GraphView />}
           {currentView === 'search' && <Search />}
           {currentView === 'digest' && <DigestView />}
+          {currentView === 'journal' && <JournalView />}
           {currentView === 'settings' && <Settings />}
         </main>
       </div>

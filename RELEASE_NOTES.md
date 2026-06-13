@@ -1,3 +1,40 @@
+# Cortex v0.5.0 — "The brain that thinks back" (2026-06-13)
+
+> v0.5 closes the gap v0.4 revealed: Cortex captured conversations but didn't capture *learnings*. The digest told me what topic a chat was about; it rarely told me what was concluded. v0.5 adds atomic-learning extraction (the high-signal layer), a daily journal (the user's own thinking, first-class), and `cortex add` (capture from anywhere a shell reaches). See [`docs/V05-THINKING.md`](docs/V05-THINKING.md) for the reasoning.
+
+Privacy-first desktop app: captures AI conversations from Claude, ChatGPT, and Gemini into a local knowledge graph. Nothing leaves your machine.
+
+## What changed
+
+- **Atomic-learning extraction.** After every capture, a local Ollama pass (`llama3.2:3b` in JSON mode, or `CORTEX_EXTRACT_MODEL`) extracts up to five short sentences capturing what was concluded, decided, or worth remembering. Each learning becomes a first-class memory (`source='derived'`, `derived_from=<parent.id>`) — searchable, taggable, exportable like any other memory. The digest reads from learnings instead of parent chats; the parent stays as substrate.
+  - Tolerant JSON parser handles common Ollama failure modes: markdown code fences, leading prose, trailing commas, `{"learnings": [...]}` envelopes.
+  - Dedupe-against-existing logic so re-extracting a re-captured conversation doesn't duplicate.
+  - Single-flight per parent id; null-safe when Ollama is down.
+- **Daily journal — first-class memory type.** New `source='journal'` memories, one per day. In-app **Journal view** (Ctrl+5): debounced autosave, recent-entries sidebar, paired-with-digest hint. CLI: `cortex journal "what you've been thinking"` for one-liners; `cortex journal --edit` opens `$EDITOR` on the day's entry; bare `cortex journal` prints today's entry. The user's own thinking lives alongside captured chats.
+- **`cortex add`** for terminal quick-capture. `cortex add "scheduler-by-priority idea from podcast" --tag idea`. Stdin-aware (`echo "thought" | cortex add`). Source defaults to `cli`. Bridges meetings, walks, podcasts to Cortex via voice-to-text or any shell pipe.
+- **MCP server v0.5** — two new tools (`cortex_extract`, `cortex_journal`), totals 11. `cortex_journal` reads today's entry by default or upserts when `content` is supplied; `cortex_extract` returns derived learnings (or triggers extraction in the in-app context).
+- **In-app Learnings panel** on every memory's detail panel. Shows derived learnings as clickable cards; "extract" button kicks Ollama on demand. Derived memories show a "↑ Parent conversation" link back.
+- **Schema v8** — `memories.derived_from` column + `idx_memories_derived_from` partial index (only indexes the derived rows) + `idx_memories_journal_day` for the hot "today's entry" lookup. Forward-only, idempotent.
+
+## What slipped (deliberately)
+
+- **Local read-only web companion** (`cortex.local` on the LAN). Smaller win than expected; deferred to v0.6 where it can be paired with mobile-friendly capture.
+- **Encrypted P2P sync.** Pushed to v0.6+ — single-machine is the common case and the engineering cost (key management, conflict resolution, NAT traversal) is enormous.
+
+## Verified this release
+
+- **453/453** tests green (434 → 453, +19 across extract / journal / MCP).
+- **MCP smoke harness:** 14/14 checks on the 11-tool surface.
+- **CLI smoke:** `cortex add`, `cortex journal` (write + read + edit + stdin), `cortex recent --source cli` all correct.
+- The CLI is pre-v7-DB tolerant — INSERTs don't reference v7/v8 columns, so it works against unmigrated DBs (the Electron app handles migration on its next launch).
+- `npm run build` clean across all three processes + worker chunk.
+
+## Stack
+
+Electron 31 · React 18 · TypeScript 5 · Tailwind 3 · better-sqlite3 12 · sqlite-vec 0.1 · Fastify 5 · D3 7 · Zustand 4 · Vitest 4 · local Ollama (`all-minilm` for embeddings, `llama3.2:3b` for summarization + extraction, both optional with graceful degradation). **453/453 tests passing.**
+
+---
+
 # Cortex v0.4.0 — "Cortex finds you, not the other way around" (2026-06-13)
 
 > Pivoted hard from the ROADMAP-as-written. The original v0.4 scope was code signing and themes; the actual v0.4 is the inversion that v0.3's MCP server kicked off — Cortex stops waiting to be opened. See [`docs/V04-THINKING.md`](docs/V04-THINKING.md) for the full reasoning.

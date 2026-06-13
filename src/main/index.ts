@@ -16,6 +16,7 @@ import { syncWikiAfterChange, backfillWikiEdges } from './wiki-edges'
 import { suggestTags } from './auto-tag'
 import { getMentionEdges } from './mention-edges'
 import { summarizeIfNeeded, backfillSummaries } from './summary-runner'
+import { extractForMemory, backfillExtraction } from './extract-runner'
 import { buildDigest } from './digest'
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
@@ -163,6 +164,10 @@ async function startServerWithRetry(): Promise<void> {
         syncWikiAfterChange(memory.id, memory.title)
         // v0.4: kick off summarization. Null-safe if Ollama isn't running.
         void summarizeIfNeeded(memory.id).catch(() => {})
+        // v0.5: extract atomic learnings. Runs after a short delay so the
+        // capture write isn't competing with extraction Ollama call for the
+        // sqlite write lock. Null-safe.
+        setTimeout(() => { void extractForMemory(memory.id).catch(() => {}) }, 2000)
       })
       telemetry.capture('memory_created', {
         source: memory.source,
@@ -301,6 +306,14 @@ app.whenReady().then(async () => {
       else log.info(`[cortex] Summary backfill: ${result.done}/${result.total}`)
     } catch (err) {
       log.error('[cortex] Summary backfill error:', err)
+    }
+    // Extraction (v0.5): gentle backfill, 10 parents per startup tick.
+    try {
+      const result = await backfillExtraction(10)
+      if (result.skipped) log.info(`[cortex] Extraction backfill skipped (${result.skipped})`)
+      else log.info(`[cortex] Extraction backfill: ${result.created} learnings from ${result.done}/${result.total} parents`)
+    } catch (err) {
+      log.error('[cortex] Extraction backfill error:', err)
     }
   })
 
@@ -448,6 +461,27 @@ function registerIpcHandlers(): void {
     return { id, pinned }
   })
   ipcMain.handle('memories:getPinned', () => db.getPinnedMemoriesLight().map(toMemory))
+
+  // ── v0.5 extraction + journal ──────────────────────────────────────────
+  ipcMain.handle('extract:run', async (_e, parentId: string) => extractForMemory(parentId))
+  ipcMain.handle('extract:backfill', async (_e, limit?: number) => backfillExtraction(limit))
+  ipcMain.handle('extract:getDerived', (_e, parentId: string) =>
+    db.getDerivedFor(parentId).map(toMemory),
+  )
+
+  ipcMain.handle('journal:today', () => {
+    const row = db.getJournalEntryFor(Date.now())
+    return row ? toMemory(row) : null
+  })
+  ipcMain.handle('journal:upsert', (_e, content: string, dayMs?: number) => {
+    const id = randomUUID()
+    const row = db.upsertJournalEntry(id, content, dayMs ?? Date.now())
+    broadcastMemoriesChanged()
+    return toMemory(row)
+  })
+  ipcMain.handle('journal:recent', (_e, limit?: number) =>
+    db.getRecentJournalEntries(limit).map(toMemory),
+  )
 
   // ── v0.4 digest ────────────────────────────────────────────────────────
   ipcMain.handle('digest:get', (_e, window: 'day' | 'week') => {

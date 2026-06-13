@@ -5,10 +5,10 @@
 // edge strength with signal provenance, and Copy / Open / Delete actions.
 
 import React, { useMemo, useState, useCallback, useEffect } from 'react'
-import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag, Link2, Sparkles, Star } from 'lucide-react'
+import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag, Link2, Sparkles, Star, Lightbulb } from 'lucide-react'
 import { useStore } from '../store'
 import { splitWikiSegments, titleIndexOf } from '../utils/wiki-text'
-import type { MemorySummary } from '../../../types'
+import type { MemorySummary, Memory } from '../../../types'
 
 const SOURCE_BADGES: Record<string, { label: string; bg: string; fg: string }> = {
   claude:  { label: 'Claude',  bg: 'bg-[#7C3AED]/20', fg: 'text-[#a78bfa]' },
@@ -46,6 +46,8 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
   const [suggesting, setSuggesting] = useState(false)
   const [summary, setSummary] = useState<MemorySummary | null>(null)
   const [generatingSummary, setGeneratingSummary] = useState(false)
+  const [derived, setDerived] = useState<Memory[]>([])
+  const [extracting, setExtracting] = useState(false)
 
   const memory = memories.find(m => m.id === memoryId)
 
@@ -55,7 +57,22 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
   useEffect(() => {
     void hydrateMemory(memoryId)
     void window.electron.summaries.get(memoryId).then(setSummary).catch(() => {})
+    void window.electron.extract.getDerived(memoryId).then(setDerived).catch(() => {})
   }, [memoryId, hydrateMemory])
+
+  const handleExtract = useCallback(async () => {
+    if (!memory || extracting) return
+    setExtracting(true)
+    try {
+      const ids = await window.electron.extract.run(memory.id)
+      if (ids.length > 0) {
+        const fresh = await window.electron.extract.getDerived(memory.id)
+        setDerived(fresh)
+      }
+    } finally {
+      setExtracting(false)
+    }
+  }, [memory, extracting])
 
   const related = useMemo(() => {
     if (!memory) return []
@@ -285,6 +302,55 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
             </button>
           </div>
         </div>
+
+        {/* Derived learnings (v0.5) — what this conversation taught */}
+        {(derived.length > 0 || (memory.source !== 'derived' && memory.source !== 'journal')) && (
+          <div className="px-3 py-2 border-b border-[#2a2a2a]">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1 text-[10px] text-[#fbbf24] uppercase tracking-wider">
+                <Lightbulb size={9} /> Learnings · {derived.length}
+              </div>
+              {memory.source !== 'derived' && memory.source !== 'journal' && (
+                <button
+                  onClick={() => void handleExtract()}
+                  disabled={extracting}
+                  className="text-[10px] text-[#fbbf24] hover:text-[#fcd34d] disabled:opacity-50"
+                >
+                  {extracting ? 'Extracting…' : derived.length > 0 ? 're-extract' : 'extract'}
+                </button>
+              )}
+            </div>
+            <div className="space-y-1">
+              {derived.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => onJump(d.id)}
+                  className="w-full text-left text-xs text-[#ccc] bg-[#1a1610]/60 border border-[#2a2520] rounded px-2 py-1.5 hover:bg-[#1f1a14] transition-colors"
+                >
+                  {d.content || d.snippet || d.title}
+                </button>
+              ))}
+              {derived.length === 0 && (
+                <div className="text-[10px] text-[#444] italic">No learnings extracted yet.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Parent link for derived memories */}
+        {memory.derivedFrom && (
+          <div className="px-3 py-2 border-b border-[#2a2a2a]">
+            <div className="flex items-center gap-1 text-[10px] text-[#444] uppercase tracking-wider mb-1">
+              <Lightbulb size={9} /> Derived from
+            </div>
+            <button
+              onClick={() => onJump(memory.derivedFrom!)}
+              className="text-xs text-[#6B9FD4] hover:underline"
+            >
+              ↑ Parent conversation
+            </button>
+          </div>
+        )}
 
         {/* Backlinks — wiki links pointing at this memory */}
         {backlinks.length > 0 && (

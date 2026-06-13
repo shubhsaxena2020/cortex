@@ -57,6 +57,8 @@ function fakeCtx(options: CtxOptions = {}) {
   const stored: Array<{ id: string; vector: number[] }> = []
   const pinned = new Set<string>()
   const summaries = new Map<string, { oneLine: string | null; paragraph: string | null }>()
+  const extractCalls: string[] = []
+  let journalEntry: Memory | null = null
 
   return {
     created,
@@ -110,6 +112,18 @@ function fakeCtx(options: CtxOptions = {}) {
     hasVec: () => options.hasVec ?? false,
     newId: () => 'fixed-uuid',
     digest: (window: string) => ({ window, totalMemories: memories.length, groups: [] }),
+    extract: async (id: string) => {
+      extractCalls.push(id)
+      return ['derived-id']
+    },
+    extractCalls,
+    journal: {
+      today: () => journalEntry,
+      upsert: (content: string) => {
+        journalEntry = mem('journal-id', { title: 'Journal', content, source: 'journal' as never })
+        return journalEntry
+      },
+    },
   }
 }
 
@@ -345,6 +359,35 @@ describe('cortex_search with summaries + pinning', () => {
   })
 })
 
+describe('cortex_extract / cortex_journal', () => {
+  it('extract delegates to ctx.extract and returns created ids', async () => {
+    const ctx = fakeCtx({ memories: [mem('a')] })
+    const out = JSON.parse((await callTool('cortex_extract', { id: 'a' }, ctx)).content[0].text)
+    expect(out.parent).toBe('a')
+    expect(out.created).toBe(1)
+    expect(ctx.extractCalls).toEqual(['a'])
+  })
+
+  it('extract errors on missing memory', async () => {
+    const res = await callTool('cortex_extract', { id: 'ghost' }, fakeCtx())
+    expect(res.isError).toBe(true)
+  })
+
+  it('journal read returns null when no entry exists', async () => {
+    const out = JSON.parse((await callTool('cortex_journal', {}, fakeCtx())).content[0].text)
+    expect(out.entry).toBeNull()
+  })
+
+  it('journal upsert writes content and round-trips', async () => {
+    const ctx = fakeCtx()
+    const write = JSON.parse((await callTool('cortex_journal', { content: 'today I shipped extract' }, ctx)).content[0].text)
+    expect(write.updated).toBe(true)
+    expect(write.entry.content).toContain('today I shipped extract')
+    const read = JSON.parse((await callTool('cortex_journal', {}, ctx)).content[0].text)
+    expect(read.entry.content).toContain('today I shipped extract')
+  })
+})
+
 describe('cortex_digest', () => {
   it('uses the day window by default and forwards to ctx.digest', async () => {
     const ctx = fakeCtx({ memories: [mem('a')] })
@@ -392,9 +435,9 @@ describe('createRpcHandler', () => {
     expect(res.result.protocolVersion).toBe(PROTOCOL_VERSION)
   })
 
-  it('lists all nine tools with schemas', async () => {
+  it('lists all eleven tools with schemas', async () => {
     const res = await handle({ jsonrpc: '2.0', id: 3, method: 'tools/list' })
-    expect(res.result.tools).toHaveLength(9)
+    expect(res.result.tools).toHaveLength(11)
     expect(res.result.tools.map((t: { name: string }) => t.name)).toEqual(TOOLS.map((t: { name: string }) => t.name))
     for (const tool of res.result.tools) {
       expect(tool.inputSchema.type).toBe('object')
@@ -402,12 +445,14 @@ describe('createRpcHandler', () => {
     }
   })
 
-  it('exposes pinned, pin, and digest tools', async () => {
+  it('exposes pinned, pin, digest, extract, journal tools', async () => {
     const res = await handle({ jsonrpc: '2.0', id: 10, method: 'tools/list' })
     const names = res.result.tools.map((t: { name: string }) => t.name)
     expect(names).toContain('cortex_pinned')
     expect(names).toContain('cortex_pin')
     expect(names).toContain('cortex_digest')
+    expect(names).toContain('cortex_extract')
+    expect(names).toContain('cortex_journal')
   })
 
   it('dispatches tools/call to the tool implementation', async () => {

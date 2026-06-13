@@ -88,11 +88,25 @@ Pivoted hard from the original v0.4 scope ("polish + distribution"). See [docs/V
 - CLI smoke: search returns semantic hits with distances and one-liners; stats / tags / pinned / help all produce correct output.
 - Production build clean across all three processes.
 
-## v0.5.0 — Connect (your own machines, not other people's)
+## v0.5.0 — "The brain that thinks back" ✅ SHIPPED (2026-06-13)
 
-- [ ] Daily / weekly digest view
-- [ ] Local read-only web companion (open `http://cortex.local` on your LAN-only laptop)
-- [ ] Optional **encrypted P2P sync between your own machines** — Syncthing-style, no cloud middleman, never a server
+Pivoted from the original v0.5 scope ("Connect"). The digest was already shipped in v0.4; P2P sync is enormous engineering for the common single-machine case. Instead v0.5 closed the gap v0.4 revealed: Cortex captured conversations but didn't capture *learnings*. See [docs/V05-THINKING.md](docs/V05-THINKING.md) for the full reasoning.
+
+- [x] **Atomic-learning extraction.** After capture, Ollama (`llama3.2:3b` JSON-mode) extracts up to five short sentences capturing what was concluded, decided, or worth remembering. Each becomes a first-class memory with `source='derived'` and `derived_from=<parent.id>`. Digest reads from these; search ranks them higher; the parent stays as the substrate.
+- [x] **Daily journal — first-class memory type.** One entry per day, `source='journal'`. In-app Journal view (Ctrl+5) with debounced autosave, recent-entries sidebar, and pairing-with-digest hint. CLI: `cortex journal "text"` for one-liners; `cortex journal --edit` opens `$EDITOR`. The user's own thinking lives alongside captured chats.
+- [x] **`cortex add`** for terminal quick-capture. Stdin-aware (`echo "thought" | cortex add`), tag- and source-flagged, hits the same FTS5/embedding pipeline. Bridges meetings, walks, podcasts to Cortex via voice-to-text or piping from anywhere.
+- [x] **MCP server v0.5** — two new tools (`cortex_extract`, `cortex_journal`), tools went 9 → 11. The journal tool reads OR upserts based on whether content is supplied; the extract tool returns derived learnings.
+- [x] **Schema v8** — `memories.derived_from` column + `idx_memories_derived_from` partial index + `idx_memories_journal_day` for the hot "today's entry" lookup.
+
+### Slipped (deliberately)
+- **Local read-only web companion** (`cortex.local`) — useful but smaller win than I expected; deferred to v0.6 where it can be paired with mobile-friendly capture (`cortex add` from the phone).
+- **Encrypted P2P sync** — pushed to v0.6 or later. Single-machine is the common case; the engineering for multi-device sync is enormous (key management, conflict resolution on SQLite, NAT traversal) and the marginal value is small until a real second device shows up.
+
+### Verified this release
+- **453/453** tests green (434 → 453, +19 across extract/journal/MCP).
+- **MCP smoke harness:** 14/14 checks on the 11-tool surface.
+- **CLI smoke:** `cortex add`, `cortex journal "<text>"`, `cortex journal` (read), `cortex recent --source cli` all produce correct output. The CLI is pre-v7-DB tolerant — INSERT statements don't reference v7/v8 columns so it works against unmigrated DBs.
+- `npm run build` clean across all three processes.
 
 ## v1.0.0 — Stable
 

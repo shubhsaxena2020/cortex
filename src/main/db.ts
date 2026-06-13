@@ -10,7 +10,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 7   // bump + add migration when schema changes
+const SCHEMA_VERSION = 8   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -28,6 +28,8 @@ type MemoryRow = {
   /** v7: 0 = unpinned, 1 = pinned. May be missing on rows from older schemas
    *  before the migration runs; mapMemory coerces with `?? 0`. */
   pinned?: number | null
+  /** v8: parent memory id for derived learnings (source='derived'); NULL otherwise. */
+  derived_from?: string | null
 }
 
 type RelationshipRow = {
@@ -51,6 +53,7 @@ function mapMemory(r: MemoryRow) {
     tags: JSON.parse(r.tags || '[]') as string[],
     url: r.url ?? null,
     pinned: !!(r.pinned ?? 0),
+    derivedFrom: r.derived_from ?? null,
   }
 }
 
@@ -352,6 +355,22 @@ function runMigrations(d: Database.Database, from: number, to: number): void {
         }
         d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_pinned ON memories(pinned) WHERE pinned = 1`)
       }
+      if (from < 8) {
+        // v8: v0.5 "brain that thinks back" — derived learnings + journal.
+        //
+        // derived_from is NULL for original captures and the parent memory id
+        // for atomic learnings extracted via Ollama. Partial index keeps the
+        // "show me a memory's children" query fast without bloating storage
+        // on the common case (most rows have no parent).
+        const mCols2 = d.prepare(`PRAGMA table_info(memories)`).all() as Array<{ name: string }>
+        if (!mCols2.some(c => c.name === 'derived_from')) {
+          d.exec(`ALTER TABLE memories ADD COLUMN derived_from TEXT`)
+        }
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_derived_from ON memories(derived_from) WHERE derived_from IS NOT NULL`)
+        // Journal entries are first-class memories with source='journal' — no
+        // new table, but the "today's journal" lookup is hot enough to index.
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_journal_day ON memories(source, timestamp) WHERE source = 'journal'`)
+      }
 
       // Bump (or write) the stored version. UPDATE if the row exists; INSERT
       // otherwise. We can't rely on the caller to handle the fresh-install
@@ -403,7 +422,7 @@ export function createMemory(id: string, title: string, content: string, source:
     'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
   ).run(id, title, content)
 
-  return { id, title, content, timestamp: now, updatedAt: now, source, tags, url, pinned: false }
+  return { id, title, content, timestamp: now, updatedAt: now, source, tags, url, pinned: false, derivedFrom: null }
 }
 
 /**
@@ -484,6 +503,7 @@ export function upsertMemoryByUrl(
       tags,
       url: canonicalUrl,
       pinned: existing.pinned,
+      derivedFrom: existing.derivedFrom,
     },
     action: 'updated',
   }
@@ -508,7 +528,7 @@ export function getAllMemories() {
 export function getAllMemoriesLight() {
   const rows = getDb().prepare(`
     SELECT id, title, substr(COALESCE(content, ''), 1, 200) AS snippet,
-           timestamp, updatedAt, source, tags, url, pinned
+           timestamp, updatedAt, source, tags, url, pinned, derived_from
     FROM memories ORDER BY pinned DESC, updatedAt DESC
   `).all() as Array<Omit<MemoryRow, 'content'> & { snippet: string }>
   return rows.map(r => ({
@@ -522,6 +542,7 @@ export function getAllMemoriesLight() {
     tags: JSON.parse(r.tags || '[]') as string[],
     url: r.url ?? null,
     pinned: !!(r.pinned ?? 0),
+    derivedFrom: r.derived_from ?? null,
   }))
 }
 
@@ -560,9 +581,9 @@ export function updateMemory(id: string, title: string, content: string, tags: s
     'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
   ).run(id, title, content)
 
-  // Read pinned state post-update so the returned row stays in sync.
+  // Read pinned state + derivedFrom post-update so the returned row stays in sync.
   const current = getMemory(id)
-  return { id, title, content, updatedAt: now, tags, pinned: current?.pinned ?? false }
+  return { id, title, content, updatedAt: now, tags, pinned: current?.pinned ?? false, derivedFrom: current?.derivedFrom ?? null }
 }
 
 export function deleteMemory(id: string) {
@@ -877,6 +898,59 @@ export function upsertSummary(s: MemorySummary): void {
   `).run(s.memoryId, s.oneLine, s.paragraph, s.contentHash, s.model, s.createdAt)
 }
 
+// ── Derived learnings (v0.5 #1) ──────────────────────────────────────────────
+
+/** Insert a derived learning. UUIDs and embedding/edge build happen at the caller. */
+export function createDerivedMemory(
+  id: string,
+  title: string,
+  content: string,
+  parentId: string,
+  tags: string[] = [],
+): ReturnType<typeof mapMemory> {
+  const d = getDb()
+  const now = Date.now()
+  const tagsStr = JSON.stringify(tags)
+  const insert = d.transaction(() => {
+    d.prepare(
+      `INSERT OR REPLACE INTO memories (id, title, content, timestamp, updatedAt, source, tags, url, pinned, derived_from)
+       VALUES (?, ?, ?, ?, ?, 'derived', ?, NULL, 0, ?)`
+    ).run(id, title, content, now, now, tagsStr, parentId)
+    d.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(id)
+    d.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(id, title, content)
+  })
+  insert()
+  return {
+    id, title, content, timestamp: now, updatedAt: now,
+    source: 'derived', tags, url: null, pinned: false, derivedFrom: parentId,
+  }
+}
+
+/** Existing derived learnings for a parent — used to dedupe before re-extracting. */
+export function getDerivedFor(parentId: string) {
+  const rows = getDb().prepare(
+    "SELECT * FROM memories WHERE derived_from = ? ORDER BY timestamp ASC"
+  ).all(parentId) as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+/**
+ * Memory ids eligible for atomic-learning extraction (substantial captures
+ * with no derived children yet). Skips journal and already-derived rows.
+ */
+export function getMemoriesNeedingExtraction(limit = 50): string[] {
+  const rows = getDb().prepare(`
+    SELECT m.id FROM memories m
+    LEFT JOIN memories c ON c.derived_from = m.id
+    WHERE m.source NOT IN ('derived', 'journal')
+      AND length(COALESCE(m.content, '')) >= 200
+      AND c.id IS NULL
+    ORDER BY m.updatedAt DESC
+    LIMIT ?
+  `).all(limit) as Array<{ id: string }>
+  return rows.map(r => r.id)
+}
+
 /** Memory ids whose summary is missing or stale (content hash mismatch). */
 export function getMemoryIdsNeedingSummary(currentHash: (memoryId: string) => string, limit?: number): string[] {
   const rows = getDb().prepare(`
@@ -910,7 +984,7 @@ export function getPinnedMemories(): ReturnType<typeof mapMemory>[] {
 export function getPinnedMemoriesLight() {
   const rows = getDb().prepare(`
     SELECT id, title, substr(COALESCE(content, ''), 1, 200) AS snippet,
-           timestamp, updatedAt, source, tags, url, pinned
+           timestamp, updatedAt, source, tags, url, pinned, derived_from
     FROM memories WHERE pinned = 1 ORDER BY updatedAt DESC
   `).all() as Array<Omit<MemoryRow, 'content'> & { snippet: string }>
   return rows.map(r => ({
@@ -924,6 +998,7 @@ export function getPinnedMemoriesLight() {
     tags: JSON.parse(r.tags || '[]') as string[],
     url: r.url ?? null,
     pinned: true,
+    derivedFrom: r.derived_from ?? null,
   }))
 }
 
@@ -934,6 +1009,59 @@ export function getMemoriesSince(since: number, limit = 200) {
   const rows = getDb().prepare(
     'SELECT * FROM memories WHERE updatedAt >= ? ORDER BY updatedAt DESC LIMIT ?'
   ).all(since, limit) as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+// ── Journal (v0.5 #2) ────────────────────────────────────────────────────────
+//
+// Journal entries are memories with source='journal'. One entry per day,
+// keyed by the (year, month, day) of timestamp. The first call creates;
+// subsequent calls update content in place.
+
+function dayKeyOf(ms: number): string {
+  const d = new Date(ms)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+export function getJournalEntryFor(day: Date | number = Date.now()) {
+  const target = typeof day === 'number' ? new Date(day) : day
+  const start = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime()
+  const end = start + 86_400_000
+  const row = getDb().prepare(
+    "SELECT * FROM memories WHERE source = 'journal' AND timestamp >= ? AND timestamp < ? ORDER BY timestamp DESC LIMIT 1"
+  ).get(start, end) as MemoryRow | undefined
+  return row ? mapMemory(row) : null
+}
+
+export function upsertJournalEntry(id: string, content: string, day: Date | number = Date.now()) {
+  const d = getDb()
+  const target = typeof day === 'number' ? new Date(day) : day
+  const title = `Journal — ${dayKeyOf(target.getTime())}`
+  const existing = getJournalEntryFor(target)
+  const tagsStr = JSON.stringify(['journal'])
+  const now = Date.now()
+  if (existing) {
+    d.prepare(
+      "UPDATE memories SET content = ?, updatedAt = ? WHERE id = ?"
+    ).run(content, now, existing.id)
+    d.prepare('DELETE FROM memories_fts WHERE memory_id = ?').run(existing.id)
+    d.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(existing.id, title, content)
+    return { id: existing.id, title, content, timestamp: existing.timestamp, updatedAt: now, source: 'journal', tags: ['journal'], url: null, pinned: existing.pinned, derivedFrom: null }
+  }
+  // Use the requested day's midnight as the timestamp so dayKeyOf is stable.
+  const dayStart = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime()
+  d.prepare(
+    `INSERT INTO memories (id, title, content, timestamp, updatedAt, source, tags, url, pinned, derived_from)
+     VALUES (?, ?, ?, ?, ?, 'journal', ?, NULL, 0, NULL)`
+  ).run(id, title, content, dayStart, now, tagsStr)
+  d.prepare('INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)').run(id, title, content)
+  return { id, title, content, timestamp: dayStart, updatedAt: now, source: 'journal', tags: ['journal'], url: null, pinned: false, derivedFrom: null }
+}
+
+export function getRecentJournalEntries(limit = 14) {
+  const rows = getDb().prepare(
+    "SELECT * FROM memories WHERE source = 'journal' ORDER BY timestamp DESC LIMIT ?"
+  ).all(limit) as MemoryRow[]
   return rows.map(mapMemory)
 }
 
