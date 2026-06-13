@@ -1,3 +1,40 @@
+# Cortex v0.4.0 — "Cortex finds you, not the other way around" (2026-06-13)
+
+> Pivoted hard from the ROADMAP-as-written. The original v0.4 scope was code signing and themes; the actual v0.4 is the inversion that v0.3's MCP server kicked off — Cortex stops waiting to be opened. See [`docs/V04-THINKING.md`](docs/V04-THINKING.md) for the full reasoning.
+
+Privacy-first desktop app: captures AI conversations from Claude, ChatGPT, and Gemini into a local knowledge graph. Nothing leaves your machine.
+
+## What changed
+
+- **`cortex` CLI** — a real terminal companion. `cortex search "auth flow"`, `cortex recent --tag rust --limit 20`, `cortex digest`, `cortex export <id>`, `cortex stats`, `cortex tags`, `cortex pin <id>`, `cortex unpin <id>`, `cortex pinned`. Pipeable (snippet-only output on non-TTY for `| grep`, `| head`), greppable, opens the same FTS5 + sqlite-vec + Ollama stack the MCP server uses. Both Bash (`cli/cortex`) and CMD (`cli/cortex.cmd`) launchers ship; `npm run cortex -- <cmd>` works locally without PATH setup.
+- **Local Ollama summarization** with `llama3.2:3b` (or `CORTEX_SUMMARY_MODEL`). Two summaries per memory — one-line (≤20 words) and paragraph (≤80 words) — cached in `memory_summaries` keyed on content hash. Stale summaries invalidate when content changes. Generation is null-safe: Ollama down ⇒ silent no-op, same pattern as embeddings.
+- **MCP server v0.4: bandwidth fix + three new tools.** `cortex_search` and `cortex_get_memory` return one-line / paragraph summaries instead of raw content, dropping the typical search-result payload from ~600 lines of raw chat to ~60 lines of distilled summary. Three new tools: `cortex_digest`, `cortex_pinned`, `cortex_pin`. Pinned memories are prepended to every `cortex_search` envelope. Tools went 6 → 9.
+- **Daily / weekly digest** (`cortex digest` + in-app view, Ctrl+4). Groups recent captures by top tag, surfaces one-line summaries, clickable in the app to drill into the editor. Two-second read on the CLI for morning-coffee use.
+- **Pinned memories** — per-memory star toggle in the detail panel; pinned set surfaces at the top of the sidebar and prepends to every MCP search response. The "user-IS" surface the 13 seed memories revealed was missing.
+- **Medium-zoom edge LOD fix** — graph perf top-up. Edge strength threshold rises with visible-edge count; mention edges drop above 4k visible nodes. Buys back the one remaining sad zoom band from v0.3.
+- **Schema v7** — `memory_summaries` table + `memories.pinned` column + `idx_memories_pinned`. Forward-only, idempotent, runs at first launch.
+
+## Why this scope, not the ROADMAP's
+
+The original v0.4 ROADMAP was distribution + polish: code signing ($300/yr), Linux AppImage, auto-update, dark/light themes, accessibility, keyboard graph navigation. All of that is future table-stakes — and none of it makes Cortex genuinely indispensable to someone using it daily. Per `docs/V04-THINKING.md`:
+
+> The product is half-passive on intake and fully active on retrieval. A second brain that waits to be asked is a filing cabinet. The thing it needs to become is the thing that finds *me*.
+
+The CLI is the highest-leverage single thing I can ship — terminal users will reach `cortex search` 20× a day, never the Electron window. The summarization makes the MCP server's output composable with limited LLM contexts. The digest makes the app a habit instead of a tool. Pinning gives the user an explicit "always-relevant context" surface.
+
+## Verified this release
+
+- **434/434** unit + integration tests green (399 → 434, +35 across summarize/digest/MCP/CLI).
+- **MCP smoke harness:** 14/14 checks (handshake → 9-tool list → search → digest → pinned → create → error paths).
+- **CLI** verified live against the real DB: `cortex stats`, `cortex search` (semantic mode), `cortex tags`, `cortex help` all produce correct output.
+- `npm run build` clean across all three processes + worker chunk.
+
+## Stack
+
+Electron 31 · React 18 · TypeScript 5 · Tailwind 3 · better-sqlite3 12 · sqlite-vec 0.1 · Fastify 5 · D3 7 · Zustand 4 · Vitest 4 · local Ollama (`all-minilm` 384d for embeddings, `llama3.2:3b` for summarization, both optional with graceful degradation). **434/434 tests passing.**
+
+---
+
 # Cortex v0.3.0 — "Smart, linked, and 100k-ready" (2026-06-13)
 
 > Cortex earns the name. Six of v0.3's eight roadmap items shipped (the kill criteria asked for at most five — we beat it), plus two items the criteria didn't anticipate: an **MCP server** turning the second brain into native Claude tool calls, and a **graph performance overhaul** that takes the canvas from 2.9 FPS at 100k+ nodes (v0.2) to **133 FPS settled**.

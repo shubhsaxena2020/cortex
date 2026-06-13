@@ -15,6 +15,8 @@ import {
 import { syncWikiAfterChange, backfillWikiEdges } from './wiki-edges'
 import { suggestTags } from './auto-tag'
 import { getMentionEdges } from './mention-edges'
+import { summarizeIfNeeded, backfillSummaries } from './summary-runner'
+import { buildDigest } from './digest'
 import { isOllamaAvailable, isEmbedModelAvailable } from './embeddings'
 import { loadVaultConfig, saveVaultConfig, initVault, startVaultWatcher, stopVaultWatcher, startWatchFolderWatcher, stopWatchFolderWatcher } from './vault'
 import * as telemetry from './telemetry'
@@ -159,6 +161,8 @@ async function startServerWithRetry(): Promise<void> {
         // Wiki edges: the capture may contain [[links]], and other memories
         // may link to this conversation's title (v0.3.0).
         syncWikiAfterChange(memory.id, memory.title)
+        // v0.4: kick off summarization. Null-safe if Ollama isn't running.
+        void summarizeIfNeeded(memory.id).catch(() => {})
       })
       telemetry.capture('memory_created', {
         source: memory.source,
@@ -287,6 +291,16 @@ app.whenReady().then(async () => {
       backfillWikiEdges()
     } catch (err) {
       log.error('[cortex] Wiki backfill error:', err)
+    }
+    // Summaries (v0.4): backfill at a gentle pace. Limited to 20 per startup
+    // tick so a 10k-memory vault doesn't hammer Ollama on first launch — the
+    // backfill UI in Settings can complete the rest on demand.
+    try {
+      const result = await backfillSummaries(20)
+      if (result.skipped) log.info(`[cortex] Summary backfill skipped (${result.skipped})`)
+      else log.info(`[cortex] Summary backfill: ${result.done}/${result.total}`)
+    } catch (err) {
+      log.error('[cortex] Summary backfill error:', err)
     }
   })
 
@@ -417,6 +431,41 @@ function registerIpcHandlers(): void {
   // Graph: mention edges are computed here (content never leaves the main
   // process) behind a fingerprint cache — see mention-edges.ts.
   ipcMain.handle('graph:getMentionEdges', () => getMentionEdges())
+
+  // ── v0.4 summaries ─────────────────────────────────────────────────────
+  ipcMain.handle('summaries:get', (_e, id: string) => db.getSummary(id))
+  ipcMain.handle('summaries:summarize', async (_e, id: string) => summarizeIfNeeded(id))
+  ipcMain.handle('summaries:backfill', async (_e, limit?: number) => backfillSummaries(limit))
+  ipcMain.handle('summaries:getMany', (_e, ids: string[]) => {
+    const map = db.getSummaries(ids)
+    return Object.fromEntries(map)
+  })
+
+  // ── v0.4 pinning ───────────────────────────────────────────────────────
+  ipcMain.handle('memories:setPinned', (_e, id: string, pinned: boolean) => {
+    db.setPinned(id, pinned)
+    broadcastMemoriesChanged()
+    return { id, pinned }
+  })
+  ipcMain.handle('memories:getPinned', () => db.getPinnedMemoriesLight().map(toMemory))
+
+  // ── v0.4 digest ────────────────────────────────────────────────────────
+  ipcMain.handle('digest:get', (_e, window: 'day' | 'week') => {
+    const w = window === 'week' ? 'week' : 'day'
+    const ms = w === 'week' ? 7 * 86_400_000 : 86_400_000
+    const since = Date.now() - ms
+    const memories = db.getMemoriesSince(since)
+    const summaryMap = db.getSummaries(memories.map(m => m.id))
+    const slim = memories.map(m => ({
+      id: m.id,
+      title: m.title,
+      source: m.source,
+      tags: m.tags,
+      updatedAt: m.updatedAt,
+      oneLine: summaryMap.get(m.id)?.oneLine ?? null,
+    }))
+    return buildDigest(w, slim, Date.now())
+  })
 
   // Extension config (read-only — for the Settings page)
   ipcMain.handle('extension:getConfig', () => {

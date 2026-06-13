@@ -10,7 +10,7 @@ let db: Database.Database | null = null
 let vectorSearchEnabled = false
 
 const EMBEDDING_DIM = 384  // must match embeddings.ts EMBEDDING_DIM
-const SCHEMA_VERSION = 6   // bump + add migration when schema changes
+const SCHEMA_VERSION = 7   // bump + add migration when schema changes
 
 function defaultDbPath(): string {
   return join(app.getPath('userData'), 'memories.db')
@@ -25,6 +25,9 @@ type MemoryRow = {
   source: string
   tags: string
   url: string | null
+  /** v7: 0 = unpinned, 1 = pinned. May be missing on rows from older schemas
+   *  before the migration runs; mapMemory coerces with `?? 0`. */
+  pinned?: number | null
 }
 
 type RelationshipRow = {
@@ -47,6 +50,7 @@ function mapMemory(r: MemoryRow) {
     source: r.source,
     tags: JSON.parse(r.tags || '[]') as string[],
     url: r.url ?? null,
+    pinned: !!(r.pinned ?? 0),
   }
 }
 
@@ -318,6 +322,36 @@ function runMigrations(d: Database.Database, from: number, to: number): void {
         d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_source ON memories(source)`)
         d.exec(`ANALYZE`)
       }
+      if (from < 7) {
+        // v7: v0.4 summarization + pinning.
+        //
+        // memory_summaries holds the one-liner + paragraph summaries generated
+        // by local Ollama. Keyed on content_hash so a re-captured memory whose
+        // content changed invalidates its old summary (and a memory whose
+        // content didn't change keeps the existing summary across upserts).
+        // Both summary fields nullable — generation may produce one without
+        // the other in degenerate cases.
+        d.exec(`
+          CREATE TABLE IF NOT EXISTS memory_summaries (
+            memory_id TEXT PRIMARY KEY,
+            one_line TEXT,
+            paragraph TEXT,
+            content_hash TEXT NOT NULL,
+            model TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            FOREIGN KEY(memory_id) REFERENCES memories(id) ON DELETE CASCADE
+          )
+        `)
+
+        // Pin: a tiny "always-relevant context" set. Three-to-five rows in
+        // practice — adding a column is overkill, but it keeps the pinned set
+        // queryable from the same row without a join.
+        const mCols = d.prepare(`PRAGMA table_info(memories)`).all() as Array<{ name: string }>
+        if (!mCols.some(c => c.name === 'pinned')) {
+          d.exec(`ALTER TABLE memories ADD COLUMN pinned INTEGER DEFAULT 0`)
+        }
+        d.exec(`CREATE INDEX IF NOT EXISTS idx_memories_pinned ON memories(pinned) WHERE pinned = 1`)
+      }
 
       // Bump (or write) the stored version. UPDATE if the row exists; INSERT
       // otherwise. We can't rely on the caller to handle the fresh-install
@@ -369,7 +403,7 @@ export function createMemory(id: string, title: string, content: string, source:
     'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
   ).run(id, title, content)
 
-  return { id, title, content, timestamp: now, updatedAt: now, source, tags, url }
+  return { id, title, content, timestamp: now, updatedAt: now, source, tags, url, pinned: false }
 }
 
 /**
@@ -449,6 +483,7 @@ export function upsertMemoryByUrl(
       source,
       tags,
       url: canonicalUrl,
+      pinned: existing.pinned,
     },
     action: 'updated',
   }
@@ -473,8 +508,8 @@ export function getAllMemories() {
 export function getAllMemoriesLight() {
   const rows = getDb().prepare(`
     SELECT id, title, substr(COALESCE(content, ''), 1, 200) AS snippet,
-           timestamp, updatedAt, source, tags, url
-    FROM memories ORDER BY updatedAt DESC
+           timestamp, updatedAt, source, tags, url, pinned
+    FROM memories ORDER BY pinned DESC, updatedAt DESC
   `).all() as Array<Omit<MemoryRow, 'content'> & { snippet: string }>
   return rows.map(r => ({
     id: r.id,
@@ -486,6 +521,7 @@ export function getAllMemoriesLight() {
     source: r.source,
     tags: JSON.parse(r.tags || '[]') as string[],
     url: r.url ?? null,
+    pinned: !!(r.pinned ?? 0),
   }))
 }
 
@@ -524,7 +560,9 @@ export function updateMemory(id: string, title: string, content: string, tags: s
     'INSERT INTO memories_fts (memory_id, title, content) VALUES (?, ?, ?)'
   ).run(id, title, content)
 
-  return { id, title, content, updatedAt: now, tags }
+  // Read pinned state post-update so the returned row stays in sync.
+  const current = getMemory(id)
+  return { id, title, content, updatedAt: now, tags, pinned: current?.pinned ?? false }
 }
 
 export function deleteMemory(id: string) {
@@ -780,6 +818,123 @@ export function getMemoryIdsWithWikiSyntax(): string[] {
     "SELECT id FROM memories WHERE content LIKE '%[[%'"
   ).all() as Array<{ id: string }>
   return rows.map(r => r.id)
+}
+
+// ── Summaries (v0.4) ─────────────────────────────────────────────────────────
+
+export interface MemorySummary {
+  memoryId: string
+  oneLine: string | null
+  paragraph: string | null
+  contentHash: string
+  model: string
+  createdAt: number
+}
+
+type SummaryRow = {
+  memory_id: string
+  one_line: string | null
+  paragraph: string | null
+  content_hash: string
+  model: string
+  created_at: number
+}
+
+function mapSummary(r: SummaryRow): MemorySummary {
+  return {
+    memoryId: r.memory_id,
+    oneLine: r.one_line,
+    paragraph: r.paragraph,
+    contentHash: r.content_hash,
+    model: r.model,
+    createdAt: r.created_at,
+  }
+}
+
+export function getSummary(memoryId: string): MemorySummary | null {
+  const row = getDb().prepare('SELECT * FROM memory_summaries WHERE memory_id = ?').get(memoryId) as SummaryRow | undefined
+  return row ? mapSummary(row) : null
+}
+
+export function getSummaries(memoryIds: string[]): Map<string, MemorySummary> {
+  const out = new Map<string, MemorySummary>()
+  if (memoryIds.length === 0) return out
+  // SQLite has a 999-parameter ceiling by default; chunk to stay well under.
+  const CHUNK = 500
+  for (let i = 0; i < memoryIds.length; i += CHUNK) {
+    const slice = memoryIds.slice(i, i + CHUNK)
+    const sql = `SELECT * FROM memory_summaries WHERE memory_id IN (${slice.map(() => '?').join(',')})`
+    const rows = getDb().prepare(sql).all(...slice) as SummaryRow[]
+    for (const r of rows) out.set(r.memory_id, mapSummary(r))
+  }
+  return out
+}
+
+export function upsertSummary(s: MemorySummary): void {
+  getDb().prepare(`
+    INSERT OR REPLACE INTO memory_summaries (memory_id, one_line, paragraph, content_hash, model, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(s.memoryId, s.oneLine, s.paragraph, s.contentHash, s.model, s.createdAt)
+}
+
+/** Memory ids whose summary is missing or stale (content hash mismatch). */
+export function getMemoryIdsNeedingSummary(currentHash: (memoryId: string) => string, limit?: number): string[] {
+  const rows = getDb().prepare(`
+    SELECT m.id, m.title, m.content, s.content_hash
+    FROM memories m
+    LEFT JOIN memory_summaries s ON s.memory_id = m.id
+    ORDER BY m.updatedAt DESC
+    ${limit ? 'LIMIT ?' : ''}
+  `).all(...(limit ? [limit] : [])) as Array<{ id: string; title: string; content: string | null; content_hash: string | null }>
+  const out: string[] = []
+  for (const r of rows) {
+    const want = currentHash(r.id)
+    if (r.content_hash !== want) out.push(r.id)
+  }
+  return out
+}
+
+// ── Pinned memories (v0.4) ───────────────────────────────────────────────────
+
+export function setPinned(memoryId: string, pinned: boolean): void {
+  getDb().prepare('UPDATE memories SET pinned = ? WHERE id = ?').run(pinned ? 1 : 0, memoryId)
+}
+
+export function getPinnedMemories(): ReturnType<typeof mapMemory>[] {
+  const rows = getDb().prepare(
+    'SELECT * FROM memories WHERE pinned = 1 ORDER BY updatedAt DESC'
+  ).all() as MemoryRow[]
+  return rows.map(mapMemory)
+}
+
+export function getPinnedMemoriesLight() {
+  const rows = getDb().prepare(`
+    SELECT id, title, substr(COALESCE(content, ''), 1, 200) AS snippet,
+           timestamp, updatedAt, source, tags, url, pinned
+    FROM memories WHERE pinned = 1 ORDER BY updatedAt DESC
+  `).all() as Array<Omit<MemoryRow, 'content'> & { snippet: string }>
+  return rows.map(r => ({
+    id: r.id,
+    title: r.title,
+    content: '',
+    snippet: r.snippet,
+    timestamp: r.timestamp,
+    updatedAt: r.updatedAt,
+    source: r.source,
+    tags: JSON.parse(r.tags || '[]') as string[],
+    url: r.url ?? null,
+    pinned: true,
+  }))
+}
+
+// ── Digest queries (v0.4) ────────────────────────────────────────────────────
+
+/** Memories updated since `since` (epoch ms), newest first. */
+export function getMemoriesSince(since: number, limit = 200) {
+  const rows = getDb().prepare(
+    'SELECT * FROM memories WHERE updatedAt >= ? ORDER BY updatedAt DESC LIMIT ?'
+  ).all(since, limit) as MemoryRow[]
+  return rows.map(mapMemory)
 }
 
 // ── Vector search (sqlite-vec, optional) ─────────────────────────────────────

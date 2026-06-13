@@ -55,10 +55,14 @@ function fakeCtx(options: CtxOptions = {}) {
   const byId = new Map(memories.map((m) => [m.id, m]))
   const created: Array<{ id: string; title: string; content: string; source: string; tags: string[] }> = []
   const stored: Array<{ id: string; vector: number[] }> = []
+  const pinned = new Set<string>()
+  const summaries = new Map<string, { oneLine: string | null; paragraph: string | null }>()
 
   return {
     created,
     stored,
+    pinned,
+    summaries,
     queries: {
       searchMemories: (query: string, source?: string, tags?: string[]) =>
         memories.filter((m) => {
@@ -87,10 +91,25 @@ function fakeCtx(options: CtxOptions = {}) {
       vectorSearch: () => options.vecHits ?? [],
       storeEmbedding: (id: string, vector: number[]) => { stored.push({ id, vector }) },
       stats: () => ({ memories: memories.length }),
+      listPinned: () => memories.filter((m) => pinned.has(m.id)),
+      setPinned: (id: string, p: boolean) => { p ? pinned.add(id) : pinned.delete(id) },
+      getSummary: (id: string) => {
+        const s = summaries.get(id)
+        return s ? { memoryId: id, ...s, contentHash: 'h', model: 'm', createdAt: 0 } : null
+      },
+      getSummaries: (ids: string[]) => {
+        const out = new Map()
+        for (const id of ids) {
+          const s = summaries.get(id)
+          if (s) out.set(id, { memoryId: id, ...s, contentHash: 'h', model: 'm', createdAt: 0 })
+        }
+        return out
+      },
     },
     embed: async () => options.embedVector ?? null,
     hasVec: () => options.hasVec ?? false,
     newId: () => 'fixed-uuid',
+    digest: (window: string) => ({ window, totalMemories: memories.length, groups: [] }),
   }
 }
 
@@ -266,6 +285,81 @@ describe('cortex_create_memory', () => {
   })
 })
 
+describe('cortex_pin / cortex_pinned', () => {
+  it('pins a memory and lists it back', async () => {
+    const ctx = fakeCtx({ memories: [mem('a'), mem('b')] })
+    const pinRes = await callTool('cortex_pin', { id: 'a', pinned: true }, ctx)
+    expect(JSON.parse(pinRes.content[0].text)).toEqual({ id: 'a', pinned: true })
+    const listRes = await callTool('cortex_pinned', {}, ctx)
+    const listed = JSON.parse(listRes.content[0].text)
+    expect(listed.count).toBe(1)
+    expect(listed.results[0].id).toBe('a')
+    expect(listed.results[0].pinned).toBe(true)
+  })
+
+  it('unpins via pinned=false', async () => {
+    const ctx = fakeCtx({ memories: [mem('a')] })
+    await callTool('cortex_pin', { id: 'a', pinned: true }, ctx)
+    await callTool('cortex_pin', { id: 'a', pinned: false }, ctx)
+    const listRes = await callTool('cortex_pinned', {}, ctx)
+    expect(JSON.parse(listRes.content[0].text).count).toBe(0)
+  })
+
+  it('rejects pinning a missing memory', async () => {
+    const ctx = fakeCtx()
+    const res = await callTool('cortex_pin', { id: 'ghost', pinned: true }, ctx)
+    expect(res.isError).toBe(true)
+  })
+
+  it('requires a boolean pinned arg', async () => {
+    const ctx = fakeCtx({ memories: [mem('a')] })
+    const res = await callTool('cortex_pin', { id: 'a' }, ctx)
+    expect(res.isError).toBe(true)
+  })
+})
+
+describe('cortex_search with summaries + pinning', () => {
+  it('returns one-line summaries in place of snippets when available', async () => {
+    const ctx = fakeCtx({ memories: [mem('a', { content: 'long body about quadtrees' })] })
+    ctx.summaries.set('a', { oneLine: 'Quadtree perf notes', paragraph: null })
+    const out = JSON.parse((await callTool('cortex_search', { query: 'quadtree', mode: 'keyword' }, ctx)).content[0].text)
+    expect(out.results[0].summary).toBe('Quadtree perf notes')
+  })
+
+  it('prepends pinned memories to the result envelope', async () => {
+    const ctx = fakeCtx({ memories: [mem('a', { content: 'searchable' }), mem('b', { title: 'Pinned' })] })
+    ctx.pinned.add('b')
+    const out = JSON.parse((await callTool('cortex_search', { query: 'searchable' }, ctx)).content[0].text)
+    expect(out.pinned).toBeDefined()
+    expect(out.pinned[0].id).toBe('b')
+    expect(out.results[0].id).toBe('a')
+  })
+
+  it('omits pinned envelope when pinned_first=false', async () => {
+    const ctx = fakeCtx({ memories: [mem('a', { content: 'q' }), mem('b')] })
+    ctx.pinned.add('b')
+    const out = JSON.parse(
+      (await callTool('cortex_search', { query: 'q', pinned_first: false }, ctx)).content[0].text,
+    )
+    expect(out.pinned).toBeUndefined()
+  })
+})
+
+describe('cortex_digest', () => {
+  it('uses the day window by default and forwards to ctx.digest', async () => {
+    const ctx = fakeCtx({ memories: [mem('a')] })
+    const out = JSON.parse((await callTool('cortex_digest', {}, ctx)).content[0].text)
+    expect(out.window).toBe('day')
+    expect(out.totalMemories).toBe(1)
+  })
+
+  it('passes week through', async () => {
+    const ctx = fakeCtx()
+    const out = JSON.parse((await callTool('cortex_digest', { window: 'week' }, ctx)).content[0].text)
+    expect(out.window).toBe('week')
+  })
+})
+
 describe('cortex_related', () => {
   it('sorts neighbors by strength descending and skips deleted rows', async () => {
     const ctx = fakeCtx({
@@ -298,14 +392,22 @@ describe('createRpcHandler', () => {
     expect(res.result.protocolVersion).toBe(PROTOCOL_VERSION)
   })
 
-  it('lists all six tools with schemas', async () => {
+  it('lists all nine tools with schemas', async () => {
     const res = await handle({ jsonrpc: '2.0', id: 3, method: 'tools/list' })
-    expect(res.result.tools).toHaveLength(6)
+    expect(res.result.tools).toHaveLength(9)
     expect(res.result.tools.map((t: { name: string }) => t.name)).toEqual(TOOLS.map((t: { name: string }) => t.name))
     for (const tool of res.result.tools) {
       expect(tool.inputSchema.type).toBe('object')
       expect(tool.description.length).toBeGreaterThan(20)
     }
+  })
+
+  it('exposes pinned, pin, and digest tools', async () => {
+    const res = await handle({ jsonrpc: '2.0', id: 10, method: 'tools/list' })
+    const names = res.result.tools.map((t: { name: string }) => t.name)
+    expect(names).toContain('cortex_pinned')
+    expect(names).toContain('cortex_pin')
+    expect(names).toContain('cortex_digest')
   })
 
   it('dispatches tools/call to the tool implementation', async () => {

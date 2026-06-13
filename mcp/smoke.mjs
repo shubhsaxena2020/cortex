@@ -86,10 +86,10 @@ try {
   check('initialize', init.result?.serverInfo?.name === 'cortex', `protocol=${init.result?.protocolVersion}`)
   notify('notifications/initialized')
 
-  // 2. tools/list
+  // 2. tools/list (v0.4: 9 tools — added digest, pinned, pin)
   const list = await rpc('tools/list')
   const names = (list.result?.tools ?? []).map((t) => t.name)
-  check('tools/list', names.length === 6, names.join(', '))
+  check('tools/list', names.length === 9, names.join(', '))
 
   // 3. stats
   const stats = toolPayload(await rpc('tools/call', { name: 'cortex_stats', arguments: {} }))
@@ -136,7 +136,14 @@ try {
   const roundTrip = toolPayload(await rpc('tools/call', { name: 'cortex_get_memory', arguments: { id: created.id } }))
   check('create round-trip', roundTrip.source === 'mcp' && roundTrip.tags.includes('mcp-smoke'))
 
-  // 9. error paths
+  // 9. v0.4 tools
+  const digest = toolPayload(await rpc('tools/call', { name: 'cortex_digest', arguments: {} }))
+  check('cortex_digest', typeof digest.totalMemories === 'number',
+    `window=${digest.window} memories=${digest.totalMemories}`)
+  const pinned = toolPayload(await rpc('tools/call', { name: 'cortex_pinned', arguments: {} }))
+  check('cortex_pinned', Array.isArray(pinned.results))
+
+  // 10. error paths
   const ghost = await rpc('tools/call', { name: 'cortex_get_memory', arguments: { id: 'no-such-id' } })
   check('missing-id is isError', ghost.result?.isError === true)
   const unknown = await rpc('tools/call', { name: 'bogus_tool', arguments: {} })

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, Tag, X, HardDrive, Eye, Settings2 } from 'lucide-react'
+import { Search, Tag, X, HardDrive, Eye, Settings2, Star } from 'lucide-react'
 import { useStore } from '../store'
 import FileTree from './FileTree'
 import TagManager from './TagManager'
@@ -37,7 +37,9 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
   const vaultFiles = getVaultOnlyFiles()
   const watchFiles = getWatchFiles()
 
+  const pinned = memories.filter(m => m.pinned)
   const filtered = memories.filter(m => {
+    if (m.pinned) return false  // shown above; don't double-list
     const q = searchQuery.toLowerCase()
     // Light rows carry a snippet instead of full content; full-text matches
     // beyond the snippet come from the Search view (FTS5), not this filter.
@@ -137,6 +139,28 @@ export default function Sidebar({ onNewMemory: _onNewMemory }: SidebarProps): Re
 
           {/* Memory list */}
           <div className="flex-1 overflow-y-auto pt-1">
+            {/* Pinned — "always-relevant context" (v0.4 thesis #4). Pinned
+                memories appear at the top regardless of recency or filter. */}
+            {pinned.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 flex-shrink-0 flex items-center gap-1.5">
+                  <Star size={9} className="text-[#fbbf24]" fill="currentColor" />
+                  <span className="text-xs text-[#fbbf24] uppercase tracking-wider">Pinned · {pinned.length}</span>
+                </div>
+                {pinned.map(m => (
+                  <MemoryItem
+                    key={m.id}
+                    memory={m}
+                    isSelected={m.id === selectedMemoryId}
+                    onClick={() => {
+                      selectMemory(m.id)
+                      if (currentView !== 'editor') setView('editor')
+                    }}
+                  />
+                ))}
+                <div className="h-px bg-[#242424] mx-3 my-1 flex-shrink-0" />
+              </>
+            )}
             <div className="px-3 py-1.5 flex-shrink-0">
               <span className="text-xs text-[#333] uppercase tracking-wider">Recent · {filtered.length}</span>
             </div>
@@ -256,6 +280,7 @@ function MemoryItem({ memory, isSelected, onClick }: {
 }): React.ReactElement {
   const dot = SOURCE_COLORS[memory.source] || '#6B9FD4'
   const preview = (memory.content || memory.snippet || '').replace(/[#*`_>\-]/g, '').trim().slice(0, 80)
+  const pinned = !!memory.pinned
 
   return (
     <div

@@ -9,6 +9,7 @@ export type DbMemory = {
   source: string
   tags: string[]
   url?: string | null
+  pinned?: boolean
 }
 
 export type DbRelationship = {
@@ -29,7 +30,8 @@ export function toMemory(row: DbMemory) {
     created_at: new Date(row.timestamp || Date.now()).toISOString(),
     updated_at: new Date(row.updatedAt || Date.now()).toISOString(),
     tags: row.tags || [],
-    url: row.url ?? null
+    url: row.url ?? null,
+    pinned: !!row.pinned,
   }
 }
 

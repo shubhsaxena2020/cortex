@@ -60,24 +60,33 @@ Shipped 5 of 8 per the kill criteria, plus two items the criteria didn't anticip
 - **Cortex MCP server** (`mcp/`) — six tools over stdio JSON-RPC (keyword FTS5 + semantic sqlite-vec search, get/list/create/related/stats), zero new dependencies, runs under Electron-as-Node, registered for Claude Code (project `.mcp.json`) and Claude Desktop. The second brain is now queryable as native tool calls.
 - **Graph performance overhaul to 100k+ nodes** — memory content no longer ships to the renderer (light projections + 200-char snippets + per-selection hydration); mention edges computed in the main process behind a fingerprint cache; worker simulation scales by node count (collide dropped ≥20k, Barnes-Hut theta 1.2, adaptive cooling/batching) with a zero-copy typed-array protocol; density-based LOD (clusters whenever >8k nodes are on screen, any zoom); flat-fill fast path above 1.5k visible nodes (no per-node shadowBlur); memoized clustering; quadtree-local edge hover above 20k links. Measured numbers in RELEASE_NOTES.md.
 
-## v0.4.0 — Polish + Distribution (the boring, expensive layer)
+## v0.4.0 — "Cortex finds you, not the other way around" ✅ SHIPPED (2026-06-13)
 
-Boring because nobody downloads an app for "consistent dark mode." Expensive because code signing + notarization + Web Store enrollment is real money and real lead time.
+Pivoted hard from the original v0.4 scope ("polish + distribution"). See [docs/V04-THINKING.md](docs/V04-THINKING.md) for the full reasoning. The TL;DR: code signing and themes don't make a second brain indispensable; making it reach the user from outside the Electron window does. After v0.3 unlocked the MCP server, v0.4 doubles down on that inversion.
 
-- [ ] **Distribution prerequisites — actual money, actual time:**
-  - macOS DMG signed + notarized — requires **Apple Developer Program enrollment ($99/yr + ~24-48h provisioning)**
-  - Windows code-signing certificate — **$200-400/yr from a CA**, kills SmartScreen warning
-  - Chrome Web Store listing — **$5 one-time + 3-7 day review**
-- [ ] Linux AppImage
-- [ ] Auto-update via electron-updater (requires the signed builds above)
-- [ ] Export graph as PNG / SVG / PDF
-- [ ] Dark / light theme toggle (currently dark-only)
-- [ ] Keyboard navigation through graph
-- [ ] Accessibility pass — focus traps, reduced-motion, ARIA on graph canvas
+- [x] **`cortex` CLI** — terminal companion sharing the MCP query layer. `search`, `recent`, `digest`, `export`, `stats`, `tags`, `pinned`, `pin`/`unpin`. Pipeable, greppable, hooks into the same FTS5 / sqlite-vec / Ollama stack. Both Bash and CMD launchers; `npm run cortex` works locally.
+- [x] **Local Ollama summarization** (`llama3.2:3b`). One-line (≤20 words) + paragraph (≤80 words) per memory, cached in `memory_summaries` keyed on content hash. Backfill UI in Settings; MCP `cortex_search` and `cortex_get_memory` return summaries by default — the bandwidth fix that makes the second brain composable with limited LLM contexts.
+- [x] **Daily / weekly digest** (`cortex digest` + in-app Digest view, Ctrl+4). Grouped by top tags, summarized one-liners, clickable to drill into the editor. Pulled forward from v0.5 because the digest is what makes the app a daily habit.
+- [x] **Pinned memories** ("always-relevant context"). Per-memory star toggle in the detail panel; pinned set surfaces at the top of the sidebar and prepended to every MCP `cortex_search` envelope. The user-IS surface the 13 seed memories revealed was missing.
+- [x] **Medium-zoom edge LOD** — graph perf top-up from v0.3. Edge strength threshold rises with visible-edge count; mention edges drop above 4k visible nodes. Buys back the remaining sad zoom band.
+- [x] **MCP server v0.4** — three new tools (`cortex_digest`, `cortex_pinned`, `cortex_pin`), summary-first result envelopes, pinned-context prepend on every search.
 
-### v0.4 kill criteria
+### Slipped to v1.0 (calling it explicitly)
+- macOS DMG signed + notarized — no users on Mac yet; pay when there are.
+- Windows code-signing certificate — same.
+- Auto-update via electron-updater — needs signed builds first.
+- Linux AppImage — Windows-first; cross-compile when the ask is real.
+- Export graph as PNG / SVG / PDF — novelty.
+- Dark / light theme toggle — dark works.
+- Keyboard navigation through graph — low marginal value.
+- Comprehensive accessibility pass — important when there are users.
+- `db.test.disabled.ts` → vitest-electron — infra; 434 tests cover the layer.
 
-- If certs aren't bought by start of phase, distribution items defer indefinitely. Ship unsigned to GitHub Releases as a workable fallback.
+### Verified this release
+- 434/434 tests green (399 → 434, +35 across summarize/digest/MCP/CLI).
+- MCP smoke harness: 14/14 checks (handshake → tools/list at 9 tools → search → digest → pinned → create → error paths).
+- CLI smoke: search returns semantic hits with distances and one-liners; stats / tags / pinned / help all produce correct output.
+- Production build clean across all three processes.
 
 ## v0.5.0 — Connect (your own machines, not other people's)
 

@@ -7,12 +7,15 @@ Claude Code, Claude Desktop, or anything speaking MCP over stdio — as native t
 
 | Tool | What it does |
 |---|---|
-| `cortex_search` | FTS5 keyword or sqlite-vec semantic search (`mode: auto\|keyword\|semantic`); semantic embeds the query via local Ollama (`all-minilm`, 384d) and falls back to keyword when Ollama is down |
-| `cortex_get_memory` | One memory by id — full content + graph relationships |
+| `cortex_search` | FTS5 keyword or sqlite-vec semantic search (`mode: auto\|keyword\|semantic`); returns one-line summaries by default (v0.4 bandwidth fix). Pinned memories prepended to every result envelope. |
+| `cortex_get_memory` | One memory by id — full content + paragraph summary + graph relationships |
 | `cortex_list_memories` | Recent memories, filterable by tags / source |
-| `cortex_create_memory` | Save a memory (source `mcp`), embedded immediately when Ollama is up; auto-edges build at next app startup |
+| `cortex_create_memory` | Save a memory (source `mcp`), embedded immediately when Ollama is up; auto-edges and summary build at next app startup |
 | `cortex_related` | Graph neighbors with edge strength + signal type |
-| `cortex_stats` | Counts by source/signal, embedding coverage, top tags |
+| `cortex_stats` | Counts by source/signal, embedding coverage, summary coverage, pinned count, top tags |
+| `cortex_digest` | Daily or weekly digest (v0.4) — recent captures grouped by top tag with one-line summaries |
+| `cortex_pinned` | List memories pinned as "always-relevant context" (v0.4) |
+| `cortex_pin` | Pin or unpin a memory so it surfaces with every search (v0.4) |
 
 ## Architecture
 

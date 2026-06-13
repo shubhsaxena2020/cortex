@@ -5,9 +5,10 @@
 // edge strength with signal provenance, and Copy / Open / Delete actions.
 
 import React, { useMemo, useState, useCallback, useEffect } from 'react'
-import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag, Link2, Sparkles } from 'lucide-react'
+import { X, ExternalLink, Trash2, Copy, Check, Plus, Tag, Link2, Sparkles, Star } from 'lucide-react'
 import { useStore } from '../store'
 import { splitWikiSegments, titleIndexOf } from '../utils/wiki-text'
+import type { MemorySummary } from '../../../types'
 
 const SOURCE_BADGES: Record<string, { label: string; bg: string; fg: string }> = {
   claude:  { label: 'Claude',  bg: 'bg-[#7C3AED]/20', fg: 'text-[#a78bfa]' },
@@ -37,12 +38,14 @@ interface MemoryDetailProps {
 }
 
 export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: MemoryDetailProps): React.ReactElement | null {
-  const { memories, relationships, updateMemory, deleteMemory, hydrateMemory } = useStore()
+  const { memories, relationships, updateMemory, deleteMemory, hydrateMemory, setPinned } = useStore()
   const [copied, setCopied] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [newTag, setNewTag] = useState('')
   const [addingTag, setAddingTag] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
+  const [summary, setSummary] = useState<MemorySummary | null>(null)
+  const [generatingSummary, setGeneratingSummary] = useState(false)
 
   const memory = memories.find(m => m.id === memoryId)
 
@@ -51,6 +54,7 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
   // hydrated row lands.
   useEffect(() => {
     void hydrateMemory(memoryId)
+    void window.electron.summaries.get(memoryId).then(setSummary).catch(() => {})
   }, [memoryId, hydrateMemory])
 
   const related = useMemo(() => {
@@ -114,6 +118,22 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
     setAddingTag(false)
   }, [memory, newTag, updateMemory])
 
+  const handleTogglePin = useCallback(async () => {
+    if (!memory) return
+    await setPinned(memory.id, !memory.pinned)
+  }, [memory, setPinned])
+
+  const handleGenerateSummary = useCallback(async () => {
+    if (!memory || generatingSummary) return
+    setGeneratingSummary(true)
+    try {
+      const result = await window.electron.summaries.summarize(memory.id)
+      setSummary(result)
+    } finally {
+      setGeneratingSummary(false)
+    }
+  }, [memory, generatingSummary])
+
   const handleSuggestTags = useCallback(async () => {
     if (!memory || suggesting) return
     setSuggesting(true)
@@ -138,16 +158,53 @@ export default function MemoryDetail({ memoryId, onClose, onOpen, onJump }: Memo
       {/* Header */}
       <div className="flex items-start justify-between p-3 pb-2 border-b border-[#2a2a2a] flex-shrink-0">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-[#e8e8e8] leading-snug break-words">{memory.title}</div>
+          <div className="flex items-center gap-1.5">
+            {memory.pinned && <Star size={11} className="text-[#fbbf24] flex-shrink-0" fill="currentColor" />}
+            <div className="text-sm font-semibold text-[#e8e8e8] leading-snug break-words">{memory.title}</div>
+          </div>
           <div className="flex items-center gap-2 mt-1.5">
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${badge.bg} ${badge.fg}`}>{badge.label}</span>
             <span className="text-[10px] text-[#555]">{formatDate(memory.created_at)}</span>
           </div>
         </div>
-        <button onClick={onClose} aria-label="Close" className="text-[#444] hover:text-[#888] transition-colors ml-2 flex-shrink-0 mt-0.5">
-          <X size={14} />
-        </button>
+        <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+          <button
+            onClick={() => void handleTogglePin()}
+            aria-label={memory.pinned ? 'Unpin memory' : 'Pin memory'}
+            title={memory.pinned ? 'Unpin from always-relevant context' : 'Pin as always-relevant context'}
+            className={`transition-colors mt-0.5 ${memory.pinned ? 'text-[#fbbf24] hover:text-[#fcd34d]' : 'text-[#444] hover:text-[#fbbf24]'}`}
+          >
+            <Star size={13} fill={memory.pinned ? 'currentColor' : 'none'} />
+          </button>
+          <button onClick={onClose} aria-label="Close" className="text-[#444] hover:text-[#888] transition-colors mt-0.5">
+            <X size={14} />
+          </button>
+        </div>
       </div>
+
+      {/* Summary (v0.4) */}
+      {(summary?.oneLine || summary?.paragraph) && (
+        <div className="px-3 py-2 border-b border-[#2a2a2a] bg-[#a78bfa]/5 flex-shrink-0">
+          <div className="flex items-center gap-1 text-[10px] text-[#a78bfa] uppercase tracking-wider mb-1">
+            <Sparkles size={9} /> Summary
+          </div>
+          {summary.oneLine && <div className="text-xs text-[#ccc] mb-1">{summary.oneLine}</div>}
+          {summary.paragraph && summary.paragraph !== summary.oneLine && (
+            <div className="text-[11px] text-[#999] leading-relaxed">{summary.paragraph}</div>
+          )}
+        </div>
+      )}
+      {!summary && (
+        <div className="px-3 py-1.5 border-b border-[#2a2a2a] flex-shrink-0">
+          <button
+            onClick={() => void handleGenerateSummary()}
+            disabled={generatingSummary}
+            className="flex items-center gap-1 text-[10px] text-[#a78bfa] hover:text-[#c4b5fd] disabled:opacity-50"
+          >
+            <Sparkles size={9} /> {generatingSummary ? 'Summarizing…' : 'Generate summary'}
+          </button>
+        </div>
+      )}
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto min-h-0">

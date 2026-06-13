@@ -41,6 +41,7 @@ interface CortexState {
   clearSelectedTags: () => void
   createRelationship: (data: Omit<Relationship, 'id'>) => Promise<void>
   deleteRelationship: (id: string) => Promise<void>
+  setPinned: (id: string, pinned: boolean) => Promise<void>
   getAllTags: () => string[]
   getTagCounts: () => Record<string, number>
   getSelectedMemory: () => Memory | undefined
@@ -179,6 +180,13 @@ export const useStore = create<CortexState>((set, get) => ({
   deleteRelationship: async id => {
     await window.electron.relationships.delete(id)
     set(state => ({ relationships: state.relationships.filter(r => r.id !== id) }))
+  },
+
+  setPinned: async (id, pinned) => {
+    await window.electron.memories.setPinned(id, pinned)
+    set(state => ({
+      memories: state.memories.map(m => (m.id === id ? { ...m, pinned } : m)),
+    }))
   },
 
   getAllTags: () => {

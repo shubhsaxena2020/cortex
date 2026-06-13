@@ -1,6 +1,6 @@
 {
   "name": "cortex",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Cortex — a local AI memory layer with semantic search across notes, files, and conversations from Claude, ChatGPT, and Gemini.",
   "main": "dist/main/index.js",
   "author": "cortex",
@@ -17,7 +17,9 @@
     "seed-10k": "node scripts/run-as-node.cjs scripts/seed-10k-vault.mjs",
     "profile-search": "node scripts/run-as-node.cjs scripts/profile-search.mjs",
     "profile-lod": "node scripts/profile-lod.mjs",
-    "profile-graph-redesign": "node scripts/profile-graph-redesign.mjs"
+    "profile-graph-redesign": "node scripts/profile-graph-redesign.mjs",
+    "cortex": "node scripts/run-as-node.cjs cli/cortex.mjs",
+    "cortex:smoke": "node scripts/run-as-node.cjs cli/smoke.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.0",

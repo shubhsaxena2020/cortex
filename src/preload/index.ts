@@ -8,7 +8,18 @@ const api: ElectronAPI = {
     create: data => ipcRenderer.invoke('memories:create', data),
     update: (id, data) => ipcRenderer.invoke('memories:update', id, data),
     delete: id => ipcRenderer.invoke('memories:delete', id),
-    search: (query, tags, source, dates) => ipcRenderer.invoke('memories:search', query, tags, source, dates)
+    search: (query, tags, source, dates) => ipcRenderer.invoke('memories:search', query, tags, source, dates),
+    setPinned: (id, pinned) => ipcRenderer.invoke('memories:setPinned', id, pinned),
+    getPinned: () => ipcRenderer.invoke('memories:getPinned'),
+  },
+  summaries: {
+    get: (id) => ipcRenderer.invoke('summaries:get', id),
+    summarize: (id) => ipcRenderer.invoke('summaries:summarize', id),
+    backfill: (limit) => ipcRenderer.invoke('summaries:backfill', limit),
+    getMany: (ids) => ipcRenderer.invoke('summaries:getMany', ids),
+  },
+  digest: {
+    get: (window) => ipcRenderer.invoke('digest:get', window),
   },
   relationships: {
     getAll: () => ipcRenderer.invoke('relationships:getAll'),

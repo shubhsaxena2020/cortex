@@ -22,11 +22,14 @@
 //     newId()      -> string                      (UUID)
 //   }
 
-export const SERVER_INFO = { name: 'cortex', version: '0.3.0' }
+export const SERVER_INFO = { name: 'cortex', version: '0.4.0' }
 export const PROTOCOL_VERSION = '2025-06-18'
 
 const SNIPPET_LEN = 240
 const MAX_LIMIT = 50
+// Pinned memories prepended to search results (v0.4 thesis #4). Capped so a
+// user with too many pins doesn't blow Claude's context budget on every call.
+const MAX_PINNED_PREPEND = 3
 
 // ── Pure helpers (mirrors db.ts semantics; covered by unit tests) ────────────
 
@@ -54,13 +57,19 @@ function clampLimit(raw, fallback) {
   return Math.min(Math.max(n > 0 ? n : fallback, 1), MAX_LIMIT)
 }
 
-function summarize(memory, extra = {}) {
+function summarize(memory, extra = {}, summaryRow = null) {
+  // v0.4 bandwidth fix: prefer the cached one-line summary over the raw
+  // snippet. Falls back to snippet when Ollama isn't running or the model
+  // hasn't summarised this memory yet — same graceful-degradation pattern.
+  const oneLine = summaryRow?.oneLine
   return {
     id: memory.id,
     title: memory.title,
+    summary: oneLine ?? null,
     snippet: snippet(memory.content),
     tags: memory.tags,
     source: memory.source,
+    ...(memory.pinned ? { pinned: true } : {}),
     updatedAt: new Date(memory.updatedAt).toISOString(),
     ...(memory.url ? { url: memory.url } : {}),
     ...extra,
@@ -81,7 +90,8 @@ export const TOOLS = [
     description:
       'Search the Cortex second-brain memories. mode "keyword" uses FTS5 full-text match; ' +
       '"semantic" embeds the query via local Ollama and runs sqlite-vec KNN; "auto" (default) ' +
-      'prefers semantic when available and falls back to keyword. Returns ranked summaries.',
+      'prefers semantic when available and falls back to keyword. Returns ranked one-line ' +
+      'summaries by default (low-bandwidth). Pinned memories are prepended.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -90,17 +100,45 @@ export const TOOLS = [
         limit: { type: 'number', description: `Max results, 1-${MAX_LIMIT} (default 10)` },
         tags: { type: 'array', items: { type: 'string' }, description: 'Only memories carrying ALL of these tags' },
         source: { type: 'string', description: 'Only memories from this source (e.g. claude, chatgpt, project_seed)' },
+        pinned_first: { type: 'boolean', description: 'Prepend pinned memories to results (default true)' },
       },
       required: ['query'],
     },
   },
   {
     name: 'cortex_get_memory',
-    description: 'Fetch one Cortex memory by id — full content plus its graph relationships.',
+    description: 'Fetch one Cortex memory by id — full content, paragraph summary, and graph relationships.',
     inputSchema: {
       type: 'object',
       properties: { id: { type: 'string', description: 'Memory id' } },
       required: ['id'],
+    },
+  },
+  {
+    name: 'cortex_digest',
+    description: 'Daily or weekly digest of recent captures. Groups by top tags, returns one-line summaries.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        window: { type: 'string', enum: ['day', 'week'], description: 'Window length (default day)' },
+      },
+    },
+  },
+  {
+    name: 'cortex_pinned',
+    description: 'List memories pinned as "always-relevant context" — the user-IS surface.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'cortex_pin',
+    description: 'Pin or unpin a memory so it surfaces with every search and at the top of the sidebar.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Memory id' },
+        pinned: { type: 'boolean', description: 'true to pin, false to unpin' },
+      },
+      required: ['id', 'pinned'],
     },
   },
   {
@@ -168,29 +206,57 @@ async function toolSearch(args, ctx) {
   const limit = clampLimit(args.limit, 10)
   const tags = Array.isArray(args.tags) ? args.tags.filter((t) => typeof t === 'string') : undefined
   const source = typeof args.source === 'string' && args.source ? args.source : undefined
+  const pinnedFirst = args.pinned_first !== false // default true
+
+  // Pinned-context prepend (v0.4 thesis #4) — the user-IS surface, returned
+  // on every search so callers always see what the user marked as "always
+  // relevant" without having to ask separately.
+  let pinned = []
+  if (pinnedFirst && ctx.queries.listPinned) {
+    const pinnedRows = ctx.queries.listPinned().slice(0, MAX_PINNED_PREPEND)
+    const pinnedSummaries = ctx.queries.getSummaries
+      ? ctx.queries.getSummaries(pinnedRows.map((m) => m.id))
+      : new Map()
+    pinned = pinnedRows.map((m) => summarize(m, { pinned: true }, pinnedSummaries.get(m.id)))
+  }
 
   let note
   if (mode !== 'keyword' && ctx.hasVec()) {
     const vector = await ctx.embed(query)
     if (vector) {
       const hits = ctx.queries.vectorSearch(vector, limit * 2) // overfetch: post-filters may drop rows
-      const results = []
+      const memories = []
       for (const hit of hits) {
         const memory = ctx.queries.getMemory(hit.memory_id)
         if (!memory || !matchesFilters(memory, tags, source)) continue
-        results.push(summarize(memory, { distance: Math.round(hit.distance * 1000) / 1000 }))
-        if (results.length >= limit) break
+        memories.push({ memory, distance: Math.round(hit.distance * 1000) / 1000 })
+        if (memories.length >= limit) break
       }
-      return jsonResult({ mode: 'semantic', count: results.length, results })
+      const summaryMap = ctx.queries.getSummaries
+        ? ctx.queries.getSummaries(memories.map((m) => m.memory.id))
+        : new Map()
+      const results = memories.map(({ memory, distance }) =>
+        summarize(memory, { distance }, summaryMap.get(memory.id)),
+      )
+      return jsonResult({ mode: 'semantic', count: results.length, results, ...(pinned.length ? { pinned } : {}) })
     }
     note = 'Ollama unreachable — fell back to keyword search'
   } else if (mode === 'semantic' && !ctx.hasVec()) {
     note = 'sqlite-vec unavailable — fell back to keyword search'
   }
 
-  const rows = ctx.queries.searchMemories(query, source, tags)
-  const results = rows.slice(0, limit).map((m) => summarize(m))
-  return jsonResult({ mode: 'keyword', ...(note ? { note } : {}), count: results.length, results })
+  const rows = ctx.queries.searchMemories(query, source, tags).slice(0, limit)
+  const summaryMap = ctx.queries.getSummaries
+    ? ctx.queries.getSummaries(rows.map((m) => m.id))
+    : new Map()
+  const results = rows.map((m) => summarize(m, {}, summaryMap.get(m.id)))
+  return jsonResult({
+    mode: 'keyword',
+    ...(note ? { note } : {}),
+    count: results.length,
+    results,
+    ...(pinned.length ? { pinned } : {}),
+  })
 }
 
 function toolGetMemory(args, ctx) {
@@ -210,8 +276,13 @@ function toolGetMemory(args, ctx) {
     }
   })
 
+  // v0.4: include the cached paragraph summary alongside full content so
+  // callers can render the summary while the full body loads or pick which
+  // they need for their context budget.
+  const summaryRow = ctx.queries.getSummary ? ctx.queries.getSummary(id) : null
   return jsonResult({
     ...memory,
+    summary: summaryRow ? { oneLine: summaryRow.oneLine, paragraph: summaryRow.paragraph } : null,
     timestamp: new Date(memory.timestamp).toISOString(),
     updatedAt: new Date(memory.updatedAt).toISOString(),
     relationships,
@@ -278,6 +349,30 @@ function toolStats(_args, ctx) {
   return jsonResult(ctx.queries.stats())
 }
 
+function toolDigest(args, ctx) {
+  if (!ctx.digest) return errorResult('cortex_digest: server has no digest support')
+  const window = args.window === 'week' ? 'week' : 'day'
+  return jsonResult(ctx.digest(window))
+}
+
+function toolPinned(_args, ctx) {
+  if (!ctx.queries.listPinned) return jsonResult({ count: 0, results: [] })
+  const rows = ctx.queries.listPinned()
+  const summaryMap = ctx.queries.getSummaries ? ctx.queries.getSummaries(rows.map((m) => m.id)) : new Map()
+  const results = rows.map((m) => summarize(m, { pinned: true }, summaryMap.get(m.id)))
+  return jsonResult({ count: results.length, results })
+}
+
+function toolPin(args, ctx) {
+  const id = typeof args.id === 'string' ? args.id.trim() : ''
+  if (!id) return errorResult('cortex_pin: "id" must be a non-empty string')
+  if (typeof args.pinned !== 'boolean') return errorResult('cortex_pin: "pinned" must be boolean')
+  if (!ctx.queries.setPinned) return errorResult('cortex_pin: server has no pin support')
+  if (!ctx.queries.getMemory(id)) return errorResult(`cortex_pin: no memory with id "${id}"`)
+  ctx.queries.setPinned(id, args.pinned)
+  return jsonResult({ id, pinned: args.pinned })
+}
+
 export async function callTool(name, args, ctx) {
   const a = args && typeof args === 'object' ? args : {}
   switch (name) {
@@ -287,6 +382,9 @@ export async function callTool(name, args, ctx) {
     case 'cortex_create_memory': return toolCreateMemory(a, ctx)
     case 'cortex_related': return toolRelated(a, ctx)
     case 'cortex_stats': return toolStats(a, ctx)
+    case 'cortex_digest': return toolDigest(a, ctx)
+    case 'cortex_pinned': return toolPinned(a, ctx)
+    case 'cortex_pin': return toolPin(a, ctx)
     default: return null // caller maps to JSON-RPC -32602
   }
 }

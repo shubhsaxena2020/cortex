@@ -488,13 +488,23 @@ export default function GraphCanvas({
         edgesDrawn = farSegCount
         ctx.setLineDash([])
       } else {
+        // v0.4: edge strength threshold rises with visible-node count. The
+        // medium band was the one painful zoom in v0.3 — 5–10k visible nodes
+        // dragged ~40k edges of mostly-low strength into view at 78ms/frame.
+        // Raising the floor to ~0.4 at scale halves the bill without losing
+        // anything the user perceives at this zoom.
+        const edgeStrengthMin = visibleNodes.length > 3000
+          ? Math.min(0.5, 0.2 + (visibleNodes.length - 3000) / 12000)
+          : 0.2
         for (const link of linksRef.current) {
           const src = link.source as D3Node
           const tgt = link.target as D3Node
           // Cull edges with neither endpoint visible.
           if (!visibleSet.has(src.id) && !visibleSet.has(tgt.id)) continue
-          // Skip very weak auto-edges — they create visual noise without meaning
-          if (link.edgeType === 'relationship' && (link.strength ?? 1) < 0.2) continue
+          // Skip weak auto-edges — they create visual noise without meaning.
+          if (link.edgeType === 'relationship' && (link.strength ?? 1) < edgeStrengthMin) continue
+          // Mention edges are noisy at scale too — drop them when dense.
+          if (link.edgeType === 'mention' && visibleNodes.length > 4000) continue
           const state = edgeStateOf(src.id, tgt.id)
           // Use signalType for auto-edges, kind for mentions
           const sigType = link.edgeType === 'relationship' ? (link.signalType ?? 'manual') : undefined

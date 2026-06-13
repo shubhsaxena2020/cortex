@@ -19,6 +19,40 @@ import { existsSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 import { createRpcHandler, toFtsPhrase, escapeLike } from './core.mjs'
+// Inlined to keep server.mjs the single MCP runtime entry — duplicating the
+// 30-line digest grouper here is preferable to a third file the MCP server
+// has to import, and the pure version lives in src/main/digest.ts for tests.
+function buildDigestPure(window, memories, now) {
+  const ms = window === 'week' ? 7 * 24 * 3600_000 : 24 * 3600_000
+  const since = now - ms
+  const tagCounts = new Map()
+  for (const m of memories) for (const t of m.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1)
+  const topTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 6).map(([tag, count]) => ({ tag, count }))
+  const topSet = new Set(topTags.map((t) => t.tag))
+  const groupsMap = new Map()
+  for (const t of topTags) groupsMap.set(t.tag, [])
+  const untagged = []
+  for (const m of memories) {
+    const primary = m.tags.find((t) => topSet.has(t))
+    if (primary) groupsMap.get(primary).push(m)
+    else if (m.tags.length === 0) untagged.push(m)
+    else {
+      const other = m.tags[0]
+      let arr = groupsMap.get(other); if (!arr) { arr = []; groupsMap.set(other, arr) }
+      arr.push(m)
+    }
+  }
+  const groups = []
+  for (const t of topTags) {
+    const arr = groupsMap.get(t.tag) ?? []
+    if (arr.length) groups.push({ label: t.tag, memories: arr.slice(0, 5) })
+  }
+  const tail = []
+  for (const [tag, arr] of groupsMap) { if (!topSet.has(tag)) tail.push(...arr) }
+  if (tail.length) groups.push({ label: 'other', memories: tail.slice(0, 5) })
+  if (untagged.length) groups.push({ label: '(untagged)', memories: untagged.slice(0, 5) })
+  return { window, since, until: now, totalMemories: memories.length, groups, topTags, untaggedCount: untagged.length }
+}
 
 const DB_PATH = process.env.CORTEX_DB_PATH || `${process.env.APPDATA}\\Cortex\\memories.db`
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434'
@@ -73,6 +107,19 @@ function mapMemory(r) {
     source: r.source,
     tags: JSON.parse(r.tags || '[]'),
     url: r.url ?? null,
+    pinned: !!(r.pinned ?? 0),
+  }
+}
+
+function mapSummaryRow(r) {
+  if (!r) return null
+  return {
+    memoryId: r.memory_id,
+    oneLine: r.one_line,
+    paragraph: r.paragraph,
+    contentHash: r.content_hash,
+    model: r.model,
+    createdAt: r.created_at,
   }
 }
 
@@ -190,6 +237,10 @@ function buildQueries(d) {
       if (hasVec) {
         try { embedded = d.prepare('SELECT COUNT(*) AS n FROM memory_vectors').get().n } catch { /* table absent */ }
       }
+      let summarized = 0
+      try { summarized = d.prepare('SELECT COUNT(*) AS n FROM memory_summaries').get().n } catch { /* table absent on pre-v7 */ }
+      let pinned = 0
+      try { pinned = d.prepare('SELECT COUNT(*) AS n FROM memories WHERE pinned = 1').get().n } catch { /* pinned column absent */ }
       const tagCounts = new Map()
       for (const r of d.prepare('SELECT tags FROM memories').all()) {
         for (const t of JSON.parse(r.tags || '[]')) {
@@ -207,9 +258,52 @@ function buildQueries(d) {
         relationships,
         bySignal,
         embedded,
+        summarized,
+        pinned,
         semanticSearch: hasVec,
         topTags,
       }
+    },
+
+    // v0.4 additions
+    listPinned() {
+      // Pinned column missing on pre-v7 DBs — fall back to empty list instead
+      // of throwing so the MCP server keeps working against an older app DB.
+      try {
+        return d.prepare(`SELECT * FROM memories WHERE pinned = 1 ORDER BY updatedAt DESC LIMIT 10`).all().map(mapMemory)
+      } catch {
+        return []
+      }
+    },
+    setPinned(id, p) {
+      try {
+        d.prepare('UPDATE memories SET pinned = ? WHERE id = ?').run(p ? 1 : 0, id)
+      } catch (err) {
+        logErr('setPinned failed (column missing?):', err.message)
+      }
+    },
+    getSummary(id) {
+      try {
+        return mapSummaryRow(d.prepare('SELECT * FROM memory_summaries WHERE memory_id = ?').get(id))
+      } catch {
+        return null
+      }
+    },
+    getSummaries(ids) {
+      const out = new Map()
+      if (ids.length === 0) return out
+      try {
+        const sql = `SELECT * FROM memory_summaries WHERE memory_id IN (${ids.map(() => '?').join(',')})`
+        for (const row of d.prepare(sql).all(...ids)) {
+          out.set(row.memory_id, mapSummaryRow(row))
+        }
+      } catch { /* table absent */ }
+      return out
+    },
+    getMemoriesSince(since, limit = 200) {
+      return d.prepare(
+        'SELECT * FROM memories WHERE updatedAt >= ? ORDER BY updatedAt DESC LIMIT ?'
+      ).all(since, limit).map(mapMemory)
     },
   }
 }
@@ -249,11 +343,27 @@ async function main() {
     queries = new Proxy({}, { get: () => failure })
   }
 
+  // Digest is wired here (not in core.mjs) so the pure core stays DB-free.
   const handle = createRpcHandler({
     queries,
     embed,
     hasVec: () => hasVec,
     newId: () => randomUUID(),
+    digest(window) {
+      const ms = window === 'week' ? 7 * 24 * 3600_000 : 24 * 3600_000
+      const since = Date.now() - ms
+      const memories = queries.getMemoriesSince(since)
+      const summaryMap = queries.getSummaries(memories.map((m) => m.id))
+      const slim = memories.map((m) => ({
+        id: m.id,
+        title: m.title,
+        source: m.source,
+        tags: m.tags,
+        updatedAt: m.updatedAt,
+        oneLine: summaryMap.get(m.id)?.oneLine ?? null,
+      }))
+      return buildDigestPure(window, slim, Date.now())
+    },
   })
 
   const rl = createInterface({ input: process.stdin, terminal: false })

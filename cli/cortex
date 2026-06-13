@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# cortex CLI launcher — runs cortex.mjs under Electron-as-Node so better-sqlite3
+# finds its ABI-matched binary. Mirror of cortex.cmd for POSIX shells.
+set -e
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ELECTRON_RUN_AS_NODE=1 "${SCRIPT_DIR}/../node_modules/electron/dist/electron" "${SCRIPT_DIR}/cortex.mjs" "$@"

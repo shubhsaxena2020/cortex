@@ -1,6 +1,6 @@
 export type MemorySource = 'claude' | 'chatgpt' | 'gemini' | 'manual'
 export type RelationshipType = 'related' | 'building_on' | 'contrasts' | 'example' | 'wiki'
-export type ViewType = 'editor' | 'graph' | 'search' | 'settings'
+export type ViewType = 'editor' | 'graph' | 'search' | 'digest' | 'settings'
 
 /** Embedding backfill state (v0.3.0 backfill UI). */
 export interface SeedStatus {
@@ -67,6 +67,40 @@ export interface Memory {
   tags: string[]
   /** Canonical source URL — present for chats captured via the extension; null otherwise. Used for dedup (P0 #1). */
   url: string | null
+  /** v0.4: pinned memories are "always-relevant context" — prepended everywhere. */
+  pinned?: boolean
+}
+
+export interface MemorySummary {
+  memoryId: string
+  oneLine: string | null
+  paragraph: string | null
+  contentHash: string
+  model: string
+  createdAt: number
+}
+
+export type DigestWindow = 'day' | 'week'
+export interface DigestMemoryLight {
+  id: string
+  title: string
+  source: string
+  tags: string[]
+  updatedAt: number
+  oneLine: string | null
+}
+export interface DigestGroup {
+  label: string
+  memories: DigestMemoryLight[]
+}
+export interface Digest {
+  window: DigestWindow
+  since: number
+  until: number
+  totalMemories: number
+  groups: DigestGroup[]
+  topTags: Array<{ tag: string; count: number }>
+  untaggedCount: number
 }
 
 /** Memory→file mention edge, computed in the main process (graph perf). */
@@ -132,6 +166,17 @@ export interface ElectronAPI {
     update: (id: string, memory: Partial<Memory>) => Promise<Memory>
     delete: (id: string) => Promise<void>
     search: (query: string, tags?: string[], source?: string, dates?: { from?: number; to?: number }) => Promise<SearchResult[]>
+    setPinned: (id: string, pinned: boolean) => Promise<{ id: string; pinned: boolean }>
+    getPinned: () => Promise<Memory[]>
+  }
+  summaries: {
+    get: (id: string) => Promise<MemorySummary | null>
+    summarize: (id: string) => Promise<MemorySummary | null>
+    backfill: (limit?: number) => Promise<{ done: number; total: number; skipped?: string }>
+    getMany: (ids: string[]) => Promise<Record<string, MemorySummary>>
+  }
+  digest: {
+    get: (window: DigestWindow) => Promise<Digest>
   }
   relationships: {
     getAll: () => Promise<Relationship[]>
