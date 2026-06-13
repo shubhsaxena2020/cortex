@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import { Info, X, ExternalLink, Eye } from 'lucide-react'
-import GraphCanvas from '../components/GraphCanvas'
+import GraphSigma from '../components/GraphSigma'
 import MemoryDetail from '../components/MemoryDetail'
 import type { FilterMode } from '../utils/graph-builder'
 import type { GraphNode } from '../utils/graph-builder'
@@ -146,7 +146,7 @@ export default function GraphView(): React.ReactElement {
             </div>
           </div>
         ) : (
-          <GraphCanvas
+          <GraphSigma
             filter={filter}
             showAll={showAll}
             watchPath={watchPath}
