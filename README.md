@@ -1,17 +1,48 @@
 # Cortex
 
-Cortex is a desktop app that gives you one searchable place for everything you've ever told an AI. Save snippets from Claude, ChatGPT, Gemini, or anywhere else with a right-click; browse them as notes; visualize how they connect in a graph; search them by keyword or semantic similarity — all backed by a local SQLite database on your machine. No cloud, no telemetry, no account.
+[![tests](https://img.shields.io/badge/tests-453%20passing-brightgreen)](#testing)
+[![release](https://img.shields.io/badge/release-v0.5.0-blue)](https://github.com/shubhsaxena2020/cortex/releases/tag/v0.5.0)
+[![license](https://img.shields.io/badge/license-MIT-blue)](#)
 
-## Status
+A privacy-first, local-first second brain. Captures AI conversations from Claude / ChatGPT / Gemini via a Chrome extension, extracts atomic learnings via local Ollama, surfaces them as a daily digest, makes the whole thing queryable from your terminal (`cortex`) and from Claude itself (MCP server). No cloud, no telemetry, no account.
 
-**Latest release:** [v0.1.0-beta](https://github.com/shubhsaxena2020/cortex/releases/tag/v0.1.0-beta) (Pre-Release, Windows installer). See [`RELEASE_NOTES.md`](./RELEASE_NOTES.md).
+## Status — v0.5.0 (2026-06-13)
 
-**Recent progress** (2026-06-04):
-- v0.2 P0 #1 shipped — conversation deduplication by canonical URL with cross-pipeline absorption ([`1d7d0e1`](https://github.com/shubhsaxena2020/cortex/commit/1d7d0e1) · [`c015dfe`](https://github.com/shubhsaxena2020/cortex/commit/c015dfe))
-- v0.2 P0 #2 shipped — smart capture filtering for ChatGPT system + tool messages ([`9f24fb8`](https://github.com/shubhsaxena2020/cortex/commit/9f24fb8))
-- 198 tests passing; build green; v0.2 P0 #4 (search latency) is next
+**Latest release:** [v0.5.0 — "The brain that thinks back"](https://github.com/shubhsaxena2020/cortex/releases/tag/v0.5.0)
 
-Roadmap: [`v0.2-FULL-ROADMAP.md`](./v0.2-FULL-ROADMAP.md) (Council-vetted).
+What's in it now (cumulative through v0.5):
+
+- **Capture** — Chrome extension catches Claude.ai + ChatGPT conversations; canonical-URL dedup so the same chat captured twice updates one memory instead of forking the graph.
+- **Search** — FTS5 keyword + sqlite-vec semantic (Ollama `all-minilm`, 384d). Sub-100ms p95 on 10k memories; degrades silently to keyword when Ollama is down.
+- **Graph** — D3 force layout off the main thread in a Web Worker; 125k+ nodes settled at **133 FPS** (7.5 ms/frame) on the far-zoom view. Cluster discs, bundled edges, density-override LOD, flat-fill fast path.
+- **Wiki links + backlinks** — `[[Title]]` syntax persists as graph edges; "Linked mentions" panel on every memory.
+- **Auto-tagging** — deterministic title-weighted heuristic tagger (offline, no Ollama needed) with lock semantics so user edits aren't clobbered on re-capture.
+- **Summarization** — Ollama (`llama3.2:3b`) generates one-line + paragraph summaries per memory, cached by content hash. MCP search responses return summaries by default to fit LLM contexts.
+- **Atomic learnings** — after capture, Ollama extracts up to 5 short sentences capturing what was concluded/decided. Each becomes a first-class memory (`source='derived'`, `derived_from=<parent>`). Digest reads from learnings; parents stay as substrate.
+- **Daily journal** (Ctrl+5) — one entry per day, first-class memory, paired with the digest in the UI. `cortex journal --edit` opens `$EDITOR`.
+- **Pinned memories** — star toggle, prepended to every MCP search envelope and the sidebar top.
+- **Daily / weekly digest** (Ctrl+4 + `cortex digest`) — grouped by top tag, one-line summaries, two-second morning-coffee read.
+
+See full per-version notes in [`RELEASE_NOTES.md`](./RELEASE_NOTES.md). Architecture reasoning per version in [`docs/V04-THINKING.md`](./docs/V04-THINKING.md) and [`docs/V05-THINKING.md`](./docs/V05-THINKING.md).
+
+> **Screenshots coming** — the app surfaces (graph, digest, journal, detail panel with learnings) are stable as of v0.5 but screenshots haven't been added to the README yet.
+
+## How it gets used
+
+There are three surfaces, deliberately. Pick whichever fits the moment:
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  Electron app  — graph, sidebar, editor, digest, journal,       │
+│                  detail panel with learnings + backlinks        │
+├─────────────────────────────────────────────────────────────────┤
+│  cortex CLI    — terminal companion. search, recent, digest,    │
+│                  journal, add, pin, export. Pipeable.           │
+├─────────────────────────────────────────────────────────────────┤
+│  MCP server    — 11 tools over stdio. Claude Code + Claude      │
+│                  Desktop reach into the second brain mid-chat.  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -19,6 +50,8 @@ Roadmap: [`v0.2-FULL-ROADMAP.md`](./v0.2-FULL-ROADMAP.md) (Council-vetted).
 
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
+- [Using the `cortex` CLI](#using-the-cortex-cli)
+- [Connecting the MCP server to Claude](#connecting-the-mcp-server-to-claude)
 - [Running in dev mode](#running-in-dev-mode)
 - [Building & packaging](#building--packaging)
 - [The Chrome extension](#the-chrome-extension)
@@ -53,13 +86,14 @@ ollama pull all-minilm     # ~22 MB, 384-dim embedding model
 ### Install the prebuilt app (Windows)
 
 1. Grab the latest `Cortex Setup <version>.exe` from the [Releases](https://github.com/shubhsaxena2020/cortex/releases) page.
-2. Run the installer. **On first launch Windows will show "Windows protected your PC" (SmartScreen)** because the installer is unsigned for v0.1. Click **More info → Run anyway**.
+2. Run the installer. **On first launch Windows will show "Windows protected your PC" (SmartScreen)** because the installer is unsigned (code-signing is deferred — see v0.4 thinking doc). Click **More info → Run anyway**.
 3. The app opens. Pick a folder to use as your vault when prompted.
-4. (Optional) Install [Ollama](https://ollama.com/download) and pull the embedding model to enable semantic search:
+4. (Optional but recommended) Install [Ollama](https://ollama.com/download) and pull two models:
    ```bash
-   ollama pull all-minilm
+   ollama pull all-minilm    # 384d embeddings — semantic search
+   ollama pull llama3.2:3b   # summaries + atomic learning extraction
    ```
-   Without Ollama, search degrades cleanly to keyword/LIKE matching.
+   Without Ollama, search degrades to keyword, summaries don't generate, and learning extraction is a no-op. Everything else still works.
 
 ### Build from source
 
@@ -71,6 +105,72 @@ npm run dev
 ```
 
 The app opens. Create your first memory with **Ctrl+N**.
+
+---
+
+## Using the `cortex` CLI
+
+The CLI ships in `cli/` and works from a built repo. It speaks to the same SQLite DB the app uses, so you can use both interchangeably.
+
+```bash
+# From the repo root, without PATH setup:
+npm run cortex -- search "auth flow"
+npm run cortex -- digest
+npm run cortex -- journal "what stuck with me today"
+
+# Or add cli/ to your PATH so `cortex` works from anywhere:
+#   Windows (PowerShell): $env:PATH = "C:\path\to\cortex\cli;$env:PATH"
+#   Bash:                 export PATH="$HOME/cortex/cli:$PATH"
+cortex search "sqlite migration" --mode semantic --limit 5
+cortex recent --tag rust --limit 20
+cortex add "scheduler-by-priority idea from podcast" --tag idea
+echo "thought from stdin" | cortex add
+cortex pin <id>
+cortex export <id> --format md
+```
+
+Run `cortex help` for the full command list. The CLI is pre-v7-DB tolerant (it won't break if you haven't launched the Electron app since installing), and it auto-detects whether sqlite-vec and Ollama are available.
+
+---
+
+## Connecting the MCP server to Claude
+
+The MCP server (`mcp/server.mjs`) exposes 11 tools that let Claude reach into your Cortex DB mid-conversation: `cortex_search`, `cortex_get_memory`, `cortex_list_memories`, `cortex_create_memory`, `cortex_related`, `cortex_stats`, `cortex_digest`, `cortex_pinned`, `cortex_pin`, `cortex_extract`, `cortex_journal`.
+
+### Claude Code (project-scoped)
+
+The repo ships an `.mcp.json` that registers `cortex` automatically. From any Claude Code session in the repo:
+
+```text
+Use the cortex_search tool to find what I've captured about X.
+```
+
+### Claude Desktop (global)
+
+Add this to `claude_desktop_config.json` (the path varies by OS — see the [MCP docs](https://modelcontextprotocol.io/quickstart/user)). Adjust the absolute paths to wherever you cloned the repo:
+
+```json
+{
+  "mcpServers": {
+    "cortex": {
+      "command": "C:\\path\\to\\cortex\\node_modules\\electron\\dist\\electron.exe",
+      "args": ["C:\\path\\to\\cortex\\mcp\\server.mjs"],
+      "env": { "ELECTRON_RUN_AS_NODE": "1" }
+    }
+  }
+}
+```
+
+The server must run under Electron-as-Node because `better-sqlite3` is compiled for Electron's ABI; system Node can't load it.
+
+Verify the server is healthy with the bundled smoke harness:
+
+```bash
+node scripts/run-as-node.cjs mcp/smoke.mjs
+# Expected: 14/14 PASS on the 11-tool surface
+```
+
+See [`mcp/README.md`](./mcp/README.md) for the per-tool reference.
 
 ---
 
@@ -238,9 +338,15 @@ Base URL: `http://127.0.0.1:<port>` (port from `%APPDATA%/cortex/extension-confi
 ## Testing
 
 ```bash
-npm test              # vitest run — 51 tests
+npm test              # vitest run — 453 tests, ~2s
 npm run test:watch    # vitest watch mode
+
+# Server / harness verification:
+node scripts/run-as-node.cjs mcp/smoke.mjs        # MCP end-to-end (14/14 PASS)
+node scripts/run-as-node.cjs cli/cortex.mjs stats # CLI sanity check
 ```
+
+Test count grew from 264 (v0.2.0) → 453 (v0.5.0). The pure cores (DB transformers, FTS5 phrase quoting, summary parsing, learning extraction, digest grouping, wiki-link parsing, mention-edge building, MCP protocol dispatch) are all unit-tested under plain vitest. better-sqlite3 paths are covered by live-process scripts.
 
 Test layout:
 
